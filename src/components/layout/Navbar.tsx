@@ -125,15 +125,24 @@ export function Navbar({ user }: NavbarProps) {
                           </Link>
                         ))}
 
-                        {user.role === "ADMIN" && (
+                        {(user.role === "admin" || user.role === "moderator") && (
                           <>
                             <div className="my-1 border-t border-sage-100" />
+                            {user.role === "admin" && (
+                              <Link
+                                href="/admin"
+                                onClick={() => setProfileOpen(false)}
+                                className="block px-4 py-2 text-sm text-green-700 font-medium hover:bg-green-50 transition-colors"
+                              >
+                                Adminpanel
+                              </Link>
+                            )}
                             <Link
-                              href="/admin"
+                              href="/moderator"
                               onClick={() => setProfileOpen(false)}
                               className="block px-4 py-2 text-sm text-green-700 font-medium hover:bg-green-50 transition-colors"
                             >
-                              Adminpanel
+                              Moderatorpanel
                             </Link>
                           </>
                         )}

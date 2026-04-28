@@ -1,9 +1,13 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedRoutes = ["/dashboard", "/min-odling", "/profil", "/installningar"];
-const adminRoutes = ["/admin"];
-const authRoutes = ["/auth/login", "/auth/register"];
+// Kräver inloggning
+const protectedRoutes = ["/dashboard", "/min-odling", "/profil", "/installningar", "/dagbok", "/paminnelser"];
+// Kräver inloggning – rollkoll sker i layout
+const adminRoutes     = ["/admin"];
+const moderatorRoutes = ["/moderator"];
+// Skicka inloggade vidare från auth-sidor
+const authRoutes      = ["/auth/login", "/auth/register"];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -17,9 +21,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -29,23 +31,23 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
 
-  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
-  const isAdmin = adminRoutes.some((r) => pathname.startsWith(r));
-  const isAuth = authRoutes.some((r) => pathname.startsWith(r));
+  const isProtected  = protectedRoutes.some((r) => pathname.startsWith(r));
+  const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
+  const isModRoute   = moderatorRoutes.some((r) => pathname.startsWith(r));
+  const isAuth       = authRoutes.some((r) => pathname.startsWith(r));
 
-  if ((isProtected || isAdmin) && !user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/auth/login";
-    redirectUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(redirectUrl);
+  // Ej inloggad → skicka till login
+  if ((isProtected || isAdminRoute || isModRoute) && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
   }
 
+  // Redan inloggad → skicka från auth-sidor
   if (isAuth && user) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
