@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 
@@ -150,6 +150,22 @@ export async function updateSetting(key: string, value: string) {
     update: { value },
   });
   revalidatePath("/admin/installningar");
+  revalidateTag("settings");
+}
+
+export async function updateSettingsBulk(entries: Record<string, string>) {
+  await requireAdmin();
+  await Promise.all(
+    Object.entries(entries).map(([key, value]) =>
+      prisma.adminSetting.upsert({
+        where: { key },
+        create: { key, value },
+        update: { value },
+      })
+    )
+  );
+  revalidatePath("/admin/installningar");
+  revalidateTag("settings");
 }
 
 // ── SEO ────────────────────────────────────────────────────────

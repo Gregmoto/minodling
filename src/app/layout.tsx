@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { siteConfig } from "@/lib/config";
+import { getSettings } from "@/lib/settings";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,60 +16,49 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: `${siteConfig.name} – ${siteConfig.tagline}`,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
-  keywords: [
-    "odling",
-    "trädgård",
-    "community",
-    "odlingstips",
-    "grönsaker",
-    "Sverige",
-    "forum",
-    "trädgårdsodling",
-    "självhushållning",
-  ],
-  authors: [{ name: "Minodling" }],
-  creator: "Minodling",
-  openGraph: {
-    type: "website",
-    locale: "sv_SE",
-    url: siteConfig.url,
-    title: siteConfig.name,
-    description: siteConfig.description,
-    siteName: siteConfig.name,
-    images: [
-      {
-        url: `${siteConfig.url}/og-image.jpg`,
-        width: 1200,
-        height: 630,
-        alt: siteConfig.name,
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteConfig.name,
-    description: siteConfig.description,
-    images: [`${siteConfig.url}/og-image.jpg`],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings();
+  const ogImage = s.seoOgImage.startsWith("http")
+    ? s.seoOgImage
+    : `${s.seoCanonical}${s.seoOgImage}`;
+
+  return {
+    title: {
+      default: s.seoTitle,
+      template: `%s | ${s.siteName}`,
     },
-  },
-  metadataBase: new URL(siteConfig.url),
-};
+    description: s.seoDescription,
+    keywords: [
+      "odling", "trädgård", "community", "odlingstips",
+      "grönsaker", "Sverige", "forum", "trädgårdsodling", "självhushållning",
+    ],
+    authors: [{ name: s.siteName }],
+    creator: s.siteName,
+    openGraph: {
+      type: "website",
+      locale: "sv_SE",
+      url: s.seoCanonical,
+      title: s.seoTitle,
+      description: s.seoDescription,
+      siteName: s.siteName,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: s.siteName }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: s.seoTitle,
+      description: s.seoDescription,
+      images: [ogImage],
+    },
+    robots: s.seoRobots,
+    metadataBase: new URL(s.seoCanonical),
+    verification: {
+      ...(s.googleVerification && { google: s.googleVerification }),
+    },
+    other: {
+      ...(s.bingVerification && { "msvalidate.01": s.bingVerification }),
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#4A7C59",
@@ -76,14 +66,19 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSettings();
+
   return (
     <html lang="sv" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="min-h-screen flex flex-col font-sans">{children}</body>
+      <body className="min-h-screen flex flex-col font-sans">
+        {children}
+        <GoogleAnalytics gaId={settings.gaId} gaScript={settings.gaScript} />
+      </body>
     </html>
   );
 }
