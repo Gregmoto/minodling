@@ -1,0 +1,382 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+// Användare & roller
+// ─────────────────────────────────────────────
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum MembershipTier {
+  FREE
+  PREMIUM
+}
+
+model Profile {
+  id             String         @id @default(uuid())
+  userId         String         @unique
+  username       String         @unique
+  displayName    String?
+  bio            String?
+  avatarUrl      String?
+  location       String?
+  website        String?
+  role           Role           @default(USER)
+  membershipTier MembershipTier @default(FREE)
+  points         Int            @default(0)
+  isVerified     Boolean        @default(false)
+  isBanned       Boolean        @default(false)
+  bannedAt       DateTime?
+  bannedReason   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  posts        Post[]
+  comments     Comment[]
+  likes        Like[]
+  coupons      UserCoupon[]
+  badges       UserBadge[]
+  notifications Notification[]
+  gardens      Garden[]
+  savedPosts   SavedPost[]
+
+  @@index([userId])
+  @@index([username])
+  @@map("profiles")
+}
+
+// ─────────────────────────────────────────────
+// Kategorier & taggar
+// ─────────────────────────────────────────────
+
+model Category {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  color       String  @default("#4A7C59")
+  iconName    String?
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  posts Post[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+  slug String @unique
+
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+// ─────────────────────────────────────────────
+// Inlägg & kommentarer (forum/tips)
+// ─────────────────────────────────────────────
+
+enum PostType {
+  DISCUSSION
+  TIP
+  QUESTION
+  HARVEST
+  SHOWCASE
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  PINNED
+  LOCKED
+  REMOVED
+}
+
+model Post {
+  id          String     @id @default(uuid())
+  title       String
+  slug        String     @unique
+  content     String
+  excerpt     String?
+  coverImage  String?
+  type        PostType   @default(DISCUSSION)
+  status      PostStatus @default(PUBLISHED)
+  isPremium   Boolean    @default(false)
+  viewCount   Int        @default(0)
+  likeCount   Int        @default(0)
+  commentCount Int       @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  publishedAt DateTime?
+
+  authorId   String
+  author     Profile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  comments  Comment[]
+  likes     Like[]
+  tags      PostTag[]
+  saved     SavedPost[]
+  images    PostImage[]
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([slug])
+  @@index([status])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+model PostImage {
+  id        String   @id @default(uuid())
+  postId    String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_images")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  isRemoved Boolean  @default(false)
+  likeCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   Profile @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId   String
+  post     Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+  likes    Like[]
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, postId])
+  @@unique([profileId, commentId])
+  @@map("likes")
+}
+
+model SavedPost {
+  profileId String
+  postId    String
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, postId])
+  @@map("saved_posts")
+}
+
+// ─────────────────────────────────────────────
+// Min odling (trädgårdsdagbok)
+// ─────────────────────────────────────────────
+
+model Garden {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  coverImage  String?
+  isPublic    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  plants    GardenPlant[]
+  logs      GardenLog[]
+
+  @@map("gardens")
+}
+
+model GardenPlant {
+  id          String    @id @default(uuid())
+  name        String
+  variety     String?
+  sowedAt     DateTime?
+  plantedAt   DateTime?
+  harvestedAt DateTime?
+  notes       String?
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+
+  gardenId String
+  garden   Garden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@map("garden_plants")
+}
+
+model GardenLog {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?
+  imageUrl  String?
+  logDate   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  gardenId String
+  garden   Garden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@map("garden_logs")
+}
+
+// ─────────────────────────────────────────────
+// Poäng, badges & kuponger
+// ─────────────────────────────────────────────
+
+model Badge {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String
+  iconUrl     String?
+  color       String  @default("#4A7C59")
+  pointsReward Int    @default(0)
+
+  users UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  profileId String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  badge   Badge   @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, badgeId])
+  @@map("user_badges")
+}
+
+model Coupon {
+  id           String    @id @default(uuid())
+  code         String    @unique
+  description  String?
+  discountType String    @default("PERCENT")
+  discountValue Float
+  maxUses      Int?
+  usedCount    Int       @default(0)
+  expiresAt    DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  users UserCoupon[]
+
+  @@map("coupons")
+}
+
+model UserCoupon {
+  profileId String
+  couponId  String
+  usedAt    DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  coupon  Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, couponId])
+  @@map("user_coupons")
+}
+
+// ─────────────────────────────────────────────
+// Notifikationer
+// ─────────────────────────────────────────────
+
+enum NotificationType {
+  COMMENT
+  LIKE
+  BADGE
+  SYSTEM
+  MENTION
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, isRead])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// Annonser / banners
+// ─────────────────────────────────────────────
+
+enum AdPlacement {
+  HEADER
+  SIDEBAR
+  FEED
+  FOOTER
+}
+
+model Advertisement {
+  id          String      @id @default(uuid())
+  title       String
+  imageUrl    String?
+  linkUrl     String
+  placement   AdPlacement
+  isActive    Boolean     @default(true)
+  isPremiumOnly Boolean   @default(false)
+  clickCount  Int         @default(0)
+  viewCount   Int         @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([placement, isActive])
+  @@map("advertisements")
+}
