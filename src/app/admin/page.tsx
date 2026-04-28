@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { Users, FileText, MessageSquare, TrendingUp, UserPlus, Eye } from "lucide-react";
 import prisma from "@/lib/prisma";

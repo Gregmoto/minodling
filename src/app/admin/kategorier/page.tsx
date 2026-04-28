@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { Tag } from "lucide-react";
 import prisma from "@/lib/prisma";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { Megaphone, Plus, Eye, MousePointerClick } from "lucide-react";
 import prisma from "@/lib/prisma";
