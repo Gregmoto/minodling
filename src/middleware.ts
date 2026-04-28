@@ -12,26 +12,6 @@ const authRoutes      = ["/auth/login", "/auth/register"];
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
 
   const isProtected  = protectedRoutes.some((r) => pathname.startsWith(r));
@@ -39,17 +19,56 @@ export async function middleware(request: NextRequest) {
   const isModRoute   = moderatorRoutes.some((r) => pathname.startsWith(r));
   const isAuth       = authRoutes.some((r) => pathname.startsWith(r));
 
-  // Ej inloggad → skicka till login
+  // Om sidan inte kräver auth-koll — passera direkt
+  if (!isProtected && !isAdminRoute && !isModRoute && !isAuth) {
+    return supabaseResponse;
+  }
+
+  let user = null;
+
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            supabaseResponse = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Om Supabase-anropet misslyckas — behandla som utloggad
+    user = null;
+  }
+
+  // Ej inloggad → skicka till login (men undvik loop om vi redan är på /auth/login)
   if ((isProtected || isAdminRoute || isModRoute) && !user) {
+    if (pathname.startsWith("/auth/")) return supabaseResponse;
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 
-  // Redan inloggad → skicka från auth-sidor
+  // Redan inloggad → skicka från auth-sidor (men bara till /dashboard, inte tillbaka)
   if (isAuth && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const redirectTo = request.nextUrl.searchParams.get("redirect");
+    const destination = redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("/auth")
+      ? redirectTo
+      : "/dashboard";
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   return supabaseResponse;
