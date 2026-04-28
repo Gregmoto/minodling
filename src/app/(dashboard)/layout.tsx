@@ -4,40 +4,23 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import prisma from "@/lib/prisma";
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // Hämta profil (eller skapa om den saknas)
-  let profile = await prisma.profile.findUnique({
+  const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
-    select: {
-      id: true,
-      userId: true,
-      username: true,
-      displayName: true,
-      avatarUrl: true,
-      role: true,
-    },
+    select: { id: true, userId: true, username: true, fullName: true, avatarUrl: true, role: true },
   });
 
-  const navUser = profile
-    ? {
-        id: profile.id,
-        username: profile.username,
-        displayName: profile.displayName,
-        avatarUrl: profile.avatarUrl,
-        role: profile.role,
-      }
-    : null;
+  const navUser = profile ? {
+    id: profile.id,
+    username: profile.username,
+    displayName: profile.fullName,
+    avatarUrl: profile.avatarUrl,
+    role: profile.role,
+  } : null;
 
   return (
     <div className="flex min-h-screen flex-col">

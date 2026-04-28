@@ -1,65 +1,52 @@
-import type { Role, MembershipTier, PostType, PostStatus, NotificationType, AdPlacement } from "@prisma/client";
-
-export type { Role, MembershipTier, PostType, PostStatus, NotificationType, AdPlacement };
+export type UserRole = "admin" | "moderator" | "user";
 
 export interface Profile {
-  id: string;
-  userId: string;
-  username: string;
-  displayName: string | null;
-  bio: string | null;
-  avatarUrl: string | null;
-  location: string | null;
-  website: string | null;
-  role: Role;
-  membershipTier: MembershipTier;
-  points: number;
-  isVerified: boolean;
-  isBanned: boolean;
-  createdAt: Date;
+  id:              string;
+  userId:          string;
+  username:        string;
+  fullName:        string | null;
+  bio:             string | null;
+  avatarUrl:       string | null;
+  location:        string | null;
+  role:            UserRole;
+  points:          number;
+  createdAt:       Date;
 }
 
 export interface PostWithAuthor {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  excerpt: string | null;
-  coverImage: string | null;
-  type: PostType;
-  status: PostStatus;
-  isPremium: boolean;
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
-  createdAt: Date;
-  author: Pick<Profile, "id" | "username" | "displayName" | "avatarUrl" | "isVerified">;
-  category: { id: string; name: string; slug: string; color: string } | null;
-  tags: { tag: { id: string; name: string; slug: string } }[];
+  id:           string;
+  title:        string;
+  content:      string;
+  category:     string | null;
+  postType:     string;
+  status:       string;
+  likesCount:   number;
+  commentsCount: number;
+  createdAt:    Date;
+  author:       Pick<Profile, "id" | "username" | "fullName" | "avatarUrl">;
 }
 
 export interface CommentWithAuthor {
-  id: string;
-  content: string;
-  likeCount: number;
+  id:        string;
+  content:   string;
+  likesCount: number;
   createdAt: Date;
   updatedAt: Date;
-  isRemoved: boolean;
-  parentId: string | null;
-  author: Pick<Profile, "id" | "username" | "displayName" | "avatarUrl">;
-  replies?: CommentWithAuthor[];
+  parentId:  string | null;
+  author:    Pick<Profile, "id" | "username" | "fullName" | "avatarUrl">;
+  replies?:  CommentWithAuthor[];
 }
 
 export interface NavItem {
   label: string;
-  href: string;
+  href:  string;
   icon?: string;
   badge?: string | number;
 }
 
 export interface SiteConfig {
-  name: string;
+  name:        string;
   description: string;
-  url: string;
-  ogImage: string;
+  url:         string;
+  ogImage:     string;
 }

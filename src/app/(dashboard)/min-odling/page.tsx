@@ -19,101 +19,96 @@ export default async function MinOdlingPage() {
   const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
     include: {
-      gardens: {
-        include: {
-          plants: true,
-          _count: { select: { logs: true, plants: true } },
-        },
+      gardenDiaries: {
         orderBy: { createdAt: "desc" },
+        include: { plant: { select: { name: true } } },
       },
     },
   });
 
   if (!profile) redirect("/auth/login");
 
+  const statusLabels: Record<string, { label: string; variant: "success" | "default" | "danger" | "warning" }> = {
+    growing:   { label: "Växer",    variant: "success" },
+    harvested: { label: "Skördad",  variant: "default" },
+    failed:    { label: "Misslyckad", variant: "danger" },
+    dormant:   { label: "Vilande",  variant: "warning" },
+  };
+
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Min odling</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Din personliga trädgårdsdagbok
-          </p>
+          <p className="text-gray-500 text-sm mt-1">Din personliga odlingsdagbok</p>
         </div>
-        <Button size="sm">
-          <Plus className="h-4 w-4" />
-          Ny odling
-        </Button>
+        <Link href="/dagbok/ny">
+          <Button size="sm">
+            <Plus className="h-4 w-4" />
+            Ny odlingspost
+          </Button>
+        </Link>
       </div>
 
-      {/* Odlingsytor */}
-      {profile.gardens.length === 0 ? (
+      {profile.gardenDiaries.length === 0 ? (
         <Card className="text-center py-16">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50 mx-auto mb-5">
             <Sprout className="h-8 w-8 text-green-500" />
           </div>
-          <h2 className="font-semibold text-gray-900 mb-2">
-            Starta din odlingsdagbok
-          </h2>
+          <h2 className="font-semibold text-gray-900 mb-2">Starta din odlingsdagbok</h2>
           <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
-            Skapa din första odlingsyta och börja dokumentera dina planters resa
-            från frö till skörd.
+            Dokumentera dina planters resa från frö till skörd.
           </p>
-          <Button>
-            <Plus className="h-4 w-4" />
-            Skapa min första odling
-          </Button>
+          <Link href="/dagbok/ny">
+            <Button>
+              <Plus className="h-4 w-4" />
+              Skapa första odlingsposten
+            </Button>
+          </Link>
         </Card>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {profile.gardens.map((garden) => (
-            <Link key={garden.id} href={`/min-odling/${garden.id}`}>
-              <Card hover className="h-full">
-                {garden.coverImage ? (
-                  <div className="aspect-video rounded-xl overflow-hidden mb-4 bg-sage-100">
-                    <img
-                      src={garden.coverImage}
-                      alt={garden.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="aspect-video rounded-xl bg-gradient-to-br from-green-50 to-sage-100 flex items-center justify-center mb-4">
-                    <Sprout className="h-10 w-10 text-green-300" />
-                  </div>
-                )}
-
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900">{garden.name}</h3>
-                  {!garden.isPublic && (
-                    <Badge variant="outline" size="sm">Privat</Badge>
+          {profile.gardenDiaries.map((diary) => {
+            const s = statusLabels[diary.status] ?? { label: diary.status, variant: "default" as const };
+            return (
+              <Link key={diary.id} href={`/dagbok/${diary.id}`}>
+                <Card hover className="h-full">
+                  {diary.imageUrl ? (
+                    <div className="aspect-video rounded-xl overflow-hidden mb-4 bg-sage-100">
+                      <img src={diary.imageUrl} alt={diary.title} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="aspect-video rounded-xl bg-gradient-to-br from-green-50 to-sage-100 flex items-center justify-center mb-4">
+                      <Sprout className="h-10 w-10 text-green-300" />
+                    </div>
                   )}
-                </div>
 
-                {garden.description && (
-                  <p className="text-sm text-gray-500 line-clamp-2 mb-4">
-                    {garden.description}
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900 line-clamp-1">{diary.title}</h3>
+                    <Badge variant={s.variant} size="sm">{s.label}</Badge>
+                  </div>
+
+                  <p className="text-xs text-gray-500 mb-3">
+                    {diary.plant?.name ?? diary.customPlantName ?? "Okänd växt"}
                   </p>
-                )}
 
-                <div className="flex items-center gap-4 text-xs text-gray-400">
-                  <span className="flex items-center gap-1">
-                    <Sprout className="h-3 w-3" />
-                    {garden._count.plants} växter
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <BookOpen className="h-3 w-3" />
-                    {garden._count.logs} loggposter
-                  </span>
-                  <span className="flex items-center gap-1 ml-auto">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(garden.createdAt)}
-                  </span>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                  <div className="flex items-center gap-4 text-xs text-gray-400">
+                    {diary.sowingDate && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> Sått: {formatDate(diary.sowingDate)}
+                      </span>
+                    )}
+                    {diary.notes && (
+                      <span className="flex items-center gap-1 ml-auto">
+                        <BookOpen className="h-3 w-3" />
+                        Anteckningar
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

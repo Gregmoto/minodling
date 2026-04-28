@@ -8,375 +8,537 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─────────────────────────────────────────────
-// Användare & roller
-// ─────────────────────────────────────────────
-
-enum Role {
-  USER
-  MODERATOR
-  ADMIN
-}
-
-enum MembershipTier {
-  FREE
-  PREMIUM
-}
-
 model Profile {
-  id             String         @id @default(uuid())
-  userId         String         @unique
-  username       String         @unique
-  displayName    String?
-  bio            String?
-  avatarUrl      String?
-  location       String?
-  website        String?
-  role           Role           @default(USER)
-  membershipTier MembershipTier @default(FREE)
-  points         Int            @default(0)
-  isVerified     Boolean        @default(false)
-  isBanned       Boolean        @default(false)
-  bannedAt       DateTime?
-  bannedReason   String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @unique @db.Uuid @map("user_id")
+  email           String?
+  username        String   @unique
+  fullName        String?  @map("full_name")
+  avatarUrl       String?  @map("avatar_url")
+  bio             String?
+  location        String?
+  growingZone     String?  @map("growing_zone")
+  growingType     String?  @map("growing_type")
+  experienceLevel String?  @map("experience_level")
+  role            String   @default("user")
+  points          Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  posts        Post[]
-  comments     Comment[]
-  likes        Like[]
-  coupons      UserCoupon[]
-  badges       UserBadge[]
-  notifications Notification[]
-  gardens      Garden[]
-  savedPosts   SavedPost[]
+  posts                Post[]
+  comments             PostComment[]
+  postLikes            PostLike[]
+  savedPosts           SavedPost[]
+  followers            Follow[]          @relation("Following")
+  following            Follow[]          @relation("Follower")
+  plantTips            PlantTip[]
+  gardenDiaries        GardenDiary[]
+  reminders            Reminder[]
+  questions            Question[]
+  answers              Answer[]
+  createdGroups        Group[]
+  groupMemberships     GroupMember[]
+  seedExchanges        SeedExchange[]
+  challengeParticipants ChallengeParticipant[]
+  pointTransactions    PointTransaction[]
+  reports              Report[]           @relation("Reporter")
+  handledReports       Report[]           @relation("Handler")
+  moderatorPermissions ModeratorPermission?
+  calendarSuggestions  GardenCalendar[]
 
-  @@index([userId])
-  @@index([username])
   @@map("profiles")
 }
 
-// ─────────────────────────────────────────────
-// Kategorier & taggar
-// ─────────────────────────────────────────────
+model ModeratorPermission {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String   @unique @db.Uuid @map("user_id")
+  canModeratePosts     Boolean  @default(false) @map("can_moderate_posts")
+  canModerateComments  Boolean  @default(false) @map("can_moderate_comments")
+  canBanUsers          Boolean  @default(false) @map("can_ban_users")
+  canManageReports     Boolean  @default(false) @map("can_manage_reports")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
-model Category {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  slug        String  @unique
-  description String?
-  color       String  @default("#4A7C59")
-  iconName    String?
-  sortOrder   Int     @default(0)
-  isActive    Boolean @default(true)
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  posts Post[]
-
-  @@map("categories")
-}
-
-model Tag {
-  id   String @id @default(uuid())
-  name String @unique
-  slug String @unique
-
-  posts PostTag[]
-
-  @@map("tags")
-}
-
-// ─────────────────────────────────────────────
-// Inlägg & kommentarer (forum/tips)
-// ─────────────────────────────────────────────
-
-enum PostType {
-  DISCUSSION
-  TIP
-  QUESTION
-  HARVEST
-  SHOWCASE
-}
-
-enum PostStatus {
-  DRAFT
-  PUBLISHED
-  PINNED
-  LOCKED
-  REMOVED
+  @@map("moderator_permissions")
 }
 
 model Post {
-  id          String     @id @default(uuid())
-  title       String
-  slug        String     @unique
-  content     String
-  excerpt     String?
-  coverImage  String?
-  type        PostType   @default(DISCUSSION)
-  status      PostStatus @default(PUBLISHED)
-  isPremium   Boolean    @default(false)
-  viewCount   Int        @default(0)
-  likeCount   Int        @default(0)
-  commentCount Int       @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  publishedAt DateTime?
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @db.Uuid @map("user_id")
+  title        String
+  content      String
+  imageUrl     String?  @map("image_url")
+  category     String?
+  postType     String   @default("discussion") @map("post_type")
+  likesCount   Int      @default(0) @map("likes_count")
+  commentsCount Int     @default(0) @map("comments_count")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  status       String   @default("published")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  authorId   String
-  author     Profile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  author   Profile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments PostComment[]
+  likes    PostLike[]
+  saved    SavedPost[]
 
-  comments  Comment[]
-  likes     Like[]
-  tags      PostTag[]
-  saved     SavedPost[]
-  images    PostImage[]
-
-  @@index([authorId])
-  @@index([categoryId])
-  @@index([slug])
+  @@index([userId])
+  @@index([category])
   @@index([status])
-  @@index([createdAt])
+  @@index([createdAt(sort: Desc)])
   @@map("posts")
 }
 
-model PostTag {
-  postId String
-  tagId  String
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+model PostComment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId     String   @db.Uuid @map("post_id")
+  userId     String   @db.Uuid @map("user_id")
+  content    String
+  parentId   String?  @db.Uuid @map("parent_id")
+  likesCount Int      @default(0) @map("likes_count")
+  status     String   @default("published")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
-  @@id([postId, tagId])
-  @@map("post_tags")
-}
-
-model PostImage {
-  id        String   @id @default(uuid())
-  postId    String
-  url       String
-  altText   String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@map("post_images")
-}
-
-model Comment {
-  id        String   @id @default(uuid())
-  content   String
-  isRemoved Boolean  @default(false)
-  likeCount Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  authorId String
-  author   Profile @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  postId   String
-  post     Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parentId String?
-  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
-  replies  Comment[] @relation("CommentReplies")
-  likes    Like[]
+  post    Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  Profile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  PostComment?  @relation("Replies", fields: [parentId], references: [id])
+  replies PostComment[] @relation("Replies")
 
   @@index([postId])
-  @@index([authorId])
-  @@map("comments")
+  @@index([userId])
+  @@map("post_comments")
 }
 
-model Like {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+model PostLike {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String   @db.Uuid @map("post_id")
+  userId    String   @db.Uuid @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  postId    String?
-  post      Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  commentId String?
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([profileId, postId])
-  @@unique([profileId, commentId])
-  @@map("likes")
+  @@unique([postId, userId])
+  @@map("post_likes")
 }
 
 model SavedPost {
-  profileId String
-  postId    String
-  createdAt DateTime @default(now())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String   @db.Uuid @map("post_id")
+  userId    String   @db.Uuid @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@id([profileId, postId])
+  @@unique([postId, userId])
   @@map("saved_posts")
 }
 
-// ─────────────────────────────────────────────
-// Min odling (trädgårdsdagbok)
-// ─────────────────────────────────────────────
+model Follow {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  followerId  String   @db.Uuid @map("follower_id")
+  followingId String   @db.Uuid @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-model Garden {
-  id          String  @id @default(uuid())
+  follower  Profile @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following Profile @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Plant {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  slug           String   @unique
+  latinName      String?  @map("latin_name")
+  imageUrl       String?  @map("image_url")
+  difficultyLevel String? @map("difficulty_level")
+  sowingPeriod   String?  @map("sowing_period")
+  plantingPeriod String?  @map("planting_period")
+  harvestPeriod  String?  @map("harvest_period")
+  sunRequirement String?  @map("sun_requirement")
+  wateringNeeds  String?  @map("watering_needs")
+  soilType       String?  @map("soil_type")
+  fertilizerNeeds String? @map("fertilizer_needs")
+  commonProblems String?  @map("common_problems")
+  description    String?
+  seoTitle       String?  @map("seo_title")
+  seoDescription String?  @map("seo_description")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tips      PlantTip[]
+  diaries   GardenDiary[]
+  reminders Reminder[]
+
+  @@index([slug])
+  @@map("plants")
+}
+
+model PlantTip {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plantId   String   @db.Uuid @map("plant_id")
+  userId    String   @db.Uuid @map("user_id")
+  content   String
+  status    String   @default("published")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  plant  Plant   @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  author Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([plantId])
+  @@map("plant_tips")
+}
+
+model GardenCalendar {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  slug            String   @unique
+  month           Int
+  category        String?
+  description     String?
+  taskType        String?  @map("task_type")
+  growingZone     String?  @map("growing_zone")
+  isUserSuggested Boolean  @default(false) @map("is_user_suggested")
+  suggestedBy     String?  @db.Uuid @map("suggested_by")
+  status          String   @default("published")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  suggester Profile? @relation(fields: [suggestedBy], references: [id], onDelete: SetNull)
+
+  @@index([month])
+  @@map("garden_calendar")
+}
+
+model GardenDiary {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @db.Uuid @map("user_id")
+  plantId         String?   @db.Uuid @map("plant_id")
+  customPlantName String?   @map("custom_plant_name")
+  title           String
+  notes           String?
+  imageUrl        String?   @map("image_url")
+  sowingDate      DateTime? @map("sowing_date") @db.Date
+  plantingDate    DateTime? @map("planting_date") @db.Date
+  harvestDate     DateTime? @map("harvest_date") @db.Date
+  status          String    @default("growing")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  owner     Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plant     Plant?     @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  reminders Reminder[]
+
+  @@index([userId])
+  @@map("garden_diary")
+}
+
+model Reminder {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @db.Uuid @map("user_id")
+  diaryId        String?  @db.Uuid @map("diary_id")
+  plantId        String?  @db.Uuid @map("plant_id")
+  reminderType   String   @map("reminder_type")
+  title          String
+  description    String?
+  dueDate        DateTime @map("due_date")
+  repeatInterval String?  @map("repeat_interval")
+  isCompleted    Boolean  @default(false) @map("is_completed")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  owner Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  diary GardenDiary? @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  plant Plant?       @relation(fields: [plantId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("reminders")
+}
+
+model Question {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @db.Uuid @map("user_id")
+  title        String
+  content      String
+  imageUrl     String?  @map("image_url")
+  category     String?
+  status       String   @default("open")
+  viewsCount   Int      @default(0) @map("views_count")
+  answersCount Int      @default(0) @map("answers_count")
+  bestAnswerId String?  @db.Uuid @map("best_answer_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  author     Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers    Answer[]
+  bestAnswer Answer?  @relation("BestAnswer", fields: [bestAnswerId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@map("questions")
+}
+
+model Answer {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId   String   @db.Uuid @map("question_id")
+  userId       String   @db.Uuid @map("user_id")
+  content      String
+  imageUrl     String?  @map("image_url")
+  likesCount   Int      @default(0) @map("likes_count")
+  isBestAnswer Boolean  @default(false) @map("is_best_answer")
+  status       String   @default("published")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  question       Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  author         Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bestAnswerFor  Question[] @relation("BestAnswer")
+
+  @@index([questionId])
+  @@map("answers")
+}
+
+model Group {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
+  slug        String   @unique
   description String?
-  coverImage  String?
-  isPublic    Boolean @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  location    String?
+  groupType   String   @default("public") @map("group_type")
+  imageUrl    String?  @map("image_url")
+  createdBy   String   @db.Uuid @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  plants    GardenPlant[]
-  logs      GardenLog[]
+  creator Profile       @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  members GroupMember[]
 
-  @@map("gardens")
+  @@index([slug])
+  @@map("groups")
 }
 
-model GardenPlant {
-  id          String    @id @default(uuid())
-  name        String
-  variety     String?
-  sowedAt     DateTime?
-  plantedAt   DateTime?
-  harvestedAt DateTime?
-  notes       String?
-  imageUrl    String?
-  createdAt   DateTime  @default(now())
+model GroupMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId   String   @db.Uuid @map("group_id")
+  userId    String   @db.Uuid @map("user_id")
+  role      String   @default("member")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  gardenId String
-  garden   Garden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("garden_plants")
+  @@unique([groupId, userId])
+  @@map("group_members")
 }
 
-model GardenLog {
-  id        String   @id @default(uuid())
-  title     String
-  content   String?
-  imageUrl  String?
-  logDate   DateTime @default(now())
-  createdAt DateTime @default(now())
-
-  gardenId String
-  garden   Garden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
-
-  @@map("garden_logs")
-}
-
-// ─────────────────────────────────────────────
-// Poäng, badges & kuponger
-// ─────────────────────────────────────────────
-
-model Badge {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  description String
-  iconUrl     String?
-  color       String  @default("#4A7C59")
-  pointsReward Int    @default(0)
-
-  users UserBadge[]
-
-  @@map("badges")
-}
-
-model UserBadge {
-  profileId String
-  badgeId   String
-  earnedAt  DateTime @default(now())
-
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  badge   Badge   @relation(fields: [badgeId], references: [id], onDelete: Cascade)
-
-  @@id([profileId, badgeId])
-  @@map("user_badges")
-}
-
-model Coupon {
-  id           String    @id @default(uuid())
-  code         String    @unique
+model SeedExchange {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @db.Uuid @map("user_id")
+  title        String
   description  String?
-  discountType String    @default("PERCENT")
-  discountValue Float
-  maxUses      Int?
-  usedCount    Int       @default(0)
-  expiresAt    DateTime?
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
+  exchangeType String   @default("trade") @map("exchange_type")
+  category     String?
+  location     String?
+  imageUrl     String?  @map("image_url")
+  status       String   @default("active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  users UserCoupon[]
+  owner Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("coupons")
+  @@index([userId])
+  @@map("seed_exchanges")
 }
 
-model UserCoupon {
-  profileId String
-  couponId  String
-  usedAt    DateTime @default(now())
-
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  coupon  Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
-
-  @@id([profileId, couponId])
-  @@map("user_coupons")
-}
-
-// ─────────────────────────────────────────────
-// Notifikationer
-// ─────────────────────────────────────────────
-
-enum NotificationType {
-  COMMENT
-  LIKE
-  BADGE
-  SYSTEM
-  MENTION
-}
-
-model Notification {
-  id        String           @id @default(uuid())
-  type      NotificationType
-  title     String
-  message   String
-  link      String?
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
-
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  @@index([profileId, isRead])
-  @@map("notifications")
-}
-
-// ─────────────────────────────────────────────
-// Annonser / banners
-// ─────────────────────────────────────────────
-
-enum AdPlacement {
-  HEADER
-  SIDEBAR
-  FEED
-  FOOTER
-}
-
-model Advertisement {
-  id          String      @id @default(uuid())
+model Challenge {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
-  imageUrl    String?
-  linkUrl     String
-  placement   AdPlacement
-  isActive    Boolean     @default(true)
-  isPremiumOnly Boolean   @default(false)
-  clickCount  Int         @default(0)
-  viewCount   Int         @default(0)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  createdAt   DateTime    @default(now())
+  slug        String    @unique
+  description String?
+  imageUrl    String?   @map("image_url")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  status      String    @default("upcoming")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  @@index([placement, isActive])
-  @@map("advertisements")
+  participants ChallengeParticipant[]
+
+  @@index([slug])
+  @@map("challenges")
+}
+
+model ChallengeParticipant {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  challengeId String   @db.Uuid @map("challenge_id")
+  userId      String   @db.Uuid @map("user_id")
+  joinedAt    DateTime @default(now()) @map("joined_at")
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  profile   Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@map("challenge_participants")
+}
+
+model Guide {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String
+  slug           String   @unique
+  excerpt        String?
+  content        String?
+  imageUrl       String?  @map("image_url")
+  category       String?
+  difficultyLevel String? @map("difficulty_level")
+  seoTitle       String?  @map("seo_title")
+  seoDescription String?  @map("seo_description")
+  published      Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@map("guides")
+}
+
+model KnowledgeArticle {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String
+  slug           String   @unique
+  excerpt        String?
+  content        String?
+  category       String?
+  imageUrl       String?  @map("image_url")
+  seoTitle       String?  @map("seo_title")
+  seoDescription String?  @map("seo_description")
+  published      Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@map("knowledge_articles")
+}
+
+model GlossaryTerm {
+  id               String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  term             String
+  slug             String   @unique
+  shortDescription String?  @map("short_description")
+  fullDescription  String?  @map("full_description")
+  imageUrl         String?  @map("image_url")
+  category         String?
+  seoTitle         String?  @map("seo_title")
+  seoDescription   String?  @map("seo_description")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@map("glossary_terms")
+}
+
+model Banner {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title            String
+  imageUrl         String?   @map("image_url")
+  linkUrl          String    @map("link_url")
+  placement        String
+  isActive         Boolean   @default(true) @map("is_active")
+  clicksCount      Int       @default(0) @map("clicks_count")
+  impressionsCount Int       @default(0) @map("impressions_count")
+  startDate        DateTime? @map("start_date")
+  endDate          DateTime? @map("end_date")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  clicks BannerClick[]
+
+  @@map("banners")
+}
+
+model BannerClick {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bannerId  String   @db.Uuid @map("banner_id")
+  userId    String?  @db.Uuid @map("user_id")
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  banner Banner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+
+  @@index([bannerId])
+  @@map("banner_clicks")
+}
+
+model PointTransaction {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @db.Uuid @map("user_id")
+  points        Int
+  reason        String
+  referenceType String?  @map("reference_type")
+  referenceId   String?  @db.Uuid @map("reference_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("point_transactions")
+}
+
+model Report {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporterId String   @db.Uuid @map("reporter_id")
+  targetType String   @map("target_type")
+  targetId   String   @db.Uuid @map("target_id")
+  reason     String
+  status     String   @default("pending")
+  handledBy  String?  @db.Uuid @map("handled_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  reporter Profile  @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  handler  Profile? @relation("Handler", fields: [handledBy], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@map("reports")
+}
+
+model AdminSetting {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key       String   @unique
+  value     String?
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_settings")
+}
+
+model SeoSetting {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pageType        String   @map("page_type")
+  pageId          String?  @db.Uuid @map("page_id")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description")
+  ogImage         String?  @map("og_image")
+  canonicalUrl    String?  @map("canonical_url")
+  noindex         Boolean  @default(false)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([pageType, pageId])
+  @@map("seo_settings")
+}
+
+model PremiumFeature {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  slug        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("premium_features")
 }

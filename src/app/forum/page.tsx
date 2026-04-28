@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, TrendingUp, Clock, Flame, Filter } from "lucide-react";
+import { Plus, TrendingUp, Clock, Flame, Filter, MessageSquare, Heart } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/layout/Navbar";
@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import { formatRelativeDate } from "@/lib/utils";
-import { MessageSquare, Heart, Eye } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Forum",
@@ -22,57 +21,51 @@ interface ForumPageProps {
 }
 
 export default async function ForumPage({ searchParams }: ForumPageProps) {
-  const params = await searchParams;
-  const sort = params.sort ?? "new";
-  const kategoriSlug = params.kategori;
+  const params       = await searchParams;
+  const sort         = params.sort ?? "new";
+  const kategori     = params.kategori;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const [categories, posts, profile] = await Promise.all([
-    prisma.category.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      include: { _count: { select: { posts: true } } },
+  const [categoryGroups, posts, profile] = await Promise.all([
+    prisma.post.groupBy({
+      by: ["category"],
+      where: { category: { not: null }, status: { in: ["published", "pinned"] } },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
     }),
     prisma.post.findMany({
       where: {
-        status: { in: ["PUBLISHED", "PINNED"] },
-        ...(kategoriSlug
-          ? { category: { slug: kategoriSlug } }
-          : {}),
+        status: { in: ["published", "pinned"] },
+        ...(kategori ? { category: kategori } : {}),
       },
       orderBy:
-        sort === "top"
-          ? { likeCount: "desc" }
-          : sort === "hot"
-          ? { commentCount: "desc" }
-          : { createdAt: "desc" },
+        sort === "top" ? { likesCount: "desc" }
+        : sort === "hot" ? { commentsCount: "desc" }
+        : { createdAt: "desc" },
       take: 20,
       include: {
-        author: {
-          select: { username: true, displayName: true, avatarUrl: true, isVerified: true },
-        },
-        category: true,
+        author: { select: { username: true, fullName: true, avatarUrl: true } },
         _count: { select: { comments: true } },
       },
     }),
     user
       ? prisma.profile.findUnique({
           where: { userId: user.id },
-          select: { id: true, username: true, displayName: true, avatarUrl: true, role: true },
+          select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
         })
       : null,
   ]);
 
   const navUser = profile
-    ? { id: profile.id, username: profile.username, displayName: profile.displayName, avatarUrl: profile.avatarUrl, role: profile.role }
+    ? { id: profile.id, username: profile.username, displayName: profile.fullName, avatarUrl: profile.avatarUrl, role: profile.role }
     : null;
 
   const sortOptions = [
-    { label: "Nyast", value: "new", icon: Clock },
+    { label: "Nyast",      value: "new", icon: Clock },
     { label: "Populärast", value: "top", icon: TrendingUp },
-    { label: "Hett", value: "hot", icon: Flame },
+    { label: "Hett",       value: "hot", icon: Flame },
   ];
 
   return (
@@ -84,12 +77,11 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Huvudflöde */}
             <div className="flex-1 min-w-0">
-              {/* Sidhuvud */}
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Forum</h1>
                   <p className="text-gray-500 text-sm mt-1">
-                    {posts.length} inlägg{kategoriSlug ? " i denna kategori" : ""}
+                    {posts.length} inlägg{kategori ? " i denna kategori" : ""}
                   </p>
                 </div>
                 {user && (
@@ -109,7 +101,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                   return (
                     <Link
                       key={opt.value}
-                      href={`/forum?sort=${opt.value}${kategoriSlug ? `&kategori=${kategoriSlug}` : ""}`}
+                      href={`/forum?sort=${opt.value}${kategori ? `&kategori=${kategori}` : ""}`}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         sort === opt.value
                           ? "bg-green-600 text-white"
@@ -137,24 +129,21 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                 <div className="space-y-3">
                   {posts.map((post) => (
                     <Card key={post.id} hover padding="md">
-                      <Link href={`/forum/${post.slug}`} className="block">
+                      <Link href={`/forum/${post.id}`} className="block">
                         <div className="flex items-start gap-3">
                           <Avatar
                             src={post.author.avatarUrl}
-                            fallback={post.author.displayName ?? post.author.username}
+                            fallback={post.author.fullName ?? post.author.username}
                             size="sm"
                             className="shrink-0 mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                              {post.status === "PINNED" && (
+                              {post.status === "pinned" && (
                                 <Badge variant="warning" size="sm">Fastnålad</Badge>
                               )}
                               {post.category && (
-                                <Badge variant="success" size="sm">{post.category.name}</Badge>
-                              )}
-                              {post.isPremium && (
-                                <Badge variant="premium" size="sm">Premium</Badge>
+                                <Badge variant="success" size="sm">{post.category}</Badge>
                               )}
                             </div>
 
@@ -162,27 +151,18 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                               {post.title}
                             </h2>
 
-                            {post.excerpt && (
-                              <p className="text-sm text-gray-500 line-clamp-2 mb-3">
-                                {post.excerpt}
-                              </p>
-                            )}
-
                             <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
                               <span className="font-medium text-gray-600">
-                                {post.author.displayName ?? post.author.username}
+                                {post.author.fullName ?? post.author.username}
                               </span>
                               <span>·</span>
                               <span>{formatRelativeDate(post.createdAt)}</span>
                               <span>·</span>
                               <span className="flex items-center gap-1">
-                                <Heart className="h-3 w-3" /> {post.likeCount}
+                                <Heart className="h-3 w-3" /> {post.likesCount}
                               </span>
                               <span className="flex items-center gap-1">
                                 <MessageSquare className="h-3 w-3" /> {post._count.comments}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Eye className="h-3 w-3" /> {post.viewCount}
                               </span>
                             </div>
                           </div>
@@ -196,7 +176,6 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
 
             {/* Sidebar */}
             <aside className="lg:w-72 space-y-5 shrink-0">
-              {/* Kategorier */}
               <Card padding="none">
                 <div className="px-5 py-4 border-b border-sage-100">
                   <h2 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
@@ -208,29 +187,28 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                   <Link
                     href="/forum"
                     className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                      !kategoriSlug ? "bg-green-50 text-green-700 font-medium" : "text-gray-700 hover:bg-sage-50"
+                      !kategori ? "bg-green-50 text-green-700 font-medium" : "text-gray-700 hover:bg-sage-50"
                     }`}
                   >
                     <span>Alla kategorier</span>
                   </Link>
-                  {categories.map((cat) => (
+                  {categoryGroups.map((group) => (
                     <Link
-                      key={cat.slug}
-                      href={`/forum?kategori=${cat.slug}`}
+                      key={group.category}
+                      href={`/forum?kategori=${encodeURIComponent(group.category ?? "")}`}
                       className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                        kategoriSlug === cat.slug
+                        kategori === group.category
                           ? "bg-green-50 text-green-700 font-medium"
                           : "text-gray-700 hover:bg-sage-50"
                       }`}
                     >
-                      <span>{cat.name}</span>
-                      <span className="text-xs text-gray-400">{cat._count.posts}</span>
+                      <span>{group.category}</span>
+                      <span className="text-xs text-gray-400">{group._count.id}</span>
                     </Link>
                   ))}
                 </div>
               </Card>
 
-              {/* Community-info */}
               {!user && (
                 <Card className="text-center bg-green-50 border-green-100">
                   <h3 className="font-semibold text-green-900 mb-2">

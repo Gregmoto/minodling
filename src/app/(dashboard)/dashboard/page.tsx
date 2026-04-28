@@ -1,19 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  Sprout,
-  MessageSquare,
-  Heart,
-  Star,
-  TrendingUp,
-  Bell,
-  Plus,
-  ArrowRight,
-} from "lucide-react";
+import { Sprout, MessageSquare, Heart, Star, TrendingUp, Plus, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
@@ -29,27 +20,21 @@ export default async function DashboardPage() {
   const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
     include: {
-      _count: { select: { posts: true, comments: true } },
-      notifications: {
-        where: { isRead: false },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      },
       posts: {
         orderBy: { createdAt: "desc" },
         take: 3,
-        include: { category: true },
       },
+      _count: { select: { posts: true, comments: true } },
     },
   });
 
   if (!profile) redirect("/auth/login");
 
   const stats = [
-    { label: "Inlägg", value: profile._count.posts, icon: MessageSquare, color: "text-blue-600 bg-blue-50" },
-    { label: "Kommentarer", value: profile._count.comments, icon: MessageSquare, color: "text-purple-600 bg-purple-50" },
-    { label: "Poäng", value: profile.points, icon: Star, color: "text-amber-600 bg-amber-50" },
-    { label: "Oglästa notiser", value: profile.notifications.length, icon: Bell, color: "text-green-600 bg-green-50" },
+    { label: "Inlägg",      value: profile._count.posts,    icon: MessageSquare, color: "text-blue-600 bg-blue-50" },
+    { label: "Kommentarer", value: profile._count.comments,  icon: MessageSquare, color: "text-purple-600 bg-purple-50" },
+    { label: "Poäng",       value: profile.points,           icon: Star,          color: "text-amber-600 bg-amber-50" },
+    { label: "Nivå",        value: profile.experienceLevel ?? "Nybörjare", icon: TrendingUp, color: "text-green-600 bg-green-50" },
   ];
 
   return (
@@ -59,18 +44,20 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-4">
           <Avatar
             src={profile.avatarUrl}
-            fallback={profile.displayName ?? profile.username}
+            fallback={profile.fullName ?? profile.username}
             size="lg"
           />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Hej, {profile.displayName ?? profile.username}! 👋
+              Hej, {profile.fullName ?? profile.username}! 👋
             </h1>
             <p className="text-gray-500 text-sm">
-              {profile.membershipTier === "PREMIUM" ? (
-                <Badge variant="premium" size="sm">Premium-medlem</Badge>
+              {profile.role === "admin" ? (
+                <Badge variant="danger" size="sm">Admin</Badge>
+              ) : profile.role === "moderator" ? (
+                <Badge variant="warning" size="sm">Moderator</Badge>
               ) : (
-                <span>Gratismedlem · <Link href="/premium" className="text-green-700 hover:underline">Uppgradera</Link></span>
+                <Badge variant="success" size="sm">Medlem</Badge>
               )}
             </p>
           </div>
@@ -83,7 +70,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* Statistik-kort */}
+      {/* Statistik */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -109,7 +96,7 @@ export default async function DashboardPage() {
           <Card padding="none">
             <div className="flex items-center justify-between px-5 py-4 border-b border-sage-100">
               <CardTitle className="text-base">Mina senaste inlägg</CardTitle>
-              <Link href="/profil" className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 transition-colors">
+              <Link href={`/profil/${profile.username}`} className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 transition-colors">
                 Se alla <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -130,13 +117,13 @@ export default async function DashboardPage() {
                 {profile.posts.map((post) => (
                   <Link
                     key={post.id}
-                    href={`/forum/${post.slug}`}
+                    href={`/forum/${post.id}`}
                     className="flex items-start gap-3 p-5 hover:bg-sage-50 transition-colors group"
                   >
                     <div className="flex-1 min-w-0">
                       {post.category && (
                         <Badge variant="success" size="sm" className="mb-1.5">
-                          {post.category.name}
+                          {post.category}
                         </Badge>
                       )}
                       <p className="text-sm font-medium text-gray-900 group-hover:text-green-700 transition-colors line-clamp-2">
@@ -144,10 +131,10 @@ export default async function DashboardPage() {
                       </p>
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
                         <span className="flex items-center gap-1">
-                          <Heart className="h-3 w-3" /> {post.likeCount}
+                          <Heart className="h-3 w-3" /> {post.likesCount}
                         </span>
                         <span className="flex items-center gap-1">
-                          <MessageSquare className="h-3 w-3" /> {post.commentCount}
+                          <MessageSquare className="h-3 w-3" /> {post.commentsCount}
                         </span>
                         <span>{formatRelativeDate(post.createdAt)}</span>
                       </div>
@@ -159,45 +146,18 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* Notifikationer */}
+        {/* Snabblänkar */}
         <div>
-          <Card padding="none">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-sage-100">
-              <CardTitle className="text-base">Notifikationer</CardTitle>
-              {profile.notifications.length > 0 && (
-                <Badge variant="success" size="sm">{profile.notifications.length} nya</Badge>
-              )}
-            </div>
-
-            {profile.notifications.length === 0 ? (
-              <div className="text-center py-10 px-6">
-                <Bell className="h-8 w-8 text-sage-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">Inga nya notifikationer</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-sage-100">
-                {profile.notifications.map((notif) => (
-                  <div key={notif.id} className="p-4 hover:bg-sage-50 transition-colors">
-                    <p className="text-sm font-medium text-gray-800">{notif.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{notif.message}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatRelativeDate(notif.createdAt)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* Snabblänkar */}
-          <Card className="mt-4" padding="md">
+          <Card padding="md">
             <CardTitle className="text-sm mb-3">Snabblänkar</CardTitle>
             <div className="space-y-2">
               {[
-                { label: "Min odling", href: "/min-odling", icon: "🌱" },
-                { label: "Mina sparade inlägg", href: "/sparade", icon: "🔖" },
-                { label: "Inställningar", href: "/installningar", icon: "⚙️" },
-                { label: "Premium", href: "/premium", icon: "⭐" },
+                { label: "Min odling",      href: "/min-odling",    icon: "🌱" },
+                { label: "Odlingsdagbok",   href: "/dagbok",        icon: "📔" },
+                { label: "Påminnelser",     href: "/paminnelser",   icon: "🔔" },
+                { label: "Fröbyte",         href: "/frobyten",      icon: "🌾" },
+                { label: "Mina grupper",    href: "/grupper",       icon: "👥" },
+                { label: "Inställningar",   href: "/installningar", icon: "⚙️" },
               ].map((link) => (
                 <Link
                   key={link.href}
@@ -210,6 +170,28 @@ export default async function DashboardPage() {
               ))}
             </div>
           </Card>
+
+          {profile.role === "admin" && (
+            <Card className="mt-4 bg-green-50 border-green-100" padding="md">
+              <CardTitle className="text-sm mb-3 text-green-800">Admin</CardTitle>
+              <div className="space-y-2">
+                {[
+                  { label: "Översikt",    href: "/admin" },
+                  { label: "Användare",   href: "/admin/anvandare" },
+                  { label: "Inlägg",      href: "/admin/inlagg" },
+                  { label: "Rapporter",   href: "/admin/rapporter" },
+                ].map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="block px-3 py-1.5 rounded-lg text-sm text-green-800 hover:bg-green-100 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

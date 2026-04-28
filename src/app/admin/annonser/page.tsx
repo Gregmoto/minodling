@@ -4,19 +4,18 @@ import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Annonser | Admin" };
 
 const placementLabels: Record<string, string> = {
-  HEADER: "Sidhuvud",
-  SIDEBAR: "Sidopanel",
-  FEED: "Flöde",
-  FOOTER: "Sidfot",
+  header:  "Sidhuvud",
+  sidebar: "Sidopanel",
+  feed:    "Flöde",
+  footer:  "Sidfot",
 };
 
 export default async function AdminAdsPage() {
-  const ads = await prisma.advertisement.findMany({
+  const banners = await prisma.banner.findMany({
     orderBy: { createdAt: "desc" },
   });
 
@@ -25,7 +24,7 @@ export default async function AdminAdsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Annonser & banners</h1>
-          <p className="text-gray-500 text-sm mt-1">{ads.length} konfigurerade</p>
+          <p className="text-gray-500 text-sm mt-1">{banners.length} konfigurerade</p>
         </div>
         <Button size="sm">
           <Plus className="h-4 w-4" />
@@ -33,7 +32,6 @@ export default async function AdminAdsPage() {
         </Button>
       </div>
 
-      {/* Info */}
       <Card className="border-amber-200 bg-amber-50" padding="md">
         <div className="flex items-start gap-3">
           <Megaphone className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
@@ -47,8 +45,7 @@ export default async function AdminAdsPage() {
         </div>
       </Card>
 
-      {/* Annonstabellen */}
-      {ads.length === 0 ? (
+      {banners.length === 0 ? (
         <Card className="text-center py-16">
           <Megaphone className="h-10 w-10 text-sage-300 mx-auto mb-3" />
           <p className="text-gray-400 mb-4">Inga annonser konfigurerade ännu</p>
@@ -70,26 +67,26 @@ export default async function AdminAdsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-sage-100">
-              {ads.map((ad) => (
-                <tr key={ad.id} className="hover:bg-sage-50">
-                  <td className="px-5 py-3 font-medium text-gray-900">{ad.title}</td>
+              {banners.map((banner) => (
+                <tr key={banner.id} className="hover:bg-sage-50">
+                  <td className="px-5 py-3 font-medium text-gray-900">{banner.title}</td>
                   <td className="px-5 py-3">
                     <Badge variant="default" size="sm">
-                      {placementLabels[ad.placement] ?? ad.placement}
+                      {placementLabels[banner.placement] ?? banner.placement}
                     </Badge>
                   </td>
                   <td className="px-5 py-3 text-gray-600">
                     <span className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" /> {ad.viewCount}
+                      <Eye className="h-3 w-3" /> {banner.impressionsCount}
                     </span>
                   </td>
                   <td className="px-5 py-3 text-gray-600">
                     <span className="flex items-center gap-1">
-                      <MousePointerClick className="h-3 w-3" /> {ad.clickCount}
+                      <MousePointerClick className="h-3 w-3" /> {banner.clicksCount}
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    {ad.isActive ? (
+                    {banner.isActive ? (
                       <Badge variant="success" size="sm">Aktiv</Badge>
                     ) : (
                       <Badge variant="default" size="sm">Inaktiv</Badge>
