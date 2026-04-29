@@ -44,3 +44,6 @@ export type { Category }             from "./CategoryScroller";
 
 export { ScrollableTabs, PLANT_DETAIL_TABS } from "./ScrollableTabs";
 export type { TabItem }              from "./ScrollableTabs";
+
+export { ImageInput }                from "./ImageInput";
+export type { ImageInputProps }      from "./ImageInput";

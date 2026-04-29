@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
-import { Loader2, Upload, X, Search, Leaf } from "lucide-react";
-import { createDiary, uploadDiaryImage } from "@/app/dagbok/actions";
+import { useState, useTransition } from "react";
+import { Loader2, X, Search, Leaf } from "lucide-react";
+import { createDiary } from "@/app/dagbok/actions";
+import { ImageInput } from "@/components/ui/ImageInput";
 
 interface PlantOption {
   id:   string;
@@ -22,28 +23,12 @@ export function NewDiaryForm({ plants }: Props) {
   const [plantSearch,    setPlantSearch]    = useState("");
   const [selectedPlant,  setSelectedPlant]  = useState<PlantOption | null>(null);
   const [imageUrl,       setImageUrl]       = useState<string | null>(null);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imageError,     setImageError]     = useState<string | null>(null);
   const [error,          setError]          = useState<string | null>(null);
   const [isPending, start] = useTransition();
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const filtered = plants.filter((p) =>
     p.name.toLowerCase().includes(plantSearch.toLowerCase())
   ).slice(0, 8);
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageError(null);
-    setImageUploading(true);
-    const fd = new FormData();
-    fd.append("image", file);
-    const result = await uploadDiaryImage(fd);
-    setImageUploading(false);
-    if (result.error) setImageError(result.error);
-    else if (result.url) setImageUrl(result.url);
-  }
 
   function handleSubmit(formData: FormData) {
     if (selectedPlant) formData.set("plantId", selectedPlant.id);
@@ -197,32 +182,13 @@ export function NewDiaryForm({ plants }: Props) {
       {/* Omslagsbild */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Omslagsbild (valfritt)</label>
-        {imageUrl ? (
-          <div className="relative inline-block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="Omslagsbild" className="max-h-48 rounded-xl border border-gray-200 object-cover" />
-            <button
-              type="button"
-              onClick={() => { setImageUrl(null); if (fileRef.current) fileRef.current.value = ""; }}
-              className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-0.5 shadow-sm hover:bg-red-50"
-            >
-              <X className="h-3.5 w-3.5 text-gray-500" />
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={imageUploading}
-            className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-sage-400 hover:text-sage-600 transition-colors disabled:opacity-50 w-full justify-center"
-          >
-            {imageUploading
-              ? <><Loader2 className="h-4 w-4 animate-spin" /> Laddar upp...</>
-              : <><Upload className="h-4 w-4" /> Ladda upp bild (max 10 MB)</>}
-          </button>
-        )}
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-        {imageError && <p className="text-xs text-red-600">{imageError}</p>}
+        <ImageInput
+          value={imageUrl}
+          onChange={setImageUrl}
+          name="imageUrl"
+          bucket="diary-images"
+          folder="covers"
+        />
       </div>
 
       {error && (
@@ -231,7 +197,7 @@ export function NewDiaryForm({ plants }: Props) {
 
       <button
         type="submit"
-        disabled={isPending || imageUploading || (plantMode === "database" && !selectedPlant)}
+        disabled={isPending || (plantMode === "database" && !selectedPlant)}
         className="w-full py-3 bg-sage-600 text-white text-sm font-medium rounded-xl hover:bg-sage-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Skapar...</> : "Skapa dagbok"}

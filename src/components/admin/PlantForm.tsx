@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Upload, X } from "lucide-react";
-import { uploadPlantImage } from "@/app/vaxtdatabas/actions";
+import { Loader2 } from "lucide-react";
 import { slugify } from "@/lib/utils";
+import { ImageInput } from "@/components/ui/ImageInput";
 
 interface PlantFormProps {
   action: (formData: FormData) => Promise<void>;
@@ -75,12 +75,9 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
   const router = useRouter();
   const [nameValue, setNameValue] = useState(defaultValues.name ?? "");
   const [slugValue, setSlugValue] = useState(defaultValues.slug ?? "");
-  const [imageUrl, setImageUrl] = useState(defaultValues.imageUrl ?? "");
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(defaultValues.imageUrl ?? null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
@@ -89,23 +86,6 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
     if (!defaultValues.slug) {
       setSlugValue(slugify(val));
     }
-  }
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { setImageError("Max 10 MB"); return; }
-    if (!file.type.startsWith("image/")) { setImageError("Endast bilder"); return; }
-
-    setImageError(null);
-    setImageUploading(true);
-    const fd = new FormData();
-    fd.append("image", file);
-    const result = await uploadPlantImage(fd);
-    setImageUploading(false);
-
-    if (result.error) setImageError(result.error);
-    else if (result.url) setImageUrl(result.url);
   }
 
   function handleSubmit(formData: FormData) {
@@ -215,60 +195,13 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
 
       {/* Bild */}
       <Field label="Bild">
-        <div className="space-y-3">
-          {imageUrl ? (
-            <div className="relative inline-block">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageUrl}
-                alt="Växtbild"
-                className="max-h-40 rounded-xl border border-gray-200 object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => { setImageUrl(""); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-0.5 shadow-sm hover:bg-red-50"
-              >
-                <X className="h-3.5 w-3.5 text-gray-500" />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={imageUploading}
-              className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-green-400 hover:text-green-600 transition-colors disabled:opacity-50 w-full justify-center"
-            >
-              {imageUploading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Laddar upp...</>
-              ) : (
-                <><Upload className="h-4 w-4" /> Ladda upp bild (max 10 MB)</>
-              )}
-            </button>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageUpload}
-          />
-          {imageError && <p className="text-xs text-red-600">{imageError}</p>}
-          {imageUrl && <input type="hidden" name="imageUrl" value={imageUrl} />}
-
-          {/* Eller URL direkt */}
-          {!imageUrl && (
-            <div className="relative">
-              <input
-                type="url"
-                placeholder="Eller klistra in bild-URL..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-          )}
-        </div>
+        <ImageInput
+          value={imageUrl}
+          onChange={setImageUrl}
+          name="imageUrl"
+          bucket="plant-images"
+          folder="plants"
+        />
       </Field>
 
       <SectionTitle>Odlingstider</SectionTitle>
@@ -422,7 +355,7 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
       <div className="flex gap-3 pt-2 border-t border-gray-100">
         <button
           type="submit"
-          disabled={isPending || imageUploading}
+          disabled={isPending}
           className="flex items-center gap-2 px-6 py-2.5 bg-sage-600 text-white text-sm font-medium rounded-xl hover:bg-sage-700 transition-colors disabled:opacity-50"
         >
           {isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Sparar...</> : submitLabel}
