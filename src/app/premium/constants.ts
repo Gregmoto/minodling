@@ -1,0 +1,103 @@
+export const PREMIUM_FEATURES = [
+  {
+    key:         "garden_planner",
+    name:        "Digital trädgårdsplanerare",
+    description: "Planera dina odlingsbäddar, skapa odlingskartor och håll koll på vad du planterar var.",
+    icon:        "🗺️",
+    comingSoon:  true,
+    slug:        "tradgardsplanerare",
+  },
+  {
+    key:         "growing_plan",
+    name:        "Personlig odlingsplan",
+    description: "Få en skräddarsydd odlingsplan baserad på din zon, din trädgård och dina mål för säsongen.",
+    icon:        "📋",
+    comingSoon:  true,
+    slug:        "odlingsplan",
+  },
+  {
+    key:         "growing_week",
+    name:        "Din odlingsvecka",
+    description: "Veckovis sammanfattning med vad du bör göra just nu – sådd, skötsel, skörd och tips.",
+    icon:        "📅",
+    comingSoon:  true,
+    slug:        "odlingsvecka",
+  },
+  {
+    key:         "advanced_reminders",
+    name:        "Avancerade påminnelser",
+    description: "Smarta påminnelser med väderkoppling, återkommande serier och push-notiser till mobilen.",
+    icon:        "🔔",
+    comingSoon:  true,
+    slug:        "avancerade-paminnelser",
+  },
+  {
+    key:         "expert_chat",
+    name:        "Expertchatt",
+    description: "Chatta direkt med erfarna odlare och trädgårdsexperter. Få svar på dina frågor inom 24 timmar.",
+    icon:        "💬",
+    comingSoon:  true,
+    slug:        "expertchatt",
+  },
+  {
+    key:         "courses",
+    name:        "Kurser",
+    description: "Tillgång till exklusiva videokurser om odling, kompostering, trädgårdsdesign och mer.",
+    icon:        "🎓",
+    comingSoon:  true,
+    slug:        "kurser",
+  },
+  {
+    key:         "marketplace",
+    name:        "Marketplace",
+    description: "Köp och sälj växter, frön och trädgårdsredskap direkt inom communityn.",
+    icon:        "🛒",
+    comingSoon:  true,
+    slug:        "marketplace",
+  },
+  {
+    key:         "shop_discounts",
+    name:        "Rabatt hos odlingsbutiker",
+    description: "Exklusiva rabatter och erbjudanden hos utvalda svenska odlingsbutiker och fröföretag.",
+    icon:        "🏷️",
+    comingSoon:  true,
+    slug:        "rabatter",
+  },
+] as const;
+
+export type PremiumFeatureKey = (typeof PREMIUM_FEATURES)[number]["key"];
+
+export const PLANS = [
+  {
+    id:       "premium_monthly",
+    name:     "Premium",
+    price:    99,
+    interval: "month" as const,
+    label:    "99 kr/mån",
+    features: [
+      "Personlig odlingsplan",
+      "Digital trädgårdsplanerare",
+      "Din odlingsvecka",
+      "Avancerade påminnelser",
+      "Expertchatt",
+      "Kurser",
+      "Marketplace",
+      "Rabatter hos butiker",
+    ],
+    highlight: false,
+  },
+  {
+    id:       "premium_yearly",
+    name:     "Premium Årsplan",
+    price:    790,
+    interval: "year" as const,
+    label:    "790 kr/år",
+    badge:    "Spara 398 kr",
+    features: [
+      "Allt i Premium",
+      "2 månader gratis",
+      "Prioriterad support",
+    ],
+    highlight: true,
+  },
+] as const;
