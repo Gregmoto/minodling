@@ -3,6 +3,8 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/settings";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { organizationSchema, websiteSchema } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -76,6 +78,7 @@ export default async function RootLayout({
   return (
     <html lang="sv" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen flex flex-col font-sans">
+        <JsonLd data={[organizationSchema(settings), websiteSchema(settings)]} />
         {children}
         <GoogleAnalytics gaId={settings.gaId} gaScript={settings.gaScript} />
       </body>
