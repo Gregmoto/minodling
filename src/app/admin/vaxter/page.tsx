@@ -105,7 +105,15 @@ export default async function VaxterPage({
                     {formatDate(plant.createdAt)}
                   </td>
                   <td className="px-4 py-3">
-                    <DeleteButton action={async () => { "use server"; await deletePlant(plant.id); }} />
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/vaxter/${plant.id}/redigera`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        Redigera
+                      </Link>
+                      <DeleteButton action={async () => { "use server"; await deletePlant(plant.id); }} />
+                    </div>
                   </td>
                 </tr>
               ))}

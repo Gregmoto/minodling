@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { formatDate } from "@/lib/utils";
+import { Plus, Edit2 } from "lucide-react";
 import { deleteGuide, toggleGuidePublished } from "@/app/admin/actions";
 
 export const metadata: Metadata = { title: "Guider | Admin" };
@@ -41,6 +42,10 @@ export default async function GuiderPage({
           <h1 className="text-2xl font-bold text-gray-900">Guider</h1>
           <p className="text-gray-500 text-sm mt-1">{guides.length} totalt</p>
         </div>
+        <Link href="/admin/guider/ny"
+          className="flex items-center gap-2 px-4 py-2.5 bg-sage-600 text-white text-sm font-medium rounded-xl hover:bg-sage-700 transition-colors">
+          <Plus className="h-4 w-4" /> Ny guide
+        </Link>
       </div>
 
       {/* Publiceringsfilter */}
@@ -97,29 +102,19 @@ export default async function GuiderPage({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <form
-                        action={async () => {
-                          "use server";
-                          await toggleGuidePublished(guide.id, !guide.published);
-                        }}
-                      >
-                        <button
-                          type="submit"
+                      <Link href={`/admin/guider/${guide.id}/redigera`}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                        <Edit2 className="h-3 w-3" /> Redigera
+                      </Link>
+                      <form action={async () => { "use server"; await toggleGuidePublished(guide.id, !guide.published); }}>
+                        <button type="submit"
                           className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                            guide.published
-                              ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                              : "bg-green-50 text-green-700 hover:bg-green-100"
-                          }`}
-                        >
+                            guide.published ? "bg-amber-50 text-amber-700 hover:bg-amber-100" : "bg-green-50 text-green-700 hover:bg-green-100"
+                          }`}>
                           {guide.published ? "Avpublicera" : "Publicera"}
                         </button>
                       </form>
-                      <DeleteButton
-                        action={async () => {
-                          "use server";
-                          await deleteGuide(guide.id);
-                        }}
-                      />
+                      <DeleteButton action={async () => { "use server"; await deleteGuide(guide.id); }} />
                     </div>
                   </td>
                 </tr>

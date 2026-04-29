@@ -45,6 +45,13 @@ model Profile {
   handledReports       Report[]           @relation("Handler")
   moderatorPermissions ModeratorPermission?
   calendarSuggestions  GardenCalendar[]
+  answerLikes          AnswerLike[]
+  plantDiagnoses       PlantDiagnosis[]
+  diagnosisComments    DiagnosisComment[]
+  challengeEntries     ChallengeEntry[]
+  challengeComments    ChallengeComment[]
+  subscription         Subscription?
+  weeklyTasks          WeeklyTask[]
 
   @@map("profiles")
 }
@@ -157,8 +164,9 @@ model Plant {
   slug           String   @unique
   latinName      String?  @map("latin_name")
   imageUrl       String?  @map("image_url")
-  difficultyLevel String? @map("difficulty_level")
-  sowingPeriod   String?  @map("sowing_period")
+  category        String?  @map("category")
+  difficultyLevel String?  @map("difficulty_level")
+  sowingPeriod    String?  @map("sowing_period")
   plantingPeriod String?  @map("planting_period")
   harvestPeriod  String?  @map("harvest_period")
   sunRequirement String?  @map("sun_requirement")
@@ -172,9 +180,10 @@ model Plant {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  tips      PlantTip[]
-  diaries   GardenDiary[]
-  reminders Reminder[]
+  tips       PlantTip[]
+  diaries    GardenDiary[]
+  reminders  Reminder[]
+  diagnoses  PlantDiagnosis[]
 
   @@index([slug])
   @@map("plants")
@@ -204,6 +213,7 @@ model GardenCalendar {
   description     String?
   taskType        String?  @map("task_type")
   growingZone     String?  @map("growing_zone")
+  growingType     String?  @map("growing_type")
   isUserSuggested Boolean  @default(false) @map("is_user_suggested")
   suggestedBy     String?  @db.Uuid @map("suggested_by")
   status          String   @default("published")
@@ -228,15 +238,33 @@ model GardenDiary {
   plantingDate    DateTime? @map("planting_date") @db.Date
   harvestDate     DateTime? @map("harvest_date") @db.Date
   status          String    @default("growing")
+  isPublic        Boolean   @default(false) @map("is_public")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  owner     Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plant     Plant?     @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  owner     Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plant     Plant?       @relation(fields: [plantId], references: [id], onDelete: SetNull)
   reminders Reminder[]
+  entries   DiaryEntry[]
 
   @@index([userId])
   @@map("garden_diary")
+}
+
+model DiaryEntry {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  diaryId   String   @db.Uuid @map("diary_id")
+  type      String   // sowing | planting | harvest | note | observation | watering | fertilizing
+  date      DateTime @db.Date
+  notes     String?
+  imageUrl  String?  @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  diary GardenDiary @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+
+  @@index([diaryId])
+  @@map("diary_entries")
 }
 
 model Reminder {
@@ -265,6 +293,7 @@ model Question {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId       String   @db.Uuid @map("user_id")
   title        String
+  slug         String   @unique
   content      String
   imageUrl     String?  @map("image_url")
   category     String?
@@ -281,6 +310,7 @@ model Question {
 
   @@index([userId])
   @@index([status])
+  @@index([slug])
   @@map("questions")
 }
 
@@ -296,12 +326,26 @@ model Answer {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  question       Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  author         Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bestAnswerFor  Question[] @relation("BestAnswer")
+  question      Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  author        Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bestAnswerFor Question[]  @relation("BestAnswer")
+  likes         AnswerLike[]
 
   @@index([questionId])
   @@map("answers")
+}
+
+model AnswerLike {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  answerId  String   @db.Uuid @map("answer_id")
+  userId    String   @db.Uuid @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  answer  Answer  @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([answerId, userId])
+  @@map("answer_likes")
 }
 
 model Group {
@@ -310,7 +354,8 @@ model Group {
   slug        String   @unique
   description String?
   location    String?
-  groupType   String   @default("public") @map("group_type")
+  category    String   @default("interest")   // "region" | "interest"
+  groupType   String   @default("public") @map("group_type")  // "public" | "private"
   imageUrl    String?  @map("image_url")
   createdBy   String   @db.Uuid @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -320,6 +365,7 @@ model Group {
   members GroupMember[]
 
   @@index([slug])
+  @@index([category])
   @@map("groups")
 }
 
@@ -341,18 +387,24 @@ model SeedExchange {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId       String   @db.Uuid @map("user_id")
   title        String
+  slug         String   @unique
   description  String?
-  exchangeType String   @default("trade") @map("exchange_type")
-  category     String?
+  variety      String?                              // Specifik sort, t.ex. "San Marzano"
+  exchangeType String   @default("trade") @map("exchange_type")  // trade | give | sell | wanted
+  category     String?                              // Frön | Plantor | Sticklingar | Verktyg | Tillbehör
   location     String?
+  price        Int?                                 // Pris i SEK (endast för sell)
   imageUrl     String?  @map("image_url")
-  status       String   @default("active")
+  status       String   @default("active")          // active | reserved | closed
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   owner Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([exchangeType])
   @@map("seed_exchanges")
 }
 
@@ -361,16 +413,21 @@ model Challenge {
   title       String
   slug        String    @unique
   description String?
+  rules       String?
+  category    String?
   imageUrl    String?   @map("image_url")
   startDate   DateTime? @map("start_date")
   endDate     DateTime? @map("end_date")
-  status      String    @default("upcoming")
+  status      String    @default("upcoming")  // upcoming | active | ended
+  published   Boolean   @default(false)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   participants ChallengeParticipant[]
+  entries      ChallengeEntry[]
 
   @@index([slug])
+  @@index([status])
   @@map("challenges")
 }
 
@@ -385,6 +442,38 @@ model ChallengeParticipant {
 
   @@unique([challengeId, userId])
   @@map("challenge_participants")
+}
+
+model ChallengeEntry {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  challengeId String   @db.Uuid @map("challenge_id")
+  profileId   String   @db.Uuid @map("profile_id")
+  imageUrl    String   @map("image_url")
+  caption     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  challenge Challenge          @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  profile   Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  comments  ChallengeComment[]
+
+  @@index([challengeId])
+  @@index([profileId])
+  @@map("challenge_entries")
+}
+
+model ChallengeComment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entryId   String   @db.Uuid @map("entry_id")
+  profileId String   @db.Uuid @map("profile_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  entry   ChallengeEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  profile Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([entryId])
+  @@map("challenge_comments")
 }
 
 model Guide {
@@ -424,6 +513,51 @@ model KnowledgeArticle {
   @@map("knowledge_articles")
 }
 
+model PlantDiagnosis {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId      String    @db.Uuid @map("profile_id")
+  imageUrl       String    @map("image_url")
+  description    String
+  plantName      String?   @map("plant_name")
+  plantId        String?   @db.Uuid @map("plant_id")
+  problemType    String?   @map("problem_type")
+  status         String    @default("open")
+  // AI-fält – förberedda för framtida integration
+  aiDiagnosis    String?   @map("ai_diagnosis")
+  aiConfidence   Float?    @map("ai_confidence")
+  aiModelVersion String?   @map("ai_model_version")
+  aiProcessedAt  DateTime? @map("ai_processed_at")
+  isPublic       Boolean   @default(true) @map("is_public")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  profile  Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  plant    Plant?            @relation(fields: [plantId], references: [id])
+  comments DiagnosisComment[]
+
+  @@index([profileId])
+  @@index([status])
+  @@index([problemType])
+  @@map("plant_diagnoses")
+}
+
+model DiagnosisComment {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  diagnosisId String   @db.Uuid @map("diagnosis_id")
+  profileId   String   @db.Uuid @map("profile_id")
+  content     String
+  isExpert    Boolean  @default(false) @map("is_expert")
+  isSolution  Boolean  @default(false) @map("is_solution")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  diagnosis PlantDiagnosis @relation(fields: [diagnosisId], references: [id], onDelete: Cascade)
+  profile   Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([diagnosisId])
+  @@map("diagnosis_comments")
+}
+
 model GlossaryTerm {
   id               String   @id @default(dbgenerated("gen_random_uuid()::text"))
   term             String
@@ -432,8 +566,10 @@ model GlossaryTerm {
   fullDescription  String?  @map("full_description")
   imageUrl         String?  @map("image_url")
   category         String?
+  relatedSlugs     String[] @map("related_slugs")
   seoTitle         String?  @map("seo_title")
   seoDescription   String?  @map("seo_description")
+  published        Boolean  @default(true)
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
@@ -531,14 +667,72 @@ model SeoSetting {
   @@map("seo_settings")
 }
 
+model WeeklyTask {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId   String    @db.Uuid  @map("profile_id")
+  weekYear    Int       @map("week_year")    // t.ex. 2025
+  weekNumber  Int       @map("week_number")  // 1–53
+
+  title       String
+  description String?
+  icon        String?   // emoji
+  source      String    @default("system")   // system | reminder | diary | calendar
+  sourceId    String?   @db.Uuid @map("source_id")   // valfri referens till källobjekt
+
+  done        Boolean   @default(false)
+  doneAt      DateTime? @map("done_at")
+  sortOrder   Int       @default(0) @map("sort_order")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, weekYear, weekNumber, title])
+  @@index([profileId, weekYear, weekNumber])
+  @@map("weekly_tasks")
+}
+
 model PremiumFeature {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique                        // maskinläsbar nyckel: "garden_planner", "expert_chat"…
   name        String
   slug        String   @unique
   description String?
-  isActive    Boolean  @default(true) @map("is_active")
+  icon        String?                                 // emoji eller ikonnamn
+  comingSoon  Boolean  @default(true)  @map("coming_soon")
+  isActive    Boolean  @default(false) @map("is_active")
+  sortOrder   Int      @default(0)     @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
 
   @@map("premium_features")
+}
+
+model Subscription {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId            String    @unique @db.Uuid @map("profile_id")
+
+  // Plan: free | premium
+  plan                 String    @default("free")
+
+  // Status: active | inactive | canceled | past_due | trialing
+  status               String    @default("inactive")
+
+  // Stripe — alla valfria tills Stripe kopplas in
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  stripePriceId        String?   @map("stripe_price_id")
+
+  currentPeriodStart   DateTime? @map("current_period_start")
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
+  trialEnd             DateTime? @map("trial_end")
+
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt      @map("updated_at")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+  @@map("subscriptions")
 }

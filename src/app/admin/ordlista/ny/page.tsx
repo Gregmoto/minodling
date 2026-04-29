@@ -1,0 +1,23 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { GlossaryTermForm } from "@/components/admin/GlossaryTermForm";
+
+export const metadata: Metadata = { title: "Ny term | Admin" };
+
+export default function NyTermPage() {
+  return (
+    <div className="space-y-6 max-w-4xl">
+      <div className="flex items-center gap-3">
+        <Link href="/admin/ordlista" className="text-gray-500 hover:text-gray-700 transition-colors">
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <h1 className="text-2xl font-bold text-gray-900">Ny term</h1>
+      </div>
+      <Card>
+        <GlossaryTermForm />
+      </Card>
+    </div>
+  );
+}

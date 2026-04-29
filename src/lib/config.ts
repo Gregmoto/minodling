@@ -11,8 +11,14 @@ export const siteConfig = {
   },
   nav: [
     { label: "Forum", href: "/forum" },
-    { label: "Odlingstips", href: "/odlingstips" },
+    { label: "Växtdiagnos", href: "/vaxtdiagnos" },
+    { label: "Guider", href: "/guider" },
+    { label: "Ordlista", href: "/ordlista" },
+    { label: "Kunskapsbank", href: "/kunskapsbank" },
+    { label: "Grupper", href: "/grupper" },
+    { label: "Fröbyte", href: "/frobyte" },
+    { label: "Utmaningar", href: "/utmaningar" },
+    { label: "Premium", href: "/premium" },
     { label: "Min odling", href: "/min-odling" },
-    { label: "Community", href: "/community" },
   ],
 } as const;

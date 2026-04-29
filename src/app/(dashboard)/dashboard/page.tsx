@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Sprout, MessageSquare, Heart, Star, TrendingUp, Plus, ArrowRight } from "lucide-react";
+import { Sprout, MessageSquare, Heart, Star, TrendingUp, Plus, ArrowRight, Bell, AlertTriangle, CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
-import { formatRelativeDate } from "@/lib/utils";
+import { CompleteButton } from "@/components/reminders/CompleteButton";
+import { formatRelativeDate, formatDate } from "@/lib/utils";
+import { REMINDER_TYPES } from "@/app/paminnelser/constants";
+import { WeeklyTaskWidget } from "@/components/odlingsvecka/WeeklyTaskWidget";
+import { getOrGenerateWeeklyTasks, getISOWeek } from "@/lib/weeklyTasks";
 
 export const metadata: Metadata = { title: "Min dashboard" };
 
@@ -29,6 +33,26 @@ export default async function DashboardPage() {
   });
 
   if (!profile) redirect("/auth/login");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const weeklyTasks = await getOrGenerateWeeklyTasks(profile.id);
+  const { weekNumber } = getISOWeek(new Date());
+
+  const [upcomingReminders, overdueReminders] = await Promise.all([
+    prisma.reminder.findMany({
+      where:   { userId: profile.id, isCompleted: false, dueDate: { gte: today, lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) } },
+      orderBy: { dueDate: "asc" },
+      take: 5,
+      include: { diary: { select: { id: true, title: true } } },
+    }),
+    prisma.reminder.findMany({
+      where:   { userId: profile.id, isCompleted: false, dueDate: { lt: today } },
+      orderBy: { dueDate: "asc" },
+      take: 3,
+    }),
+  ]);
 
   const stats = [
     { label: "Inlägg",      value: profile._count.posts,    icon: MessageSquare, color: "text-blue-600 bg-blue-50" },
@@ -90,6 +114,37 @@ export default async function DashboardPage() {
         })}
       </div>
 
+      {/* Påminnelse-banner om förfallna finns */}
+      {overdueReminders.length > 0 && (
+        <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-red-800">
+              {overdueReminders.length} förfallen{overdueReminders.length !== 1 ? "a" : ""} påminnelse{overdueReminders.length !== 1 ? "r" : ""}
+            </p>
+            <p className="text-xs text-red-600 truncate">{overdueReminders[0].title}{overdueReminders.length > 1 ? ` och ${overdueReminders.length - 1} till` : ""}</p>
+          </div>
+          <Link href="/paminnelser?tab=overdue" className="shrink-0 text-xs font-medium text-red-700 hover:underline">
+            Hantera →
+          </Link>
+        </div>
+      )}
+
+      {/* Din odlingsvecka */}
+      <Card padding="none">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-base">Din odlingsvecka</CardTitle>
+            <span className="text-xs text-gray-400">v.{weekNumber}</span>
+          </div>
+          <Link href="/odlingsvecka" className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 transition-colors">
+            Visa allt <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        <WeeklyTaskWidget tasks={weeklyTasks} weekNumber={weekNumber} />
+      </Card>
+
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Senaste inlägg */}
         <div className="lg:col-span-2">
@@ -146,8 +201,55 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* Snabblänkar */}
-        <div>
+        {/* Sidebar */}
+        <div className="space-y-4">
+
+          {/* Påminnelser denna veckan */}
+          <Card padding="none">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-amber-500" />
+                <CardTitle className="text-base">Denna veckan</CardTitle>
+              </div>
+              <Link href="/paminnelser" className="text-xs text-amber-600 hover:text-amber-700 flex items-center gap-1 transition-colors">
+                Alla <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            {upcomingReminders.length === 0 ? (
+              <div className="px-5 py-8 text-center">
+                <p className="text-sm text-gray-400">Inga påminnelser 🎉</p>
+                <Link href="/paminnelser?tab=new" className="text-xs text-amber-600 hover:underline mt-1 block">
+                  Lägg till
+                </Link>
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {upcomingReminders.map((r) => {
+                  const typeInfo = REMINDER_TYPES.find((t) => t.value === r.reminderType);
+                  const days = Math.ceil((r.dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <li key={r.id} className="flex items-center gap-3 px-5 py-3">
+                      <CompleteButton reminderId={r.id} isCompleted={false} />
+                      <span className="text-base shrink-0">{typeInfo?.emoji ?? "🔔"}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 leading-tight truncate">{r.title}</p>
+                        {r.diary && (
+                          <p className="text-xs text-gray-400 truncate">{r.diary.title}</p>
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold shrink-0 ${
+                        days === 0 ? "text-orange-600" : days === 1 ? "text-amber-600" : "text-gray-400"
+                      }`}>
+                        {days === 0 ? "Idag" : days === 1 ? "Imorgon" : `${days}d`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+
+          {/* Snabblänkar */}
           <Card padding="md">
             <CardTitle className="text-sm mb-3">Snabblänkar</CardTitle>
             <div className="space-y-2">

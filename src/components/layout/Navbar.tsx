@@ -110,10 +110,12 @@ export function Navbar({ user }: NavbarProps) {
                         </div>
 
                         {[
-                          { label: "Min dashboard", href: "/dashboard" },
-                          { label: "Min odling", href: "/min-odling" },
-                          { label: "Min profil", href: `/profil/${user.username}` },
-                          { label: "Inställningar", href: "/installningar" },
+                          { label: "Min dashboard",  href: "/dashboard" },
+                          { label: "Min odling",     href: "/min-odling" },
+                          { label: "Odlingsdagbok",  href: "/dagbok" },
+                          { label: "Påminnelser",    href: "/paminnelser" },
+                          { label: "Min profil",     href: `/profil/${user.username}` },
+                          { label: "Inställningar",  href: "/installningar" },
                         ].map((item) => (
                           <Link
                             key={item.href}
