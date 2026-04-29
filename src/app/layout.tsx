@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/settings";
-import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
+import { CookieBanner } from "@/components/cookies/CookieBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,24 +36,24 @@ export async function generateMetadata(): Promise<Metadata> {
       "odling", "trädgård", "community", "odlingstips",
       "grönsaker", "Sverige", "forum", "trädgårdsodling", "självhushållning",
     ],
-    authors: [{ name: s.siteName }],
-    creator: s.siteName,
+    authors:  [{ name: s.siteName }],
+    creator:  s.siteName,
     openGraph: {
-      type: "website",
-      locale: "sv_SE",
-      url: s.seoCanonical,
-      title: s.seoTitle,
+      type:        "website",
+      locale:      "sv_SE",
+      url:         s.seoCanonical,
+      title:       s.seoTitle,
       description: s.seoDescription,
-      siteName: s.siteName,
+      siteName:    s.siteName,
       images: [{ url: ogImage, width: 1200, height: 630, alt: s.siteName }],
     },
     twitter: {
-      card: "summary_large_image",
-      title: s.seoTitle,
+      card:        "summary_large_image",
+      title:       s.seoTitle,
       description: s.seoDescription,
-      images: [ogImage],
+      images:      [ogImage],
     },
-    robots: s.seoRobots,
+    robots:      s.seoRobots,
     metadataBase: new URL(s.seoCanonical),
     verification: {
       ...(s.googleVerification && { google: s.googleVerification }),
@@ -63,9 +65,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#4A7C59",
-  width: "device-width",
-  initialScale: 1,
+  themeColor:    "#4A7C59",
+  width:         "device-width",
+  initialScale:  1,
 };
 
 export default async function RootLayout({
@@ -79,8 +81,24 @@ export default async function RootLayout({
     <html lang="sv" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen flex flex-col font-sans">
         <JsonLd data={[organizationSchema(settings), websiteSchema(settings)]} />
-        {children}
-        <GoogleAnalytics gaId={settings.gaId} gaScript={settings.gaScript} />
+
+        <CookieConsentProvider>
+          {children}
+
+          {/* Cookie-banner – visas tills användaren gjort ett val */}
+          <CookieBanner />
+
+          {/*
+           * AnalyticsScripts laddas BARA efter samtycke.
+           * gaId/gaScript och bingId skickas från server men
+           * scripten injiceras aldrig förrän consent.analytics/marketing är true.
+           */}
+          <AnalyticsScripts
+            gaId={settings.gaId}
+            gaScript={settings.gaScript}
+            bingId={settings.bingVerification}
+          />
+        </CookieConsentProvider>
       </body>
     </html>
   );
