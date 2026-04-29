@@ -7,18 +7,25 @@ export const siteConfig = {
   ogImage: "/og-image.jpg",
   links: {
     instagram: "https://instagram.com/minodling",
-    facebook: "https://facebook.com/minodling",
+    facebook:  "https://facebook.com/minodling",
   },
-  nav: [
-    { label: "Forum", href: "/forum" },
-    { label: "Växtdiagnos", href: "/vaxtdiagnos" },
-    { label: "Guider", href: "/guider" },
-    { label: "Ordlista", href: "/ordlista" },
-    { label: "Kunskapsbank", href: "/kunskapsbank" },
-    { label: "Grupper", href: "/grupper" },
-    { label: "Fröbyte", href: "/frobyte" },
-    { label: "Utmaningar", href: "/utmaningar" },
-    { label: "Premium", href: "/premium" },
-    { label: "Min odling", href: "/min-odling" },
+  /** Primära nav-länkar – alltid synliga på desktop */
+  navPrimary: [
+    { label: "Forum",       href: "/forum" },
+    { label: "Guider",      href: "/guider" },
+    { label: "Växtdatabas", href: "/vaxtdatabas" },
+    { label: "Grupper",     href: "/grupper" },
+    { label: "Fröbyte",     href: "/frobyte" },
   ],
+  /** Sekundära nav-länkar – i "Mer"-dropdown */
+  navMore: [
+    { label: "Växtdiagnos",  href: "/vaxtdiagnos" },
+    { label: "Ordlista",     href: "/ordlista" },
+    { label: "Kunskapsbank", href: "/kunskapsbank" },
+    { label: "Utmaningar",   href: "/utmaningar" },
+  ],
+  /** Behålls för bakåtkompatibilitet */
+  get nav() {
+    return [...this.navPrimary, ...this.navMore];
+  },
 } as const;
