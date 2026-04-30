@@ -2,6 +2,7 @@ export const revalidate = 300;
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { guideMetadata, articleSchema, truncateDescription, canonicalUrl } from "@/lib/seo";
@@ -16,22 +17,56 @@ import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import { BookOpen } from "lucide-react";
 
+const getGuide = unstable_cache(
+  async (slug: string) => prisma.guide.findUnique({ where: { slug } }).catch(() => null),
+  ["guide-detail"],
+  { revalidate: 300, tags: ["guides"] },
+);
+
+const getRelatedGuideContent = unstable_cache(
+  async (slug: string, category: string | null) =>
+    Promise.all([
+      prisma.guide.findMany({
+        where: { published: true, category: category ?? undefined, slug: { not: slug } },
+        select: { slug: true, title: true, difficultyLevel: true },
+        take: 4,
+      }),
+      prisma.plant.findMany({
+        where:
+          category === "Grönsaker" || category === "Frukter & bär" || category === "Kryddor & örter"
+            ? {}
+            : { category: category ?? undefined },
+        select: { slug: true, name: true },
+        take: 5,
+        orderBy: { name: "asc" },
+      }),
+      prisma.glossaryTerm.findMany({
+        where: { published: true },
+        select: { slug: true, term: true },
+        take: 5,
+        orderBy: { term: "asc" },
+      }),
+      prisma.knowledgeArticle.findMany({
+        where: { published: true },
+        select: { slug: true, title: true, category: true },
+        take: 4,
+        orderBy: { createdAt: "desc" },
+      }),
+    ]).catch(() => [[], [], [], []] as [never[], never[], never[], never[]]),
+  ["guide-related"],
+  { revalidate: 300, tags: ["guides"] },
+);
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const [guide, settings] = await Promise.all([
-    prisma.guide.findUnique({ where: { slug } }),
-    getSettings(),
-  ]);
+  const [guide, settings] = await Promise.all([getGuide(slug), getSettings()]);
   if (!guide || !guide.published) return { title: "Guide hittades inte" };
   return guideMetadata(guide, settings, `/guider/${slug}`);
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [guide, settings] = await Promise.all([
-    prisma.guide.findUnique({ where: { slug } }),
-    getSettings(),
-  ]);
+  const [guide, settings] = await Promise.all([getGuide(slug), getSettings()]);
 
   if (!guide || !guide.published) notFound();
 
@@ -40,33 +75,9 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
 
   const navUser = await getNavUser(user?.id);
 
-  // Related content
-  const [relatedGuides, relatedPlants, relatedGlossary, relatedArticles] = await Promise.all([
-    prisma.guide.findMany({
-      where: { published: true, category: guide.category ?? undefined, slug: { not: slug } },
-      select: { slug: true, title: true, difficultyLevel: true },
-      take: 4,
-    }),
-    prisma.plant.findMany({
-      where: guide.category === "Grönsaker" || guide.category === "Frukter & bär" || guide.category === "Kryddor & örter"
-        ? {}
-        : { category: guide.category ?? undefined },
-      select: { slug: true, name: true },
-      take: 5,
-      orderBy: { name: "asc" },
-    }),
-    prisma.glossaryTerm.findMany({
-      select: { slug: true, term: true },
-      take: 5,
-      orderBy: { term: "asc" },
-    }),
-    prisma.knowledgeArticle.findMany({
-      where: { published: true },
-      select: { slug: true, title: true, category: true },
-      take: 4,
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  // Related content (cached)
+  const [relatedGuides, relatedPlants, relatedGlossary, relatedArticles] =
+    await getRelatedGuideContent(slug, guide.category);
 
   const path = `/guider/${slug}`;
   const schema = articleSchema({

@@ -2,6 +2,7 @@ export const revalidate = 300;
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { articleMetadata, articleSchema, truncateDescription, canonicalUrl } from "@/lib/seo";
@@ -15,22 +16,23 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 
+const getArticle = unstable_cache(
+  async (slug: string) =>
+    prisma.knowledgeArticle.findUnique({ where: { slug } }).catch(() => null),
+  ["article-detail"],
+  { revalidate: 300, tags: ["kunskapsbank"] },
+);
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const [article, settings] = await Promise.all([
-    prisma.knowledgeArticle.findUnique({ where: { slug } }),
-    getSettings(),
-  ]);
+  const [article, settings] = await Promise.all([getArticle(slug), getSettings()]);
   if (!article || !article.published) return { title: "Artikel hittades inte" };
   return articleMetadata(article, settings, `/kunskapsbank/${slug}`);
 }
 
 export default async function KunskapsbankArtikelPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [article, settings] = await Promise.all([
-    prisma.knowledgeArticle.findUnique({ where: { slug } }),
-    getSettings(),
-  ]);
+  const [article, settings] = await Promise.all([getArticle(slug), getSettings()]);
 
   if (!article || !article.published) notFound();
 
