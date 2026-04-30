@@ -171,10 +171,12 @@ model Plant {
   harvestPeriod  String?  @map("harvest_period")
   sunRequirement String?  @map("sun_requirement")
   wateringNeeds  String?  @map("watering_needs")
-  soilType       String?  @map("soil_type")
-  fertilizerNeeds String? @map("fertilizer_needs")
-  commonProblems String?  @map("common_problems")
-  description    String?
+  soilType        String?  @map("soil_type")
+  fertilizerNeeds String?  @map("fertilizer_needs")
+  soilPreparation String?  @map("soil_preparation")
+  locationNotes   String?  @map("location_notes")
+  commonProblems  String?  @map("common_problems")
+  description     String?
   seoTitle       String?  @map("seo_title")
   seoDescription String?  @map("seo_description")
   createdAt      DateTime @default(now()) @map("created_at")

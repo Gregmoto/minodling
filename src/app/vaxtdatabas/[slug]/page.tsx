@@ -60,9 +60,20 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
       <span className="mt-0.5 text-green-500 shrink-0">{icon}</span>
       <div className="flex-1 min-w-0">
         <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</dt>
-        <dd className="mt-0.5 text-sm text-gray-800">{value}</dd>
+        <dd className="mt-0.5 text-sm text-gray-800 whitespace-pre-line">{value}</dd>
       </div>
     </div>
+  );
+}
+
+function NoteSection({ title, emoji, content }: { title: string; emoji: string; content: string }) {
+  return (
+    <Card padding="lg">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-3">
+        <span>{emoji}</span>{title}
+      </h2>
+      <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{content}</p>
+    </Card>
   );
 }
 
@@ -301,6 +312,76 @@ export default async function PlantDetailPage({ params }: PageProps) {
 
               {/* ── Höger sidebar ── */}
               <div className="space-y-5 lg:pt-[52px]">
+
+                {/* Svårighetsgrad + odlingsstatus – prominent */}
+                {(plant.difficultyLevel || isGrowing) && (
+                  <Card padding="lg">
+                    <div className="flex flex-wrap gap-2">
+                      {plant.difficultyLevel && (
+                        <div className={`flex-1 min-w-0 rounded-xl px-4 py-3 text-center ${
+                          plant.difficultyLevel === "easy"   ? "bg-green-50 border border-green-200" :
+                          plant.difficultyLevel === "medium" ? "bg-amber-50 border border-amber-200" :
+                                                               "bg-red-50 border border-red-200"
+                        }`}>
+                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Svårighetsgrad</div>
+                          <div className={`text-sm font-bold ${
+                            plant.difficultyLevel === "easy"   ? "text-green-700" :
+                            plant.difficultyLevel === "medium" ? "text-amber-700" : "text-red-700"
+                          }`}>
+                            {plant.difficultyLevel === "easy" ? "⭐ Lätt" :
+                             plant.difficultyLevel === "medium" ? "⭐⭐ Medel" : "⭐⭐⭐ Svår"}
+                          </div>
+                        </div>
+                      )}
+                      {isGrowing && (
+                        <div className="flex-1 min-w-0 rounded-xl px-4 py-3 text-center bg-green-600 border border-green-700">
+                          <div className="text-xs font-medium text-green-100 uppercase tracking-wide mb-1">Status</div>
+                          <div className="text-sm font-bold text-white">🌱 Odlar denna</div>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Kom igång – OVANFÖR Odlingsfakta */}
+                {(plant.sowingPeriod || plant.plantingPeriod || plant.harvestPeriod || plant.sunRequirement || plant.wateringNeeds) && (
+                  <Card padding="lg" className="bg-green-50 border-green-200">
+                    <h2 className="text-sm font-bold text-green-900 mb-3">Kom igång</h2>
+                    <ul className="space-y-2.5 text-sm text-green-800">
+                      {plant.sowingPeriod && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">🌱</span>
+                          <span>Så inomhus: <strong>{plant.sowingPeriod}</strong></span>
+                        </li>
+                      )}
+                      {plant.plantingPeriod && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">🪴</span>
+                          <span>Plantera ut: <strong>{plant.plantingPeriod}</strong></span>
+                        </li>
+                      )}
+                      {plant.harvestPeriod && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">🌾</span>
+                          <span>Skörd: <strong>{plant.harvestPeriod}</strong></span>
+                        </li>
+                      )}
+                      {plant.sunRequirement && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">☀️</span>
+                          <span>{plant.sunRequirement}</span>
+                        </li>
+                      )}
+                      {plant.wateringNeeds && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">💧</span>
+                          <span>{plant.wateringNeeds}</span>
+                        </li>
+                      )}
+                    </ul>
+                  </Card>
+                )}
+
                 {/* Odlingsfakta */}
                 {growingInfo.length > 0 && (
                   <Card padding="lg">
@@ -313,43 +394,14 @@ export default async function PlantDetailPage({ params }: PageProps) {
                   </Card>
                 )}
 
-                {/* Snabb-facts */}
-                {(plant.sowingPeriod || plant.plantingPeriod || plant.harvestPeriod || plant.sunRequirement || plant.wateringNeeds) && (
-                  <Card padding="lg" className="bg-green-50 border-green-100">
-                    <h2 className="text-sm font-semibold text-green-900 mb-3">Kom igång</h2>
-                    <ul className="space-y-2 text-sm text-green-800">
-                      {plant.sowingPeriod && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0">🌱</span>
-                          <span>Så inomhus: <strong>{plant.sowingPeriod}</strong></span>
-                        </li>
-                      )}
-                      {plant.plantingPeriod && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0">🪴</span>
-                          <span>Plantera ut: <strong>{plant.plantingPeriod}</strong></span>
-                        </li>
-                      )}
-                      {plant.harvestPeriod && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0">🌾</span>
-                          <span>Skörd: <strong>{plant.harvestPeriod}</strong></span>
-                        </li>
-                      )}
-                      {plant.sunRequirement && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0">☀️</span>
-                          <span>{plant.sunRequirement}</span>
-                        </li>
-                      )}
-                      {plant.wateringNeeds && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0">💧</span>
-                          <span>{plant.wateringNeeds}</span>
-                        </li>
-                      )}
-                    </ul>
-                  </Card>
+                {/* Lämplig plats */}
+                {plant.locationNotes && (
+                  <NoteSection title="Lämplig plats" emoji="📍" content={plant.locationNotes} />
+                )}
+
+                {/* Jordförberedelse */}
+                {plant.soilPreparation && (
+                  <NoteSection title="Jordförberedelse" emoji="🪱" content={plant.soilPreparation} />
                 )}
 
                 {/* Navigeringslänkar */}

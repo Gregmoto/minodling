@@ -26,6 +26,8 @@ interface PlantDefaults {
   wateringNeeds: string;
   soilType: string;
   fertilizerNeeds: string;
+  soilPreparation: string;
+  locationNotes: string;
   commonProblems: string;
   description: string;
   seoTitle: string;
@@ -272,27 +274,47 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
           </select>
         </Field>
         <Field label="Jordtyp" name="soilType">
-          <input
+          <textarea
             id="soilType"
             name="soilType"
-            type="text"
             defaultValue={defaultValues.soilType ?? ""}
-            maxLength={100}
-            placeholder="T.ex. Mullrik, väldrainerad"
-            className={inputClass}
+            rows={3}
+            placeholder="T.ex. Mullrik, väldrainerad jord med pH 6–7"
+            className={textareaClass}
           />
         </Field>
       </div>
 
       <Field label="Gödsling" name="fertilizerNeeds" hint="Beskrivning av gödselbehov">
-        <input
+        <textarea
           id="fertilizerNeeds"
           name="fertilizerNeeds"
-          type="text"
           defaultValue={defaultValues.fertilizerNeeds ?? ""}
-          maxLength={200}
-          placeholder="T.ex. Kaliumrik gödsel var 2 vecka under fruktbildning"
-          className={inputClass}
+          rows={3}
+          placeholder="T.ex. Kaliumrik gödsel var 2:a vecka under fruktbildning"
+          className={textareaClass}
+        />
+      </Field>
+
+      <Field label="Jordförberedelse" name="soilPreparation" hint="Tips om hur man förbereder jorden inför plantering">
+        <textarea
+          id="soilPreparation"
+          name="soilPreparation"
+          defaultValue={defaultValues.soilPreparation ?? ""}
+          rows={4}
+          placeholder="T.ex. Gräv ned kompost på hösten. Luckra till 30 cm djup. Tillsätt kalk om pH är under 6..."
+          className={textareaClass}
+        />
+      </Field>
+
+      <Field label="Lämplig plats" name="locationNotes" hint="Var passar växten bäst – sol, halvskugga, skyddad plats etc.">
+        <textarea
+          id="locationNotes"
+          name="locationNotes"
+          defaultValue={defaultValues.locationNotes ?? ""}
+          rows={4}
+          placeholder="T.ex. Varm och solig plats skyddad mot vind. Fungerar bra längs husvägg åt söder. Undvik sänkor med frostfickor..."
+          className={textareaClass}
         />
       </Field>
 
