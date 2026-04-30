@@ -109,6 +109,29 @@ const ALL_TABS: TabItem[] = [
   { id: "guider",         label: "Guider",          icon: <Star          className="h-3.5 w-3.5" /> },
 ];
 
+// ── Hjälpkomponent: hanterar både HTML och ren text med radbrytningar ──
+
+function PlantTextContent({ text }: { text: string }) {
+  const isHtml = /<[a-z][\s\S]*>/i.test(text);
+  if (isHtml) {
+    return (
+      <div
+        className="prose prose-sm prose-sage max-w-none text-gray-700 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: text }}
+      />
+    );
+  }
+  // Ren text: dela på dubbla radbrytningar → stycken
+  const paragraphs = text.split(/\n{2,}/).filter(Boolean);
+  return (
+    <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+      {paragraphs.map((para, i) => (
+        <p key={i} className="whitespace-pre-line">{para.trim()}</p>
+      ))}
+    </div>
+  );
+}
+
 // ── Komponent ─────────────────────────────────────────────────────
 
 export function PlantDetailTabs({
@@ -159,10 +182,7 @@ export function PlantDetailTabs({
           {plant.description ? (
             <Card padding="lg">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Om {plant.name}</h2>
-              <div
-                className="prose prose-sm prose-sage max-w-none text-gray-700 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: plant.description }}
-              />
+              <PlantTextContent text={plant.description} />
             </Card>
           ) : (
             <Card padding="lg">

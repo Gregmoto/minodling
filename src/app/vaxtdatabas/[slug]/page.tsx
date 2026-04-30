@@ -67,16 +67,6 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
   );
 }
 
-function NoteSection({ title, emoji, content }: { title: string; emoji: string; content: string }) {
-  return (
-    <Card padding="lg">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-3">
-        <span>{emoji}</span>{title}
-      </h2>
-      <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{content}</p>
-    </Card>
-  );
-}
 
 export default async function PlantDetailPage({ params }: PageProps) {
   const { slug } = await params;
@@ -372,16 +362,6 @@ export default async function PlantDetailPage({ params }: PageProps) {
                       ))}
                     </dl>
                   </Card>
-                )}
-
-                {/* Lämplig plats */}
-                {plant.locationNotes && (
-                  <NoteSection title="Lämplig plats" emoji="📍" content={plant.locationNotes} />
-                )}
-
-                {/* Jordförberedelse */}
-                {plant.soilPreparation && (
-                  <NoteSection title="Jordförberedelse" emoji="🪱" content={plant.soilPreparation} />
                 )}
 
                 {/* Navigeringslänkar */}
