@@ -56,16 +56,19 @@ export interface PlantDetailTabsProps {
     difficultyLevel: string | null;
     category:        string | null;
     frostSensitive?: boolean;
+    // Fritext från adminformulär
+    locationNotes?:   string | null;
+    soilPreparation?: string | null;
     // Kalender
     indoorsStart?:   CalendarPeriod | null;
     harvestWindow?:  CalendarPeriod | null;
-    // Plats
+    // Plats (strukturerat)
     hardinessZone?:  { min: number; max: number } | null;
     temperature?:    { min: number; max: number } | null;
     sunlight?:       SunlightLevel[];
     goodNeighbors?:  Neighbor[];
     badNeighbors?:   Neighbor[];
-    // Jord
+    // Jord (strukturerat)
     ph?:             { min: number; max: number } | null;
     soilTypes?:      SoilType[];
     drainage?:       DrainageType | null;
@@ -93,17 +96,17 @@ export interface PlantDetailTabsProps {
 // ── Flik-definitioner ─────────────────────────────────────────────
 
 const ALL_TABS: TabItem[] = [
-  { id: "om",             label: "Om växten",          icon: <Info          className="h-3.5 w-3.5" /> },
-  { id: "kalender",       label: "Planteringskalender", icon: <CalendarDays  className="h-3.5 w-3.5" /> },
-  { id: "svarighetsgrad", label: "Svårighetsgrad",      icon: <BarChart2     className="h-3.5 w-3.5" /> },
-  { id: "plats",          label: "Lämplig plats",       icon: <MapPin        className="h-3.5 w-3.5" /> },
-  { id: "jord",           label: "Jordförberedelse",    icon: <FlaskConical  className="h-3.5 w-3.5" /> },
-  { id: "tillvaxt",       label: "Tillväxtperiod",      icon: <TrendingUp    className="h-3.5 w-3.5" /> },
-  { id: "howtos",         label: "Odlingsguider",       icon: <BookOpen      className="h-3.5 w-3.5" /> },
-  { id: "faq",            label: "FAQ",                 icon: <HelpCircle    className="h-3.5 w-3.5" /> },
-  { id: "benefits",       label: "Näringsvärden",       icon: <Leaf          className="h-3.5 w-3.5" /> },
-  { id: "tips",           label: "Tips",                icon: <Lightbulb     className="h-3.5 w-3.5" /> },
-  { id: "guider",         label: "Guider",              icon: <Star          className="h-3.5 w-3.5" /> },
+  { id: "om",             label: "Om växten",      icon: <Info          className="h-3.5 w-3.5" /> },
+  { id: "kalender",       label: "Kalender",        icon: <CalendarDays  className="h-3.5 w-3.5" /> },
+  { id: "svarighetsgrad", label: "Svårighet",       icon: <BarChart2     className="h-3.5 w-3.5" /> },
+  { id: "plats",          label: "Plats",           icon: <MapPin        className="h-3.5 w-3.5" /> },
+  { id: "jord",           label: "Jord",            icon: <FlaskConical  className="h-3.5 w-3.5" /> },
+  { id: "tillvaxt",       label: "Tillväxt",        icon: <TrendingUp    className="h-3.5 w-3.5" /> },
+  { id: "howtos",         label: "Odling",          icon: <BookOpen      className="h-3.5 w-3.5" /> },
+  { id: "faq",            label: "FAQ",             icon: <HelpCircle    className="h-3.5 w-3.5" /> },
+  { id: "benefits",       label: "Näring",          icon: <Leaf          className="h-3.5 w-3.5" /> },
+  { id: "tips",           label: "Tips",            icon: <Lightbulb     className="h-3.5 w-3.5" /> },
+  { id: "guider",         label: "Guider",          icon: <Star          className="h-3.5 w-3.5" /> },
 ];
 
 // ── Komponent ─────────────────────────────────────────────────────
@@ -123,9 +126,16 @@ export function PlantDetailTabs({
   const difficulty = (plant.difficultyLevel as DifficultyLevel | null) ?? null;
 
   // Dölj flikar utan data
+  const hasLocationData = !!(plant.locationNotes || plant.hardinessZone || (plant.sunlight?.length ?? 0) > 0 || plant.goodNeighbors?.length || plant.temperature);
+  const hasSoilData     = !!(plant.soilPreparation || plant.soilNotes || plant.ph || (plant.soilTypes?.length ?? 0) > 0);
+  const hasBenefits     = !!(plant.benefitsText || (plant.nutrition?.length ?? 0) > 0 || (plant.recipes?.length ?? 0) > 0);
+  const hasFaq          = !!(plant.faqItems && plant.faqItems.length > 0);
+
   const visibleTabs = ALL_TABS.filter((t) => {
-    if (t.id === "faq"    && (!plant.faqItems    || plant.faqItems.length === 0))    return false;
-    if (t.id === "guider" && relatedGuides.length === 0 && relatedTerms.length === 0) return false;
+    if (t.id === "faq"      && !hasFaq)          return false;
+    if (t.id === "benefits" && !hasBenefits)     return false;
+    if (t.id === "plats"    && !hasLocationData) return false;
+    if (t.id === "jord"     && !hasSoilData)     return false;
     return true;
   });
 
@@ -217,11 +227,16 @@ export function PlantDetailTabs({
 
       {/* ── Lämplig plats ── */}
       {activeTab === "plats" && (
-        <div className="animate-fade-in">
-          <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+        <div className="space-y-5 animate-fade-in">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <MapPin className="h-5 w-5 text-green-600" />
             Lämplig plats
           </h2>
+          {plant.locationNotes && (
+            <Card padding="lg">
+              <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{plant.locationNotes}</p>
+            </Card>
+          )}
           <LocationSection
             hardinessZone={plant.hardinessZone}
             temperature={plant.temperature}
@@ -234,11 +249,16 @@ export function PlantDetailTabs({
 
       {/* ── Jordförberedelse ── */}
       {activeTab === "jord" && (
-        <div className="animate-fade-in">
-          <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+        <div className="space-y-5 animate-fade-in">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <FlaskConical className="h-5 w-5 text-green-600" />
             Jordförberedelse
           </h2>
+          {plant.soilPreparation && (
+            <Card padding="lg">
+              <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{plant.soilPreparation}</p>
+            </Card>
+          )}
           <SoilSection
             ph={plant.ph}
             soilTypes={plant.soilTypes}
@@ -361,12 +381,12 @@ export function PlantDetailTabs({
       {/* ── Guider & ordlista ── */}
       {activeTab === "guider" && (
         <div className="space-y-6 animate-fade-in">
-          {relatedGuides.length > 0 && (
-            <Card padding="lg">
-              <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4">
-                <BookOpen className="h-5 w-5 text-green-600" />
-                Relaterade guider
-              </h2>
+          <Card padding="lg">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4">
+              <BookOpen className="h-5 w-5 text-green-600" />
+              Relaterade guider
+            </h2>
+            {relatedGuides.length > 0 ? (
               <ul className="space-y-2">
                 {relatedGuides.map((g) => (
                   <li key={g.slug}>
@@ -377,8 +397,15 @@ export function PlantDetailTabs({
                   </li>
                 ))}
               </ul>
-            </Card>
-          )}
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-400 mb-3">Inga specifika guider hittades för {plant.name}.</p>
+                <Link href="/guider" className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-800 hover:underline">
+                  <BookOpen className="h-4 w-4" /> Bläddra alla odlingsguider
+                </Link>
+              </div>
+            )}
+          </Card>
           {relatedTerms.length > 0 && (
             <Card padding="lg">
               <h2 className="text-base font-semibold text-gray-900 mb-3">Odlingsordlista</h2>

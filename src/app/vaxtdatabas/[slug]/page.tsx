@@ -276,16 +276,19 @@ export default async function PlantDetailPage({ params }: PageProps) {
                     commonProblems:  plant.commonProblems,
                     difficultyLevel: plant.difficultyLevel,
                     category:        plant.category,
+                    // Fritext
+                    locationNotes:   plant.locationNotes,
+                    soilPreparation: plant.soilPreparation,
                     // Strukturerad kalenderdata – null tills vidare
                     indoorsStart:    null,
                     harvestWindow:   null,
-                    // Plats – null tills vidare (visar tom-state med tom komponent)
+                    // Plats (strukturerat) – null tills vidare
                     hardinessZone:   null,
                     temperature:     null,
                     sunlight:        [],
                     goodNeighbors:   [],
                     badNeighbors:    [],
-                    // Jord – null tills vidare
+                    // Jord (strukturerat) – null tills vidare
                     ph:              null,
                     soilTypes:       [],
                     drainage:        null,
@@ -297,7 +300,7 @@ export default async function PlantDetailPage({ params }: PageProps) {
                     howToPhases:     undefined,
                     // FAQ – döljs om tom
                     faqItems:        undefined,
-                    // Näringsvärden – default-värden visas
+                    // Näringsvärden – döljs om tom
                     benefitsText:    null,
                     nutrition:       undefined,
                     recipes:         undefined,
