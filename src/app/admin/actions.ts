@@ -275,6 +275,7 @@ export async function toggleGuidePublished(id: string, published: boolean) {
   await prisma.guide.update({ where: { id }, data: { published } });
   revalidatePath("/admin/guider");
   revalidatePath("/guider");
+  revalidateTag("guides");
 }
 
 export async function deleteGuide(id: string) {
@@ -303,6 +304,8 @@ export async function createGuide(formData: FormData) {
   await prisma.guide.create({ data: { title, slug, excerpt, content, imageUrl, category, difficultyLevel, seoTitle, seoDescription, published } });
   revalidatePath("/admin/guider");
   revalidatePath("/guider");
+  revalidatePath(`/guider/${slug}`);
+  revalidateTag("guides");
   redirect("/admin/guider");
 }
 
@@ -323,6 +326,7 @@ export async function updateGuide(id: string, formData: FormData) {
   revalidatePath("/admin/guider");
   revalidatePath("/guider");
   revalidatePath(`/guider/${slug}`);
+  revalidateTag("guides");
   redirect("/admin/guider");
 }
 
@@ -332,6 +336,7 @@ export async function toggleArticlePublished(id: string, published: boolean) {
   await prisma.knowledgeArticle.update({ where: { id }, data: { published } });
   revalidatePath("/admin/kunskapsbank");
   revalidatePath("/kunskapsbank");
+  revalidateTag("kunskapsbank");
 }
 
 export async function deleteArticle(id: string) {
@@ -359,6 +364,8 @@ export async function createArticle(formData: FormData) {
   await prisma.knowledgeArticle.create({ data: { title, slug, excerpt, content, imageUrl, category, seoTitle, seoDescription, published } });
   revalidatePath("/admin/kunskapsbank");
   revalidatePath("/kunskapsbank");
+  revalidatePath(`/kunskapsbank/${slug}`);
+  revalidateTag("kunskapsbank");
   redirect("/admin/kunskapsbank");
 }
 
@@ -378,6 +385,7 @@ export async function updateArticle(id: string, formData: FormData) {
   revalidatePath("/admin/kunskapsbank");
   revalidatePath("/kunskapsbank");
   revalidatePath(`/kunskapsbank/${slug}`);
+  revalidateTag("kunskapsbank");
   redirect("/admin/kunskapsbank");
 }
 
@@ -401,6 +409,8 @@ export async function createGlossaryTerm(formData: FormData) {
   });
   revalidatePath("/admin/ordlista");
   revalidatePath("/ordlista");
+  revalidatePath(`/ordlista/${slug}`);
+  revalidateTag("ordlista");
   redirect("/admin/ordlista");
 }
 
@@ -425,6 +435,7 @@ export async function updateGlossaryTerm(id: string, formData: FormData) {
   revalidatePath("/admin/ordlista");
   revalidatePath("/ordlista");
   revalidatePath(`/ordlista/${slug}`);
+  revalidateTag("ordlista");
   redirect("/admin/ordlista");
 }
 
@@ -433,6 +444,7 @@ export async function toggleGlossaryTermPublished(id: string, published: boolean
   await prisma.glossaryTerm.update({ where: { id }, data: { published } });
   revalidatePath("/admin/ordlista");
   revalidatePath("/ordlista");
+  revalidateTag("ordlista");
 }
 
 export async function deleteGlossaryTerm(id: string) {

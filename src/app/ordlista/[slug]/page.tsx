@@ -22,7 +22,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const [term, settings] = await Promise.all([
-    prisma.glossaryTerm.findUnique({ where: { slug } }),
+    prisma.glossaryTerm.findUnique({ where: { slug } }).catch(() => null),
     getSettings(),
   ]);
   if (!term || !term.published) return { title: "Term hittades inte" };
@@ -36,10 +36,8 @@ export default async function OrdlistaTermPage({
 }) {
   const { slug } = await params;
 
-  const [term, settings] = await Promise.all([
-    prisma.glossaryTerm.findUnique({ where: { slug } }),
-    getSettings(),
-  ]);
+  const settings = await getSettings();
+  const term = await prisma.glossaryTerm.findUnique({ where: { slug } }).catch(() => null);
 
   if (!term || !term.published) notFound();
 
