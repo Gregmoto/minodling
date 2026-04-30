@@ -1,50 +1,13 @@
-export const revalidate = 300;
+export const revalidate = 60;
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { unstable_cache } from "next/cache";
 import { Search, Sprout, Star, SlidersHorizontal } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
-
-const getPlants = unstable_cache(
-  async (q: string, kategori: string, svarighets: string) =>
-    prisma.plant.findMany({
-      where: {
-        ...(q ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" as const } },
-            { latinName: { contains: q, mode: "insensitive" as const } },
-          ],
-        } : {}),
-        ...(kategori   ? { category: kategori }          : {}),
-        ...(svarighets ? { difficultyLevel: svarighets } : {}),
-      },
-      orderBy: { name: "asc" },
-      select: {
-        id: true, slug: true, name: true, latinName: true, imageUrl: true,
-        category: true, difficultyLevel: true, sowingPeriod: true, harvestPeriod: true,
-        _count: { select: { tips: true } },
-      },
-    }),
-  ["plants-list"],
-  { revalidate: 300, tags: ["plants"] },
-);
-
-const getPlantCategories = unstable_cache(
-  async () =>
-    prisma.plant.findMany({
-      where: { category: { not: null } },
-      select: { category: true },
-      distinct: ["category"],
-      orderBy: { category: "asc" },
-    }),
-  ["plant-categories"],
-  { revalidate: 300, tags: ["plants"] },
-);
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -114,8 +77,30 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const [plants, allCategories, navUser] = await Promise.all([
-    getPlants(q, kategori, svarighets),
-    getPlantCategories(),
+    prisma.plant.findMany({
+      where: {
+        ...(q ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" as const } },
+            { latinName: { contains: q, mode: "insensitive" as const } },
+          ],
+        } : {}),
+        ...(kategori   ? { category: kategori }          : {}),
+        ...(svarighets ? { difficultyLevel: svarighets } : {}),
+      },
+      orderBy: { name: "asc" },
+      select: {
+        id: true, slug: true, name: true, latinName: true, imageUrl: true,
+        category: true, difficultyLevel: true, sowingPeriod: true, harvestPeriod: true,
+        _count: { select: { tips: true } },
+      },
+    }).catch(() => []),
+    prisma.plant.findMany({
+      where: { category: { not: null } },
+      select: { category: true },
+      distinct: ["category"],
+      orderBy: { category: "asc" },
+    }).catch(() => []),
     getNavUser(user?.id),
   ]);
 

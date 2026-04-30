@@ -1,42 +1,11 @@
-export const revalidate = 300;
+export const revalidate = 60;
+
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { getSettings } from "@/lib/settings";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
-
-const getTerms = unstable_cache(
-  async (q: string, bokstav: string, kategori: string) =>
-    prisma.glossaryTerm.findMany({
-      where: {
-        published: true,
-        AND: [
-          q       ? { term: { contains: q,       mode: "insensitive" } } : {},
-          bokstav ? { term: { startsWith: bokstav, mode: "insensitive" } } : {},
-          kategori ? { category: kategori } : {},
-        ],
-      },
-      orderBy: { term: "asc" },
-      select: { slug: true, term: true, shortDescription: true, category: true },
-    }).catch(() => []),
-  ["ordlista-terms"],
-  { revalidate: 300, tags: ["ordlista"] },
-);
-
-const getTermCategories = unstable_cache(
-  async () =>
-    prisma.glossaryTerm.findMany({
-      where: { published: true, category: { not: null } },
-      select: { category: true },
-      distinct: ["category"],
-      orderBy: { category: "asc" },
-    }).catch(() => []),
-  ["ordlista-categories"],
-  { revalidate: 300, tags: ["ordlista"] },
-);
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
@@ -64,8 +33,24 @@ export default async function OrdlistaPage({
   const { data: { user } } = await supabase.auth.getUser();
 
   const [terms, categories, navUser] = await Promise.all([
-    getTerms(q, bokstav, kategori),
-    getTermCategories(),
+    prisma.glossaryTerm.findMany({
+      where: {
+        published: true,
+        AND: [
+          q       ? { term: { contains: q,        mode: "insensitive" } } : {},
+          bokstav ? { term: { startsWith: bokstav, mode: "insensitive" } } : {},
+          kategori ? { category: kategori } : {},
+        ],
+      },
+      orderBy: { term: "asc" },
+      select: { slug: true, term: true, shortDescription: true, category: true },
+    }).catch(() => []),
+    prisma.glossaryTerm.findMany({
+      where: { published: true, category: { not: null } },
+      select: { category: true },
+      distinct: ["category"],
+      orderBy: { category: "asc" },
+    }).catch(() => []),
     getNavUser(user?.id),
   ]);
 
