@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, Sprout, Bell, Search, ChevronDown,
-  Crown, LayoutDashboard, BookOpen, AlarmClock,
+  LayoutDashboard, BookOpen, AlarmClock,
   User, Settings, ShieldCheck, LogOut, Leaf,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -150,14 +150,14 @@ export function Navbar({ user }: NavbarProps) {
 
             {user ? (
               <>
-                {/* Notifikationer */}
-                <button
+                {/* Påminnelser */}
+                <Link
+                  href="/paminnelser"
                   className="relative h-9 w-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
-                  aria-label="Notifikationer"
+                  aria-label="Påminnelser"
                 >
                   <Bell className="h-4 w-4" />
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-green-500 ring-2 ring-white" />
-                </button>
+                </Link>
 
                 {/* Profil-dropdown */}
                 <div className="relative">
@@ -251,15 +251,6 @@ export function Navbar({ user }: NavbarProps) {
               </>
             ) : (
               <>
-                {/* Premium-länk (ej inloggad) */}
-                <Link
-                  href="/premium"
-                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors whitespace-nowrap"
-                >
-                  <Crown className="h-3.5 w-3.5" />
-                  Premium
-                </Link>
-
                 {/* Logga in */}
                 <Link
                   href="/auth/login"
@@ -311,14 +302,6 @@ export function Navbar({ user }: NavbarProps) {
               </Link>
             ))}
 
-            <Link
-              href="/premium"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors"
-            >
-              <Crown className="h-4 w-4" />
-              Premium
-            </Link>
           </div>
 
           {!user && (

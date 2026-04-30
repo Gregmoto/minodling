@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { CalendarDays, BookOpen, Bell, Crown } from "lucide-react";
+import { CalendarDays, BookOpen, Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
@@ -98,37 +98,6 @@ export default async function OdlingsveckaPage() {
                 <WeeklyTaskWidget tasks={tasks} weekNumber={weekNumber} expanded={true} />
               </div>
 
-              {/* Premium-teaser */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-6">
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                    <Crown className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">Mer med Premium</h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Med Premium får du en fullständig personlig odlingsplan med AI-baserade rekommendationer,
-                      väderkoppling och automatisk veckoplanering.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {[
-                        "AI-anpassade uppgifter",
-                        "Väderbaserade tips",
-                        "Fleraveckorsplan",
-                        "Koppling till din trädgårdsplanerare",
-                      ].map((f) => (
-                        <span key={f} className="px-2.5 py-1 bg-white border border-amber-200 text-amber-700 rounded-lg text-xs font-medium">
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                    <Link href="/premium"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition-colors">
-                      <Crown className="h-3.5 w-3.5" /> Läs mer om Premium
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Sidebar */}

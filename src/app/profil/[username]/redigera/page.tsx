@@ -8,7 +8,7 @@ import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 export const metadata: Metadata = { title: "Redigera profil" };
@@ -43,10 +43,13 @@ const inputClass = "w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5
 
 export default async function RedigeraProfilPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ sparad?: string }>;
 }) {
   const { username } = await params;
+  const { sparad } = await searchParams;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -75,6 +78,14 @@ export default async function RedigeraProfilPage({
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Redigera profil</h1>
           </div>
+
+          {/* Sparat-bekräftelse */}
+          {sparad === "1" && (
+            <div className="mb-5 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+              <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+              <span className="font-medium">Profilen har sparats!</span>
+            </div>
+          )}
 
           {/* Avatar */}
           <Card className="mb-6 flex flex-col items-center py-6">

@@ -26,7 +26,7 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath(`/profil/${profile.username}`);
   revalidatePath("/dashboard");
-  redirect(`/profil/${profile.username}`);
+  redirect(`/profil/${profile.username}/redigera?sparad=1`);
 }
 
 export async function uploadAvatar(formData: FormData): Promise<{ url?: string; error?: string }> {

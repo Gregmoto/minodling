@@ -22,7 +22,7 @@ import { formatRelativeDate } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Minodling – Sveriges odlingscommunity",
   description:
-    "Gå med i Sveriges mest engagerade odlingscommunity. Dela odlingstips, ställ frågor och hitta inspiration från tusentals passionerade odlare.",
+    "Sveriges odlingscommunity. Dela odlingstips, ställ frågor och hitta inspiration. Alltid gratis.",
   openGraph: {
     title: "Minodling – Sveriges odlingscommunity",
     description: "Gå med i Sveriges mest engagerade odlingscommunity.",
@@ -169,8 +169,7 @@ export default async function HomePage() {
               </h1>
 
               <p className="text-lg sm:text-xl text-gray-600 mb-10 leading-relaxed text-balance max-w-2xl mx-auto">
-                Gå med i {userCount > 0 ? `${userCount.toLocaleString("sv-SE")}+` : "tusentals"} passionerade svenska odlare.
-                Dela tips, ställ frågor och hitta inspiration – gratis.
+                Gå med i Sveriges odlingscommunity. Dela tips, ställ frågor och hitta inspiration – alltid gratis.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -197,10 +196,9 @@ export default async function HomePage() {
               </div>
 
               {/* Micro-stats */}
-              <div className="grid grid-cols-3 gap-6 mt-14 pt-10 border-t border-sage-200">
+              <div className="grid grid-cols-2 gap-6 mt-14 pt-10 border-t border-sage-200 max-w-sm mx-auto">
                 {[
-                  { value: userCount > 0 ? `${userCount.toLocaleString("sv-SE")}+` : "—", label: "Odlare" },
-                  { value: plantCount > 0 ? `${plantCount}+` : "100+", label: "Växter i databasen" },
+                  { value: plantCount > 0 ? `${plantCount}+` : "10+", label: "Växter i databasen" },
                   { value: "Gratis", label: "Alltid" },
                 ].map((s) => (
                   <div key={s.label} className="text-center">
@@ -550,7 +548,7 @@ export default async function HomePage() {
                   Klar att börja din odlingsresa?
                 </h2>
                 <p className="text-green-100 mb-8 leading-relaxed">
-                  Skapa ett gratis konto på 30 sekunder och börja dela din passion med tusentals svenska odlare.
+                  Skapa ett gratis konto på 30 sekunder och börja dela din odlingspassion med communityn.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link href="/auth/register">

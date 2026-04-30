@@ -15,7 +15,6 @@ const footerLinks = {
     { label: "Kontakt",       href: "/kontakt" },
     { label: "Annonsera",     href: "/annonsera" },
     { label: "Nyhetsbrev",    href: "/nyhetsbrev" },
-    { label: "Premium",       href: "/premium" },
   ],
   legal: [
     { label: "Integritetspolicy", href: "/integritetspolicy" },
