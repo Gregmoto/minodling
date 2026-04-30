@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { CookieBanner } from "@/components/cookies/CookieBanner";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -87,6 +88,7 @@ export default async function RootLayout({
 
           {/* Cookie-banner – visas tills användaren gjort ett val */}
           <CookieBanner />
+          <Analytics />
 
           {/*
            * AnalyticsScripts laddas BARA efter samtycke.
