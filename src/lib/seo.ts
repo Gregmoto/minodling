@@ -181,8 +181,8 @@ export function articleSchema(opts: {
   description: string;
   url: string;
   imageUrl?: string | null;
-  datePublished: Date;
-  dateModified: Date;
+  datePublished: Date | string;
+  dateModified: Date | string;
   siteName: string;
   seoCanonical: string;
 }) {
@@ -193,8 +193,8 @@ export function articleSchema(opts: {
     description: opts.description,
     url: opts.url,
     ...(opts.imageUrl && { image: opts.imageUrl }),
-    datePublished: opts.datePublished.toISOString(),
-    dateModified: opts.dateModified.toISOString(),
+    datePublished: new Date(opts.datePublished).toISOString(),
+    dateModified: new Date(opts.dateModified).toISOString(),
     publisher: {
       "@type": "Organization",
       name: opts.siteName,
