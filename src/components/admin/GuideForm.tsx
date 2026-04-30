@@ -152,7 +152,7 @@ export function GuideForm({ guide }: Props) {
       {/* Publicera */}
       <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
         <input type="checkbox" id="published" name="published" value="true"
-          defaultChecked={guide?.published ?? false}
+          defaultChecked={guide?.published ?? true}
           className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-400" />
         <label htmlFor="published" className="text-sm font-medium text-green-800 cursor-pointer">
           Publicera guiden

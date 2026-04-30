@@ -138,7 +138,7 @@ export function ArticleForm({ article }: Props) {
       {/* Publicera */}
       <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-xl border border-purple-200">
         <input type="checkbox" id="published" name="published" value="true"
-          defaultChecked={article?.published ?? false}
+          defaultChecked={article?.published ?? true}
           className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-400" />
         <label htmlFor="published" className="text-sm font-medium text-purple-800 cursor-pointer">
           Publicera artikeln
