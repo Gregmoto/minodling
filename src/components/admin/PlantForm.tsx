@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { ImageInput } from "@/components/ui/ImageInput";
 
@@ -79,6 +79,7 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
   const [slugValue, setSlugValue] = useState(defaultValues.slug ?? "");
   const [imageUrl, setImageUrl] = useState<string | null>(defaultValues.imageUrl ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -96,8 +97,12 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
 
     startTransition(async () => {
       try {
+        setSaved(false);
         await action(formData);
-        router.push("/admin/vaxter");
+        // If we're creating a new plant the server action may redirect;
+        // for editing it returns normally → show confirmation.
+        setSaved(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
         if (err instanceof Error && !err.message.includes("NEXT_REDIRECT")) {
           setError(err.message);
@@ -246,7 +251,7 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
 
       <SectionTitle>Skötselkrav</SectionTitle>
 
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 gap-4">
         <Field label="Solbehov" name="sunRequirement">
           <select
             id="sunRequirement"
@@ -273,17 +278,18 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
             <option>Högt – håll fuktig</option>
           </select>
         </Field>
-        <Field label="Jordtyp" name="soilType">
-          <textarea
-            id="soilType"
-            name="soilType"
-            defaultValue={defaultValues.soilType ?? ""}
-            rows={3}
-            placeholder="T.ex. Mullrik, väldrainerad jord med pH 6–7"
-            className={textareaClass}
-          />
-        </Field>
       </div>
+
+      <Field label="Jordtyp" name="soilType">
+        <textarea
+          id="soilType"
+          name="soilType"
+          defaultValue={defaultValues.soilType ?? ""}
+          rows={4}
+          placeholder="T.ex. Mullrik, väldrainerad jord med pH 6–7"
+          className={textareaClass}
+        />
+      </Field>
 
       <Field label="Gödsling" name="fertilizerNeeds" hint="Beskrivning av gödselbehov">
         <textarea
@@ -367,6 +373,21 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
           className={textareaClass}
         />
       </Field>
+
+      {saved && (
+        <div className="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+          <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+          <span className="font-medium">Växten har sparats!</span>
+          <a
+            href={`/vaxtdatabas/${slugValue}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto text-green-700 underline hover:text-green-900 text-xs"
+          >
+            Visa på sidan →
+          </a>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">

@@ -19,6 +19,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PlantDetailTabs } from "@/components/plants/PlantDetailTabs";
+import { PlantSidebarStatus } from "@/components/plants/PlantSidebarStatus";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -313,35 +314,11 @@ export default async function PlantDetailPage({ params }: PageProps) {
               {/* ── Höger sidebar ── */}
               <div className="space-y-5 lg:pt-[52px]">
 
-                {/* Svårighetsgrad + odlingsstatus – prominent */}
-                {(plant.difficultyLevel || isGrowing) && (
-                  <Card padding="lg">
-                    <div className="flex flex-wrap gap-2">
-                      {plant.difficultyLevel && (
-                        <div className={`flex-1 min-w-0 rounded-xl px-4 py-3 text-center ${
-                          plant.difficultyLevel === "easy"   ? "bg-green-50 border border-green-200" :
-                          plant.difficultyLevel === "medium" ? "bg-amber-50 border border-amber-200" :
-                                                               "bg-red-50 border border-red-200"
-                        }`}>
-                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Svårighetsgrad</div>
-                          <div className={`text-sm font-bold ${
-                            plant.difficultyLevel === "easy"   ? "text-green-700" :
-                            plant.difficultyLevel === "medium" ? "text-amber-700" : "text-red-700"
-                          }`}>
-                            {plant.difficultyLevel === "easy" ? "⭐ Lätt" :
-                             plant.difficultyLevel === "medium" ? "⭐⭐ Medel" : "⭐⭐⭐ Svår"}
-                          </div>
-                        </div>
-                      )}
-                      {isGrowing && (
-                        <div className="flex-1 min-w-0 rounded-xl px-4 py-3 text-center bg-green-600 border border-green-700">
-                          <div className="text-xs font-medium text-green-100 uppercase tracking-wide mb-1">Status</div>
-                          <div className="text-sm font-bold text-white">🌱 Odlar denna</div>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                )}
+                {/* Svårighetsgrad + odlingsstatus + knappar */}
+                <PlantSidebarStatus
+                  difficultyLevel={plant.difficultyLevel}
+                  initialGrowing={isGrowing}
+                />
 
                 {/* Kom igång – OVANFÖR Odlingsfakta */}
                 {(plant.sowingPeriod || plant.plantingPeriod || plant.harvestPeriod || plant.sunRequirement || plant.wateringNeeds) && (
