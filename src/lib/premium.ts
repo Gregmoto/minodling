@@ -75,22 +75,18 @@ export async function getPremiumStatus(profileId: string): Promise<PremiumStatus
 
 /**
  * Enkel boolean-check. Använd i server components och actions.
+ * TILLFÄLLIGT: alltid true – alla funktioner är gratis tills vidare.
  */
-export async function isPremium(profileId: string): Promise<boolean> {
-  const { isPremium: result } = await getPremiumStatus(profileId);
-  return result;
+export async function isPremium(_profileId: string): Promise<boolean> {
+  return true;
 }
 
 /**
  * Kastar ett fel om användaren inte är premium.
- * Använd i server actions som kräver premium.
- *
- * @example
- * await requirePremium(profile.id);
+ * TILLFÄLLIGT: gör ingenting – alla funktioner är gratis tills vidare.
  */
-export async function requirePremium(profileId: string): Promise<void> {
-  const ok = await isPremium(profileId);
-  if (!ok) throw new Error("Den här funktionen kräver ett premium-konto.");
+export async function requirePremium(_profileId: string): Promise<void> {
+  // no-op – allt är öppet tills vidare
 }
 
 /**
