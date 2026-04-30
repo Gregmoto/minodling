@@ -6,8 +6,10 @@ import {
   TrendingUp, Heart, Calendar, Flower2, Library, Image as ImageIcon,
   ChevronRight,
 } from "lucide-react";
+import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { getNavUser } from "@/lib/nav-user";
 import { getSettings } from "@/lib/settings";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -64,6 +66,59 @@ const QUICK_LINKS = [
   },
 ];
 
+// ── Cached public data queries ─────────────────────────────────────────
+const getPopularPosts = unstable_cache(
+  async () => prisma.post.findMany({
+    where: { status: "published" },
+    orderBy: [{ likesCount: "desc" }, { commentsCount: "desc" }],
+    take: 5,
+    include: { author: { select: { username: true, fullName: true, avatarUrl: true } } },
+  }).catch(() => []),
+  ["home-popular-posts"],
+  { revalidate: 60, tags: ["posts"] },
+);
+
+const getCalendarTips = unstable_cache(
+  async (month: number) => prisma.gardenCalendar.findMany({
+    where: { month, status: "published" },
+    orderBy: { createdAt: "asc" },
+    take: 6,
+    select: { id: true, title: true, category: true, taskType: true, description: true, slug: true },
+  }).catch(() => []),
+  ["home-calendar-tips"],
+  { revalidate: 3600, tags: ["calendar"] },
+);
+
+const getLatestGuide = unstable_cache(
+  async () => prisma.guide.findFirst({
+    where: { published: true },
+    orderBy: { createdAt: "desc" },
+    select: { title: true, slug: true, excerpt: true, imageUrl: true, category: true },
+  }).catch(() => null),
+  ["home-latest-guide"],
+  { revalidate: 300, tags: ["guides"] },
+);
+
+const getMemberImages = unstable_cache(
+  async () => prisma.post.findMany({
+    where: { status: "published", imageUrl: { not: null } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+    select: { id: true, title: true, imageUrl: true, author: { select: { username: true, avatarUrl: true } } },
+  }).catch(() => []),
+  ["home-member-images"],
+  { revalidate: 120, tags: ["posts"] },
+);
+
+const getSiteCounts = unstable_cache(
+  async () => Promise.all([
+    prisma.plant.count().catch(() => 0),
+    prisma.profile.count().catch(() => 0),
+  ]),
+  ["home-site-counts"],
+  { revalidate: 3600 },
+);
+
 export default async function HomePage() {
   const currentMonth = new Date().getMonth() + 1; // 1-12
   const monthName = MONTHS_SV[currentMonth - 1];
@@ -71,58 +126,14 @@ export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Hämta profil om inloggad
-  const profile = user
-    ? await prisma.profile.findUnique({
-        where: { userId: user.id },
-        select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
-      }).catch(() => null)
-    : null;
-
-  const navUser = profile
-    ? { id: profile.id, username: profile.username, displayName: profile.fullName, avatarUrl: profile.avatarUrl, role: profile.role }
-    : null;
-
-  // Hämta all data parallellt
-  const [popularPosts, calendarTips, latestGuide, memberImages, plantCount, userCount] = await Promise.all([
-    // Populära inlägg
-    prisma.post.findMany({
-      where: { status: "published" },
-      orderBy: [{ likesCount: "desc" }, { commentsCount: "desc" }],
-      take: 5,
-      include: {
-        author: { select: { username: true, fullName: true, avatarUrl: true } },
-      },
-    }).catch(() => []),
-
-    // Odlingskalender denna månad
-    prisma.gardenCalendar.findMany({
-      where: { month: currentMonth, status: "published" },
-      orderBy: { createdAt: "asc" },
-      take: 6,
-      select: { id: true, title: true, category: true, taskType: true, description: true, slug: true },
-    }).catch(() => []),
-
-    // Senaste publicerade guiden
-    prisma.guide.findFirst({
-      where: { published: true },
-      orderBy: { createdAt: "desc" },
-      select: { title: true, slug: true, excerpt: true, imageUrl: true, category: true },
-    }).catch(() => null),
-
-    // Inlägg med bilder från members
-    prisma.post.findMany({
-      where: { status: "published", imageUrl: { not: null } },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      select: { id: true, title: true, imageUrl: true, author: { select: { username: true, avatarUrl: true } } },
-    }).catch(() => []),
-
-    // Antal växter i DB
-    prisma.plant.count().catch(() => 0),
-
-    // Antal användare
-    prisma.profile.count().catch(() => 0),
+  // Hämta all data parallellt – public queries är cachade
+  const [navUser, popularPosts, calendarTips, latestGuide, memberImages, [plantCount, userCount]] = await Promise.all([
+    getNavUser(user?.id),
+    getPopularPosts(),
+    getCalendarTips(currentMonth),
+    getLatestGuide(),
+    getMemberImages(),
+    getSiteCounts(),
   ]);
 
   const TASK_COLORS: Record<string, string> = {

@@ -1,9 +1,33 @@
 export const revalidate = 300;
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
+
+const getArticles = unstable_cache(
+  async (kategori: string) =>
+    prisma.knowledgeArticle.findMany({
+      where: { published: true, ...(kategori ? { category: kategori } : {}) },
+      orderBy: { createdAt: "desc" },
+      select: { slug: true, title: true, excerpt: true, imageUrl: true, category: true, createdAt: true },
+    }).catch(() => []),
+  ["kunskapsbank-articles"],
+  { revalidate: 300, tags: ["kunskapsbank"] },
+);
+
+const getArticleCategories = unstable_cache(
+  async () =>
+    prisma.knowledgeArticle.findMany({
+      where: { published: true, category: { not: null } },
+      select: { category: true },
+      distinct: ["category"],
+    }).catch(() => []),
+  ["kunskapsbank-categories"],
+  { revalidate: 300, tags: ["kunskapsbank"] },
+);
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
@@ -27,19 +51,11 @@ export default async function KunskapsbankPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const articles = await prisma.knowledgeArticle.findMany({
-    where: { published: true, ...(kategori ? { category: kategori } : {}) },
-    orderBy: { createdAt: "desc" },
-    select: { slug: true, title: true, excerpt: true, imageUrl: true, category: true, createdAt: true },
-  }).catch(() => []);
-
-  const kategorier = await prisma.knowledgeArticle.findMany({
-    where: { published: true, category: { not: null } },
-    select: { category: true },
-    distinct: ["category"],
-  }).catch(() => []);
-
-  const navUser = user ? { id: user.id, username: user.email ?? "användare", displayName: null, avatarUrl: null } : null;
+  const [articles, kategorier, navUser] = await Promise.all([
+    getArticles(kategori ?? ""),
+    getArticleCategories(),
+    getNavUser(user?.id),
+  ]);
 
   return (
     <div className="flex min-h-screen flex-col">

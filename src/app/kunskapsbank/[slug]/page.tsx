@@ -8,6 +8,7 @@ import { articleMetadata, articleSchema, truncateDescription, canonicalUrl } fro
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
+import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
@@ -35,7 +36,7 @@ export default async function KunskapsbankArtikelPage({ params }: { params: Prom
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const navUser = user ? { id: user.id, username: user.email ?? "användare", displayName: null, avatarUrl: null } : null;
+  const navUser = await getNavUser(user?.id);
 
   const path = `/kunskapsbank/${slug}`;
   const schema = articleSchema({

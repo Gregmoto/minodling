@@ -8,6 +8,7 @@ import { glossaryMetadata, truncateDescription } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
+import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
@@ -45,15 +46,7 @@ export default async function OrdlistaTermPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const navProfile = user ? await import("@/lib/prisma").then((m) =>
-    m.default.profile.findUnique({
-      where: { userId: user.id },
-      select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
-    })
-  ) : null;
-  const navUser = navProfile
-    ? { id: navProfile.id, username: navProfile.username, displayName: navProfile.fullName, avatarUrl: navProfile.avatarUrl, role: navProfile.role }
-    : null;
+  const navUser = await getNavUser(user?.id);
 
   // Relaterat innehåll
   const [relatedTerms, relatedGuides, relatedPlants] = await Promise.all([

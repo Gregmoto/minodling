@@ -8,6 +8,7 @@ import { guideMetadata, articleSchema, truncateDescription, canonicalUrl } from 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
+import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
@@ -37,16 +38,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch profile for navUser
-  const navProfile = user ? await import("@/lib/prisma").then((m) =>
-    m.default.profile.findUnique({
-      where: { userId: user.id },
-      select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
-    })
-  ) : null;
-  const navUser = navProfile
-    ? { id: navProfile.id, username: navProfile.username, displayName: navProfile.fullName, avatarUrl: navProfile.avatarUrl, role: navProfile.role }
-    : null;
+  const navUser = await getNavUser(user?.id);
 
   // Related content
   const [relatedGuides, relatedPlants, relatedGlossary, relatedArticles] = await Promise.all([

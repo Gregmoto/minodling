@@ -1,10 +1,42 @@
 export const revalidate = 300;
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
+import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
+
+const getTerms = unstable_cache(
+  async (q: string, bokstav: string, kategori: string) =>
+    prisma.glossaryTerm.findMany({
+      where: {
+        published: true,
+        AND: [
+          q       ? { term: { contains: q,       mode: "insensitive" } } : {},
+          bokstav ? { term: { startsWith: bokstav, mode: "insensitive" } } : {},
+          kategori ? { category: kategori } : {},
+        ],
+      },
+      orderBy: { term: "asc" },
+      select: { slug: true, term: true, shortDescription: true, category: true },
+    }).catch(() => []),
+  ["ordlista-terms"],
+  { revalidate: 300, tags: ["ordlista"] },
+);
+
+const getTermCategories = unstable_cache(
+  async () =>
+    prisma.glossaryTerm.findMany({
+      where: { published: true, category: { not: null } },
+      select: { category: true },
+      distinct: ["category"],
+      orderBy: { category: "asc" },
+    }).catch(() => []),
+  ["ordlista-categories"],
+  { revalidate: 300, tags: ["ordlista"] },
+);
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
@@ -31,35 +63,10 @@ export default async function OrdlistaPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const navProfile = user ? await import("@/lib/prisma").then((m) =>
-    m.default.profile.findUnique({
-      where: { userId: user.id },
-      select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
-    })
-  ) : null;
-  const navUser = navProfile
-    ? { id: navProfile.id, username: navProfile.username, displayName: navProfile.fullName, avatarUrl: navProfile.avatarUrl, role: navProfile.role }
-    : null;
-
-  const [terms, categories] = await Promise.all([
-    prisma.glossaryTerm.findMany({
-      where: {
-        published: true,
-        AND: [
-          q        ? { term: { contains: q, mode: "insensitive" } } : {},
-          bokstav  ? { term: { startsWith: bokstav, mode: "insensitive" } } : {},
-          kategori ? { category: kategori } : {},
-        ],
-      },
-      orderBy: { term: "asc" },
-      select: { slug: true, term: true, shortDescription: true, category: true },
-    }),
-    prisma.glossaryTerm.findMany({
-      where: { published: true, category: { not: null } },
-      select: { category: true },
-      distinct: ["category"],
-      orderBy: { category: "asc" },
-    }),
+  const [terms, categories, navUser] = await Promise.all([
+    getTerms(q, bokstav, kategori),
+    getTermCategories(),
+    getNavUser(user?.id),
   ]);
 
   const uniqueCategories = categories.map((c) => c.category!).filter(Boolean);
