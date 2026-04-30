@@ -119,27 +119,36 @@ export async function createPlant(formData: FormData) {
   const slug  = (formData.get("slug") as string).trim();
   if (!name || !slug) throw new Error("Namn och slug är obligatoriska");
 
-  await prisma.plant.create({
-    data: {
-      name,
-      slug,
-      latinName:       (formData.get("latinName")       as string | null) || null,
-      imageUrl:        (formData.get("imageUrl")         as string | null) || null,
-      category:        (formData.get("category")         as string | null) || null,
-      difficultyLevel: (formData.get("difficultyLevel")  as string | null) || null,
-      sowingPeriod:    (formData.get("sowingPeriod")     as string | null) || null,
-      plantingPeriod:  (formData.get("plantingPeriod")   as string | null) || null,
-      harvestPeriod:   (formData.get("harvestPeriod")    as string | null) || null,
-      sunRequirement:  (formData.get("sunRequirement")   as string | null) || null,
-      wateringNeeds:   (formData.get("wateringNeeds")    as string | null) || null,
-      soilType:        (formData.get("soilType")         as string | null) || null,
-      fertilizerNeeds: (formData.get("fertilizerNeeds")  as string | null) || null,
-      commonProblems:  (formData.get("commonProblems")   as string | null) || null,
-      description:     (formData.get("description")      as string | null) || null,
-      seoTitle:        (formData.get("seoTitle")         as string | null) || null,
-      seoDescription:  (formData.get("seoDescription")   as string | null) || null,
-    },
-  });
+  try {
+    await prisma.plant.create({
+      data: {
+        name,
+        slug,
+        latinName:       (formData.get("latinName")       as string | null) || null,
+        imageUrl:        (formData.get("imageUrl")         as string | null) || null,
+        category:        (formData.get("category")         as string | null) || null,
+        difficultyLevel: (formData.get("difficultyLevel")  as string | null) || null,
+        sowingPeriod:    (formData.get("sowingPeriod")     as string | null) || null,
+        plantingPeriod:  (formData.get("plantingPeriod")   as string | null) || null,
+        harvestPeriod:   (formData.get("harvestPeriod")    as string | null) || null,
+        sunRequirement:  (formData.get("sunRequirement")   as string | null) || null,
+        wateringNeeds:   (formData.get("wateringNeeds")    as string | null) || null,
+        soilType:        (formData.get("soilType")         as string | null) || null,
+        fertilizerNeeds: (formData.get("fertilizerNeeds")  as string | null) || null,
+        commonProblems:  (formData.get("commonProblems")   as string | null) || null,
+        description:     (formData.get("description")      as string | null) || null,
+        seoTitle:        (formData.get("seoTitle")         as string | null) || null,
+        seoDescription:  (formData.get("seoDescription")   as string | null) || null,
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // Unique constraint → slug redan taget
+    if (msg.includes("Unique constraint") || msg.includes("unique")) {
+      throw new Error(`En växt med slug "${slug}" finns redan. Välj ett annat namn.`);
+    }
+    throw new Error(`Kunde inte spara växten: ${msg}`);
+  }
 
   revalidatePath("/admin/vaxter");
   revalidatePath("/vaxtdatabas");
