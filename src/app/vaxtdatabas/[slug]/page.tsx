@@ -1,9 +1,10 @@
-export const revalidate = 60;
+export const revalidate = 300;
 
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import {
   Sun, Droplets, Layers, Sprout, CalendarDays, Leaf,
   Flower2, Pencil,
@@ -21,16 +22,61 @@ import { Badge } from "@/components/ui/Badge";
 import { PlantDetailTabs } from "@/components/plants/PlantDetailTabs";
 import { PlantSidebarStatus } from "@/components/plants/PlantSidebarStatus";
 
+// ── Cachade DB-anrop (5 min) ──────────────────────────────────────
+const getPlant = unstable_cache(
+  async (slug: string) =>
+    prisma.plant.findUnique({
+      where: { slug },
+      include: {
+        tips: {
+          where: { status: "published" },
+          orderBy: { createdAt: "desc" },
+          include: {
+            author: { select: { username: true, fullName: true, avatarUrl: true } },
+          },
+        },
+      },
+    }).catch(() => null),
+  ["plant-detail"],
+  { revalidate: 300, tags: ["plants"] },
+);
+
+const getPlantRelated = unstable_cache(
+  async (plantName: string) =>
+    Promise.all([
+      prisma.guide.findMany({
+        where: {
+          published: true,
+          OR: [
+            { title:   { contains: plantName, mode: "insensitive" } },
+            { content: { contains: plantName, mode: "insensitive" } },
+          ],
+        },
+        select: { slug: true, title: true },
+        take: 3,
+      }).catch(() => []),
+      prisma.glossaryTerm.findMany({
+        where: {
+          OR: [
+            { term:            { contains: plantName, mode: "insensitive" } },
+            { fullDescription: { contains: plantName, mode: "insensitive" } },
+          ],
+        },
+        select: { slug: true, term: true },
+        take: 4,
+      }).catch(() => []),
+    ]),
+  ["plant-related"],
+  { revalidate: 300, tags: ["plants"] },
+);
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [plant, settings] = await Promise.all([
-    prisma.plant.findUnique({ where: { slug } }),
-    getSettings(),
-  ]);
+  const [plant, settings] = await Promise.all([getPlant(slug), getSettings()]);
   if (!plant) return { title: "Växt hittades inte" };
   return plantMetadata(plant, settings, `/vaxtdatabas/${slug}`);
 }
@@ -75,18 +121,7 @@ export default async function PlantDetailPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const [plant, settings, profile] = await Promise.all([
-    prisma.plant.findUnique({
-      where: { slug },
-      include: {
-        tips: {
-          where: { status: "published" },
-          orderBy: { createdAt: "desc" },
-          include: {
-            author: { select: { username: true, fullName: true, avatarUrl: true } },
-          },
-        },
-      },
-    }),
+    getPlant(slug),
     getSettings(),
     user
       ? prisma.profile.findUnique({
@@ -98,37 +133,15 @@ export default async function PlantDetailPage({ params }: PageProps) {
 
   if (!plant) notFound();
 
-  // Kolla om användaren redan odlar denna växt
+  // Kolla om användaren redan odlar denna växt (auth-beroende, ej cachebar)
   const isGrowing = profile
     ? (await prisma.gardenDiary.count({
         where: { userId: profile.id, plantId: plant.id, status: "growing" },
       })) > 0
     : false;
 
-  // Fetch related guides and glossary terms
-  const [relatedGuides, relatedTerms] = await Promise.all([
-    prisma.guide.findMany({
-      where: {
-        published: true,
-        OR: [
-          { title:   { contains: plant.name, mode: "insensitive" } },
-          { content: { contains: plant.name, mode: "insensitive" } },
-        ],
-      },
-      select: { slug: true, title: true },
-      take: 3,
-    }).catch(() => []),
-    prisma.glossaryTerm.findMany({
-      where: {
-        OR: [
-          { term:            { contains: plant.name, mode: "insensitive" } },
-          { fullDescription: { contains: plant.name, mode: "insensitive" } },
-        ],
-      },
-      select: { slug: true, term: true },
-      take: 4,
-    }).catch(() => []),
-  ]);
+  // Cachade relaterade guider och ordlistetermer
+  const [relatedGuides, relatedTerms] = await getPlantRelated(plant.name);
 
   const navUser = profile
     ? { id: profile.id, username: profile.username, displayName: profile.fullName, avatarUrl: profile.avatarUrl, role: profile.role }
