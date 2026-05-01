@@ -302,17 +302,6 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
         />
       </Field>
 
-      <Field label="Jordförberedelse" name="soilPreparation" hint="Tips om hur man förbereder jorden inför plantering">
-        <textarea
-          id="soilPreparation"
-          name="soilPreparation"
-          defaultValue={defaultValues.soilPreparation ?? ""}
-          rows={4}
-          placeholder="T.ex. Gräv ned kompost på hösten. Luckra till 30 cm djup. Tillsätt kalk om pH är under 6..."
-          className={textareaClass}
-        />
-      </Field>
-
       <Field label="Lämplig plats" name="locationNotes" hint="Var passar växten bäst – sol, halvskugga, skyddad plats etc.">
         <textarea
           id="locationNotes"
@@ -320,6 +309,17 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
           defaultValue={defaultValues.locationNotes ?? ""}
           rows={4}
           placeholder="T.ex. Varm och solig plats skyddad mot vind. Fungerar bra längs husvägg åt söder. Undvik sänkor med frostfickor..."
+          className={textareaClass}
+        />
+      </Field>
+
+      <Field label="Jordförberedelse" name="soilPreparation" hint="Tips om hur man förbereder jorden inför plantering">
+        <textarea
+          id="soilPreparation"
+          name="soilPreparation"
+          defaultValue={defaultValues.soilPreparation ?? ""}
+          rows={4}
+          placeholder="T.ex. Gräv ned kompost på hösten. Luckra till 30 cm djup. Tillsätt kalk om pH är under 6..."
           className={textareaClass}
         />
       </Field>
