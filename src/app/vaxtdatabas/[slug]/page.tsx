@@ -251,12 +251,91 @@ export default async function PlantDetailPage({ params }: PageProps) {
         )}
 
         {/* ── Innehåll ── */}
-        <div className="bg-cream-50 min-h-screen">
+        <div className="bg-cream-50 min-h-screen overflow-x-hidden">
           <div className="container-main py-8">
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
 
-              {/* ── Vänster: flik-innehåll ── */}
-              <div className="lg:col-span-2">
+              {/* ── Höger sidebar – FIRST i DOM → visas överst på mobil ── */}
+              <div className="space-y-4 lg:space-y-5 lg:col-start-3 lg:row-start-1 lg:pt-[52px]">
+
+                {/* Svårighetsgrad + odlingsstatus + knappar */}
+                <PlantSidebarStatus
+                  difficultyLevel={plant.difficultyLevel}
+                  initialGrowing={isGrowing}
+                />
+
+                {/* Kom igång */}
+                {(plant.sowingPeriod || plant.plantingPeriod || plant.harvestPeriod || plant.sunRequirement || plant.wateringNeeds) && (
+                  <Card padding="lg" className="bg-green-50 border-green-200">
+                    <h2 className="text-sm font-bold text-green-900 mb-3">Kom igång</h2>
+                    <ul className="space-y-2.5 text-sm text-green-800">
+                      {plant.sowingPeriod && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">🌱</span>
+                          <span className="min-w-0 break-words">Så inomhus: <strong>{plant.sowingPeriod}</strong></span>
+                        </li>
+                      )}
+                      {plant.plantingPeriod && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">🪴</span>
+                          <span className="min-w-0 break-words">Plantera ut: <strong>{plant.plantingPeriod}</strong></span>
+                        </li>
+                      )}
+                      {plant.harvestPeriod && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">🌾</span>
+                          <span className="min-w-0 break-words">Skörd: <strong>{plant.harvestPeriod}</strong></span>
+                        </li>
+                      )}
+                      {plant.sunRequirement && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">☀️</span>
+                          <span className="min-w-0 break-words">{plant.sunRequirement}</span>
+                        </li>
+                      )}
+                      {plant.wateringNeeds && (
+                        <li className="flex items-start gap-2">
+                          <span className="shrink-0 text-base">💧</span>
+                          <span className="min-w-0 break-words">{plant.wateringNeeds}</span>
+                        </li>
+                      )}
+                    </ul>
+                  </Card>
+                )}
+
+                {/* Odlingsfakta */}
+                {growingInfo.length > 0 && (
+                  <Card padding="lg">
+                    <h2 className="text-base font-semibold text-gray-900 mb-2">Odlingsfakta</h2>
+                    <dl>
+                      {growingInfo.map((row) => (
+                        <InfoRow key={row.label} icon={row.icon} label={row.label} value={row.value} />
+                      ))}
+                    </dl>
+                  </Card>
+                )}
+
+                {/* Navigeringslänkar */}
+                <div className="hidden lg:block space-y-2">
+                  <Link
+                    href="/vaxtdatabas"
+                    className="flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-800 hover:underline"
+                  >
+                    ← Tillbaka till växtdatabasen
+                  </Link>
+                  {plant.category && (
+                    <Link
+                      href={`/vaxtdatabas?kategori=${encodeURIComponent(plant.category)}`}
+                      className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-green-700 hover:underline"
+                    >
+                      → Fler {plant.category.toLowerCase()}
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Vänster: flik-innehåll – SECOND i DOM → visas under sidebar på mobil ── */}
+              <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 min-w-0">
                 <PlantDetailTabs
                   plant={{
                     id:              plant.id,
@@ -302,70 +381,9 @@ export default async function PlantDetailPage({ params }: PageProps) {
                   isLoggedIn={!!profile}
                   initialGrowing={isGrowing}
                 />
-              </div>
 
-              {/* ── Höger sidebar ── */}
-              <div className="space-y-5 lg:pt-[52px]">
-
-                {/* Svårighetsgrad + odlingsstatus + knappar */}
-                <PlantSidebarStatus
-                  difficultyLevel={plant.difficultyLevel}
-                  initialGrowing={isGrowing}
-                />
-
-                {/* Kom igång – OVANFÖR Odlingsfakta */}
-                {(plant.sowingPeriod || plant.plantingPeriod || plant.harvestPeriod || plant.sunRequirement || plant.wateringNeeds) && (
-                  <Card padding="lg" className="bg-green-50 border-green-200">
-                    <h2 className="text-sm font-bold text-green-900 mb-3">Kom igång</h2>
-                    <ul className="space-y-2.5 text-sm text-green-800">
-                      {plant.sowingPeriod && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0 text-base">🌱</span>
-                          <span>Så inomhus: <strong>{plant.sowingPeriod}</strong></span>
-                        </li>
-                      )}
-                      {plant.plantingPeriod && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0 text-base">🪴</span>
-                          <span>Plantera ut: <strong>{plant.plantingPeriod}</strong></span>
-                        </li>
-                      )}
-                      {plant.harvestPeriod && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0 text-base">🌾</span>
-                          <span>Skörd: <strong>{plant.harvestPeriod}</strong></span>
-                        </li>
-                      )}
-                      {plant.sunRequirement && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0 text-base">☀️</span>
-                          <span>{plant.sunRequirement}</span>
-                        </li>
-                      )}
-                      {plant.wateringNeeds && (
-                        <li className="flex items-start gap-2">
-                          <span className="shrink-0 text-base">💧</span>
-                          <span>{plant.wateringNeeds}</span>
-                        </li>
-                      )}
-                    </ul>
-                  </Card>
-                )}
-
-                {/* Odlingsfakta */}
-                {growingInfo.length > 0 && (
-                  <Card padding="lg">
-                    <h2 className="text-base font-semibold text-gray-900 mb-2">Odlingsfakta</h2>
-                    <dl>
-                      {growingInfo.map((row) => (
-                        <InfoRow key={row.label} icon={row.icon} label={row.label} value={row.value} />
-                      ))}
-                    </dl>
-                  </Card>
-                )}
-
-                {/* Navigeringslänkar */}
-                <div className="space-y-2">
+                {/* Navigeringslänkar – visas på mobil under tabbar */}
+                <div className="lg:hidden mt-6 space-y-2">
                   <Link
                     href="/vaxtdatabas"
                     className="flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-800 hover:underline"
@@ -382,6 +400,7 @@ export default async function PlantDetailPage({ params }: PageProps) {
                   )}
                 </div>
               </div>
+
             </div>
           </div>
         </div>

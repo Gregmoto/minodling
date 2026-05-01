@@ -163,7 +163,7 @@ export function PlantDetailTabs({
   });
 
   return (
-    <>
+    <div className="min-w-0 overflow-x-hidden">
       {/* ── Sticky tab-nav ── */}
       <ScrollableTabs
         tabs={visibleTabs}
@@ -445,7 +445,7 @@ export function PlantDetailTabs({
         </div>
       )}
 
-      {/* ── Global sticky bottom actions ── */}
+      {/* ── Global sticky bottom actions (mobil only) ── */}
       <StickyPlantActions
         isPlanning={isPlanning}
         isGrowing={isGrowing}
@@ -454,6 +454,6 @@ export function PlantDetailTabs({
         mobileOnly
       />
       <StickyPlantActionsSpacer mobileOnly />
-    </>
+    </div>
   );
 }
