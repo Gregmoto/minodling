@@ -116,7 +116,7 @@ const getSiteCounts = unstable_cache(
     prisma.profile.count().catch(() => 0),
   ]),
   ["home-site-counts"],
-  { revalidate: 3600 },
+  { revalidate: 300, tags: ["plants"] },
 );
 
 export default async function HomePage() {
