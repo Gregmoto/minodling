@@ -214,37 +214,37 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
       <SectionTitle>Odlingstider</SectionTitle>
 
       <div className="grid sm:grid-cols-3 gap-4">
-        <Field label="Såningstid" name="sowingPeriod" hint="T.ex. Feb–Apr">
-          <input
+        <Field label="Såningstid" name="sowingPeriod" hint="T.ex. Feb–Apr inomhus">
+          <textarea
             id="sowingPeriod"
             name="sowingPeriod"
-            type="text"
+            rows={3}
             defaultValue={defaultValues.sowingPeriod ?? ""}
-            maxLength={60}
-            placeholder="Feb–Apr"
-            className={inputClass}
+            maxLength={300}
+            placeholder="Feb–Apr inomhus, direktså maj"
+            className={`${inputClass} resize-none`}
           />
         </Field>
-        <Field label="Planteringstid" name="plantingPeriod" hint="T.ex. Maj–Jun">
-          <input
+        <Field label="Planteringstid" name="plantingPeriod" hint="T.ex. Maj–Jun utomhus">
+          <textarea
             id="plantingPeriod"
             name="plantingPeriod"
-            type="text"
+            rows={3}
             defaultValue={defaultValues.plantingPeriod ?? ""}
-            maxLength={60}
-            placeholder="Maj–Jun"
-            className={inputClass}
+            maxLength={300}
+            placeholder="Plantera ut efter sista frost, maj–jun"
+            className={`${inputClass} resize-none`}
           />
         </Field>
-        <Field label="Skördetid" name="harvestPeriod" hint="T.ex. Aug–Sep">
-          <input
+        <Field label="Skördetid" name="harvestPeriod" hint="T.ex. Aug–sep">
+          <textarea
             id="harvestPeriod"
             name="harvestPeriod"
-            type="text"
+            rows={3}
             defaultValue={defaultValues.harvestPeriod ?? ""}
-            maxLength={60}
-            placeholder="Aug–Sep"
-            className={inputClass}
+            maxLength={300}
+            placeholder="Aug–okt, skörda löpande"
+            className={`${inputClass} resize-none`}
           />
         </Field>
       </div>
