@@ -130,21 +130,6 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Din odlingsvecka */}
-      <Card padding="none">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-green-600" />
-            <CardTitle className="text-base">Din odlingsvecka</CardTitle>
-            <span className="text-xs text-gray-400">v.{weekNumber}</span>
-          </div>
-          <Link href="/odlingsvecka" className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 transition-colors">
-            Visa allt <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-        <WeeklyTaskWidget tasks={weeklyTasks} weekNumber={weekNumber} />
-      </Card>
-
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Senaste inlägg */}
         <div className="lg:col-span-2">
@@ -296,6 +281,21 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Din odlingsvecka */}
+      <Card padding="none">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-base">Din odlingsvecka</CardTitle>
+            <span className="text-xs text-gray-400">v.{weekNumber}</span>
+          </div>
+          <Link href="/odlingsvecka" className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 transition-colors">
+            Visa allt <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        <WeeklyTaskWidget tasks={weeklyTasks} weekNumber={weekNumber} />
+      </Card>
     </div>
   );
 }
