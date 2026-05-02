@@ -264,7 +264,7 @@ export default async function PlantDetailPage({ params }: PageProps) {
         )}
 
         {/* ── Innehåll ── */}
-        <div className="bg-cream-50 min-h-screen overflow-x-hidden">
+        <div className="bg-cream-50 min-h-screen [overflow-x:clip]">
           <div className="container-main py-8">
             <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
 

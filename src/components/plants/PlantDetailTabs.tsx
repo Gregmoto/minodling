@@ -163,14 +163,14 @@ export function PlantDetailTabs({
   });
 
   return (
-    <div className="min-w-0 overflow-x-hidden">
+    <div className="min-w-0 [overflow-x:clip]">
       {/* ── Sticky tab-nav ── */}
       <ScrollableTabs
         tabs={visibleTabs}
         activeId={activeTab}
         onSelect={setActiveTab}
         sticky
-        stickyTop={56}
+        stickyTop={64}
         stickyBg="bg-cream-50"
         size="sm"
         className="mb-6"
