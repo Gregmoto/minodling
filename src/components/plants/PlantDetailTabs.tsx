@@ -61,6 +61,7 @@ export interface PlantDetailTabsProps {
     soilPreparation?: string | null;
     // Kalender
     indoorsStart?:   CalendarPeriod | null;
+    plantingWindow?: CalendarPeriod | null;
     harvestWindow?:  CalendarPeriod | null;
     // Plats (strukturerat)
     hardinessZone?:  { min: number; max: number } | null;
@@ -217,6 +218,7 @@ export function PlantDetailTabs({
           </h2>
           <PlantingCalendar
             indoors={plant.indoorsStart ?? null}
+            planting={plant.plantingWindow ?? null}
             harvest={plant.harvestWindow ?? null}
             plantType={plant.name}
             frostSensitive={plant.frostSensitive}

@@ -170,8 +170,9 @@ export default async function PlantDetailPage({ params }: PageProps) {
     return { startMonth: start, startDay: 1, endMonth: end, endDay: DAYS_IN_MONTH[end - 1] };
   }
 
-  const indoorsStart  = parseMonthRange(plant.sowingPeriod);
-  const harvestWindow = parseMonthRange(plant.harvestPeriod);
+  const indoorsStart   = parseMonthRange(plant.sowingPeriod);
+  const plantingWindow = parseMonthRange(plant.plantingPeriod);
+  const harvestWindow  = parseMonthRange(plant.harvestPeriod);
 
   const growingInfo: { icon: React.ReactNode; label: string; value: string }[] = [
     plant.sowingPeriod    && { icon: <CalendarDays className="h-4 w-4" />, label: "Såningstid",    value: plant.sowingPeriod },
@@ -385,6 +386,7 @@ export default async function PlantDetailPage({ params }: PageProps) {
                     soilPreparation: plant.soilPreparation,
                     // Kalenderdata – parsad från fritext
                     indoorsStart,
+                    plantingWindow,
                     harvestWindow,
                     // Plats (strukturerat) – null tills vidare
                     hardinessZone:   null,
