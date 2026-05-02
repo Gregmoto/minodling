@@ -11,6 +11,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+import Image from "next/image";
 import { BookOpen } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -102,11 +103,9 @@ export default async function GuiderPage({
                 <Link key={g.slug} href={`/guider/${g.slug}`}>
                   <Card hover padding="none" className="h-full overflow-hidden">
                     {g.imageUrl ? (
-                      <img
-                        src={g.imageUrl}
-                        alt={`Guide: ${g.title}`}
-                        className="w-full h-44 object-cover"
-                      />
+                      <div className="relative w-full h-44">
+                        <Image src={g.imageUrl} alt={`Guide: ${g.title}`} fill className="object-cover" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
+                      </div>
                     ) : (
                       <div className="w-full h-44 bg-gradient-to-br from-amber-50 to-green-50 flex items-center justify-center">
                         <BookOpen className="h-10 w-10 text-amber-300" />

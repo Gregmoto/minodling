@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import Image from "next/image";
 import { formatDate } from "@/lib/utils";
 import { Library } from "lucide-react";
 
@@ -95,7 +96,9 @@ export default async function KunskapsbankPage({
                 <Link key={a.slug} href={`/kunskapsbank/${a.slug}`}>
                   <Card hover padding="none" className="h-full overflow-hidden">
                     {a.imageUrl ? (
-                      <img src={a.imageUrl} alt={a.title} className="w-full h-40 object-cover" />
+                      <div className="relative w-full h-40">
+                        <Image src={a.imageUrl} alt={a.title} fill className="object-cover" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
+                      </div>
                     ) : (
                       <div className="w-full h-40 bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
                         <Library className="h-8 w-8 text-purple-200" />

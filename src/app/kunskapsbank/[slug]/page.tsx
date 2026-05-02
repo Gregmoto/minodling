@@ -14,6 +14,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import Image from "next/image";
 import { formatDate } from "@/lib/utils";
 
 const getArticle = unstable_cache(
@@ -58,7 +59,7 @@ export default async function KunskapsbankArtikelPage({ params }: { params: Prom
       <main className="flex-1 bg-cream-50">
         {article.imageUrl && (
           <div className="relative h-64 overflow-hidden">
-            <img src={article.imageUrl} alt={article.title} className="w-full h-full object-cover" />
+            <Image src={article.imageUrl} alt={article.title} fill className="object-cover" priority sizes="100vw" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           </div>
         )}

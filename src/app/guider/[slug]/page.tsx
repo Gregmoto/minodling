@@ -15,6 +15,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+import Image from "next/image";
 import { BookOpen } from "lucide-react";
 
 const getGuide = unstable_cache(
@@ -98,7 +99,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         {/* Hero */}
         {guide.imageUrl ? (
           <div className="relative h-72 sm:h-96 overflow-hidden">
-            <img src={guide.imageUrl} alt={guide.title} className="w-full h-full object-cover" />
+            <Image src={guide.imageUrl} alt={guide.title} fill className="object-cover" priority sizes="100vw" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-0 container-main py-8">
               <div className="flex gap-2 mb-3">
