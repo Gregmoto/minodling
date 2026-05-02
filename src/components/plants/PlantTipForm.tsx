@@ -56,7 +56,7 @@ export function PlantTipForm({ plantId }: PlantTipFormProps) {
       <button
         type="submit"
         disabled={isPending || content.trim().length < 5}
-        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
       >
         {isPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />

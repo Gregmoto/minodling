@@ -402,7 +402,7 @@ export function PlantDetailTabs({
       {activeTab === "guider" && (
         <div className="space-y-6 animate-fade-in">
           <Card padding="lg">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-4">
               <BookOpen className="h-5 w-5 text-green-600" />
               Relaterade guider
             </h2>
@@ -418,10 +418,23 @@ export function PlantDetailTabs({
                 ))}
               </ul>
             ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-gray-400 mb-3">Inga specifika guider hittades för {plant.name}.</p>
-                <Link href="/guider" className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-800 hover:underline">
-                  <BookOpen className="h-4 w-4" /> Bläddra alla odlingsguider
+              <div className="flex flex-col items-center gap-4 py-6 text-center">
+                <div className="h-12 w-12 rounded-2xl bg-green-50 flex items-center justify-center">
+                  <BookOpen className="h-6 w-6 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    Inga specifika guider för {plant.name} just nu
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Bläddra bland alla våra odlingsguider för tips och inspiration
+                  </p>
+                </div>
+                <Link
+                  href="/guider"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors"
+                >
+                  <BookOpen className="h-4 w-4" /> Bläddra odlingsguider
                 </Link>
               </div>
             )}
