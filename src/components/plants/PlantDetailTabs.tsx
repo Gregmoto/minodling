@@ -28,6 +28,7 @@ import { formatRelativeDate } from "@/lib/utils";
 interface Tip {
   id:        string;
   content:   string;
+  imageUrl:  string | null;
   createdAt: Date;
   author: {
     username:  string;
@@ -97,17 +98,18 @@ export interface PlantDetailTabsProps {
 // ── Flik-definitioner ─────────────────────────────────────────────
 
 const ALL_TABS: TabItem[] = [
-  { id: "om",             label: "Om växten",      icon: <Info          className="h-3.5 w-3.5" /> },
+  { id: "om",             label: "Om växten",       icon: <Info          className="h-3.5 w-3.5" /> },
   { id: "kalender",       label: "Kalender",        icon: <CalendarDays  className="h-3.5 w-3.5" /> },
-  { id: "svarighetsgrad", label: "Svårighet",       icon: <BarChart2     className="h-3.5 w-3.5" /> },
+  { id: "tillvaxt",       label: "Tillväxt",        icon: <TrendingUp    className="h-3.5 w-3.5" /> },
   { id: "jord",           label: "Jord",            icon: <FlaskConical  className="h-3.5 w-3.5" /> },
   { id: "plats",          label: "Plats",           icon: <MapPin        className="h-3.5 w-3.5" /> },
-  { id: "tillvaxt",       label: "Tillväxt",        icon: <TrendingUp    className="h-3.5 w-3.5" /> },
+  { id: "problem",        label: "Problem",         icon: <AlertTriangle className="h-3.5 w-3.5" /> },
+  { id: "tips",           label: "Tips",            icon: <Lightbulb     className="h-3.5 w-3.5" /> },
+  { id: "guider",         label: "Guider",          icon: <Star          className="h-3.5 w-3.5" /> },
+  { id: "svarighetsgrad", label: "Svårighet",       icon: <BarChart2     className="h-3.5 w-3.5" /> },
   { id: "howtos",         label: "Odling",          icon: <BookOpen      className="h-3.5 w-3.5" /> },
   { id: "faq",            label: "FAQ",             icon: <HelpCircle    className="h-3.5 w-3.5" /> },
   { id: "benefits",       label: "Näring",          icon: <Leaf          className="h-3.5 w-3.5" /> },
-  { id: "tips",           label: "Tips",            icon: <Lightbulb     className="h-3.5 w-3.5" /> },
-  { id: "guider",         label: "Guider",          icon: <Star          className="h-3.5 w-3.5" /> },
 ];
 
 // ── Hjälpkomponent: hanterar både HTML och ren text med radbrytningar ──
@@ -156,10 +158,11 @@ export function PlantDetailTabs({
   const hasFaq          = !!(plant.faqItems && plant.faqItems.length > 0);
 
   const visibleTabs = ALL_TABS.filter((t) => {
-    if (t.id === "faq"      && !hasFaq)          return false;
-    if (t.id === "benefits" && !hasBenefits)     return false;
-    if (t.id === "plats"    && !hasLocationData) return false;
-    if (t.id === "jord"     && !hasSoilData)     return false;
+    if (t.id === "faq"      && !hasFaq)              return false;
+    if (t.id === "benefits" && !hasBenefits)         return false;
+    if (t.id === "plats"    && !hasLocationData)     return false;
+    if (t.id === "jord"     && !hasSoilData)         return false;
+    if (t.id === "problem"  && !plant.commonProblems) return false;
     return true;
   });
 
@@ -192,17 +195,6 @@ export function PlantDetailTabs({
                 <p className="text-gray-400 text-sm">
                   Odlingsguide för {plant.name} är under uppbyggnad.
                 </p>
-              </div>
-            </Card>
-          )}
-          {plant.commonProblems && (
-            <Card padding="lg">
-              <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                Vanliga problem
-              </h2>
-              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {plant.commonProblems}
               </div>
             </Card>
           )}
@@ -302,6 +294,19 @@ export function PlantDetailTabs({
         </Card>
       )}
 
+      {/* ── Vanliga problem ── */}
+      {activeTab === "problem" && plant.commonProblems && (
+        <Card padding="lg" className="animate-fade-in">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4">
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            Vanliga problem & lösningar
+          </h2>
+          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
+            {plant.commonProblems}
+          </div>
+        </Card>
+      )}
+
       {/* ── Odlingsguider (how-tos) ── */}
       {activeTab === "howtos" && (
         <div className="animate-fade-in">
@@ -349,7 +354,7 @@ export function PlantDetailTabs({
             )}
           </h2>
           {tips.length > 0 && (
-            <div className="space-y-4 mb-6">
+            <div className="space-y-5 mb-6">
               {tips.map((tip) => (
                 <div key={tip.id} className="flex gap-3">
                   <Link href={`/profil/${tip.author.username}`} className="shrink-0">
@@ -360,7 +365,7 @@ export function PlantDetailTabs({
                     />
                   </Link>
                   <div className="flex-1 bg-sage-50 rounded-xl px-4 py-3">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1.5">
                       <Link
                         href={`/profil/${tip.author.username}`}
                         className="text-sm font-medium text-gray-800 hover:text-green-700"
@@ -372,6 +377,16 @@ export function PlantDetailTabs({
                       </span>
                     </div>
                     <p className="text-sm text-gray-700 whitespace-pre-wrap">{tip.content}</p>
+                    {tip.imageUrl && (
+                      <div className="mt-3">
+                        <img
+                          src={tip.imageUrl}
+                          alt="Bild från odlare"
+                          className="rounded-xl max-h-64 w-auto object-cover border border-gray-100 cursor-pointer hover:opacity-95 transition-opacity"
+                          onClick={() => window.open(tip.imageUrl!, "_blank")}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

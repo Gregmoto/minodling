@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
-export async function addPlantTip(plantId: string, content: string) {
+export async function addPlantTip(plantId: string, content: string, imageUrl?: string | null) {
   const user = await requireAuth();
   const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
@@ -20,6 +20,7 @@ export async function addPlantTip(plantId: string, content: string) {
       plantId,
       userId: profile.id,
       content: content.trim(),
+      imageUrl: imageUrl ?? null,
       status: "published",
     },
   });
