@@ -402,15 +402,6 @@ export default async function PlantDetailPage({ params }: PageProps) {
                     soilNotes:       null,
                     // Tillväxt – default-faser visas automatiskt
                     growthPhases:    undefined,
-                    // How-tos – default-faser visas automatiskt
-                    howToPhases:     undefined,
-                    // FAQ – döljs om tom
-                    faqItems:        undefined,
-                    // Näringsvärden – döljs om tom
-                    benefitsText:    null,
-                    nutrition:       undefined,
-                    recipes:         undefined,
-                    benefitsTags:    undefined,
                   }}
                   tips={plant.tips}
                   relatedGuides={relatedGuides}
