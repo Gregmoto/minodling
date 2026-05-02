@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   BookOpen, Lightbulb, CalendarDays, Info,
-  AlertTriangle, MapPin, FlaskConical, TrendingUp, Leaf,
+  AlertTriangle, MapPin, FlaskConical, TrendingUp,
 } from "lucide-react";
 import { PlantingCalendar, type CalendarPeriod } from "@/components/plants/PlantingCalendar";
 import { LocationSection, type SunlightLevel, type Neighbor } from "@/components/plants/LocationSection";
@@ -118,13 +118,14 @@ export function PlantDetailTabs({
   isLoggedIn,
   initialGrowing = false,
 }: PlantDetailTabsProps) {
-  const [isPlanning, setIsPlanning] = useState(false);
-  const [isGrowing,  setIsGrowing]  = useState(initialGrowing);
+  const [isPlanning,   setIsPlanning]   = useState(false);
+  const [isGrowing,    setIsGrowing]    = useState(initialGrowing);
+  const [bottomTab,    setBottomTab]    = useState<"tips" | "ordlista">("tips");
 
   const hasCalendar     = !!(plant.indoorsStart || plant.plantingWindow || plant.harvestWindow);
-  const hasGrowth       = !!(plant.growthPhases && plant.growthPhases.length > 0);
   const hasSoilData     = !!(plant.soilPreparation || plant.soilNotes || plant.ph || (plant.soilTypes?.length ?? 0) > 0);
   const hasLocationData = !!(plant.locationNotes || plant.hardinessZone || (plant.sunlight?.length ?? 0) > 0 || plant.goodNeighbors?.length || plant.temperature);
+  const hasOrdlista     = relatedTerms.length > 0;
 
   return (
     <div className="min-w-0 [overflow-x:clip] space-y-6">
@@ -164,15 +165,13 @@ export function PlantDetailTabs({
         </Card>
       )}
 
-      {/* 3. Tillväxtperiod */}
-      {hasGrowth && (
-        <Card padding="lg">
-          <SectionHeading icon={<TrendingUp className="h-5 w-5" />}>
-            Tillväxtperiod
-          </SectionHeading>
-          <GrowthTimeline phases={plant.growthPhases} />
-        </Card>
-      )}
+      {/* 3. Tillväxtperiod – alltid synlig */}
+      <Card padding="lg">
+        <SectionHeading icon={<TrendingUp className="h-5 w-5" />}>
+          Tillväxtperiod
+        </SectionHeading>
+        <GrowthTimeline phases={plant.growthPhases} />
+      </Card>
 
       {/* 4. Jordförberedelse */}
       {hasSoilData && (
@@ -228,120 +227,124 @@ export function PlantDetailTabs({
         </Card>
       )}
 
-      {/* 7. Tips från odlare */}
-      <Card padding="lg">
-        <SectionHeading icon={<Lightbulb className="h-5 w-5 text-amber-400" />}>
-          Tips från odlare
-          {tips.length > 0 && (
-            <span className="ml-auto text-sm font-normal text-gray-400">{tips.length} tips</span>
-          )}
-        </SectionHeading>
-
-        {tips.length > 0 && (
-          <div className="space-y-5 mb-6">
-            {tips.map((tip) => (
-              <div key={tip.id} className="flex gap-3">
-                <Link href={`/profil/${tip.author.username}`} className="shrink-0">
-                  <Avatar
-                    src={tip.author.avatarUrl}
-                    fallback={tip.author.fullName ?? tip.author.username}
-                    size="sm"
-                  />
-                </Link>
-                <div className="flex-1 bg-sage-50 rounded-xl px-4 py-3">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Link
-                      href={`/profil/${tip.author.username}`}
-                      className="text-sm font-medium text-gray-800 hover:text-green-700"
-                    >
-                      {tip.author.fullName ?? tip.author.username}
-                    </Link>
-                    <span className="text-xs text-gray-400">{formatRelativeDate(tip.createdAt)}</span>
-                  </div>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{tip.content}</p>
-                  {tip.imageUrl && (
-                    <div className="mt-3">
-                      <img
-                        src={tip.imageUrl}
-                        alt="Bild från odlare"
-                        className="rounded-xl max-h-64 w-auto object-cover border border-gray-100 cursor-pointer hover:opacity-95 transition-opacity"
-                        onClick={() => window.open(tip.imageUrl!, "_blank")}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {isLoggedIn ? (
-          <div className={cn("pt-2", tips.length > 0 && "border-t border-gray-100")}>
-            <p className="text-sm text-gray-500 mb-3">Dela ditt tips om {plant.name}:</p>
-            <PlantTipForm plantId={plant.id} />
-          </div>
-        ) : (
-          <div className={cn("text-center py-6 bg-green-50 rounded-xl", tips.length > 0 && "mt-4")}>
-            <p className="text-sm text-green-700">
-              <Link
-                href={`/auth/login?redirect=/vaxtdatabas/${plant.slug}`}
-                className="font-medium underline"
-              >
-                Logga in
-              </Link>{" "}
-              för att dela ditt eget tips
-            </p>
-          </div>
-        )}
-
-        {tips.length === 0 && !isLoggedIn && (
-          <p className="text-sm text-gray-400 text-center py-4 mt-2">
-            Inga tips än – bli den första!
-          </p>
-        )}
-      </Card>
-
-      {/* 8. Relaterade guider */}
-      {(relatedGuides.length > 0 || relatedTerms.length > 0) && (
-        <div className="space-y-4">
-          {relatedGuides.length > 0 && (
-            <Card padding="lg">
-              <SectionHeading icon={<BookOpen className="h-5 w-5" />}>
-                Relaterade guider
-              </SectionHeading>
-              <ul className="space-y-2">
-                {relatedGuides.map((g) => (
-                  <li key={g.slug}>
-                    <Link
-                      href={`/guider/${g.slug}`}
-                      className="flex items-center gap-2 text-sm text-green-700 hover:text-green-800 hover:underline transition-colors"
-                    >
-                      <span className="text-green-400">›</span>
-                      {g.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-          {relatedTerms.length > 0 && (
-            <Card padding="lg">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Odlingsordlista</h3>
-              <div className="flex flex-wrap gap-2">
-                {relatedTerms.map((t) => (
-                  <Link
-                    key={t.slug}
-                    href={`/ordlista/${t.slug}`}
-                    className="px-3 py-1 bg-sage-50 text-sage-700 text-sm rounded-full hover:bg-sage-100 transition-colors border border-sage-200"
-                  >
-                    {t.term}
-                  </Link>
-                ))}
-              </div>
-            </Card>
+      {/* 7. Tips & Ordlista – tabbad sektion */}
+      <Card padding="none">
+        {/* Tabb-header */}
+        <div className="flex border-b border-gray-100">
+          <button
+            onClick={() => setBottomTab("tips")}
+            className={cn(
+              "flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors",
+              bottomTab === "tips"
+                ? "text-green-700 border-b-2 border-green-600 -mb-px"
+                : "text-gray-500 hover:text-gray-700",
+            )}
+          >
+            <Lightbulb className="h-4 w-4" />
+            Tips från odlare
+            {tips.length > 0 && (
+              <span className="ml-1 bg-green-100 text-green-700 text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                {tips.length}
+              </span>
+            )}
+          </button>
+          {hasOrdlista && (
+            <button
+              onClick={() => setBottomTab("ordlista")}
+              className={cn(
+                "flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors",
+                bottomTab === "ordlista"
+                  ? "text-green-700 border-b-2 border-green-600 -mb-px"
+                  : "text-gray-500 hover:text-gray-700",
+              )}
+            >
+              <BookOpen className="h-4 w-4" />
+              Odlingsordlista
+            </button>
           )}
         </div>
-      )}
+
+        {/* Tips-panel */}
+        {bottomTab === "tips" && (
+          <div className="p-5">
+            {tips.length > 0 && (
+              <div className="space-y-5 mb-6">
+                {tips.map((tip) => (
+                  <div key={tip.id} className="flex gap-3">
+                    <Link href={`/profil/${tip.author.username}`} className="shrink-0">
+                      <Avatar
+                        src={tip.author.avatarUrl}
+                        fallback={tip.author.fullName ?? tip.author.username}
+                        size="sm"
+                      />
+                    </Link>
+                    <div className="flex-1 bg-sage-50 rounded-xl px-4 py-3">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Link
+                          href={`/profil/${tip.author.username}`}
+                          className="text-sm font-medium text-gray-800 hover:text-green-700"
+                        >
+                          {tip.author.fullName ?? tip.author.username}
+                        </Link>
+                        <span className="text-xs text-gray-400">{formatRelativeDate(tip.createdAt)}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{tip.content}</p>
+                      {tip.imageUrl && (
+                        <div className="mt-3">
+                          <img
+                            src={tip.imageUrl}
+                            alt="Bild från odlare"
+                            className="rounded-xl max-h-64 w-auto object-cover border border-gray-100 cursor-pointer hover:opacity-95 transition-opacity"
+                            onClick={() => window.open(tip.imageUrl!, "_blank")}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {isLoggedIn ? (
+              <div className={cn("pt-2", tips.length > 0 && "border-t border-gray-100")}>
+                <p className="text-sm text-gray-500 mb-3">Dela ditt tips om {plant.name}:</p>
+                <PlantTipForm plantId={plant.id} />
+              </div>
+            ) : (
+              <div className={cn("text-center py-6 bg-green-50 rounded-xl", tips.length > 0 && "mt-4")}>
+                <p className="text-sm text-green-700">
+                  <Link href={`/auth/login?redirect=/vaxtdatabas/${plant.slug}`} className="font-medium underline">
+                    Logga in
+                  </Link>{" "}
+                  för att dela ditt eget tips
+                </p>
+              </div>
+            )}
+            {tips.length === 0 && !isLoggedIn && (
+              <p className="text-sm text-gray-400 text-center py-4 mt-2">
+                Inga tips än – bli den första!
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Ordlista-panel */}
+        {bottomTab === "ordlista" && hasOrdlista && (
+          <div className="p-5">
+            <div className="flex flex-wrap gap-2">
+              {relatedTerms.map((t) => (
+                <Link
+                  key={t.slug}
+                  href={`/ordlista/${t.slug}`}
+                  className="px-3 py-1.5 bg-sage-50 text-sage-700 text-sm rounded-full hover:bg-sage-100 transition-colors border border-sage-200"
+                >
+                  {t.term}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </Card>
 
       {/* Sticky bottom actions (mobil) */}
       <StickyPlantActions
