@@ -133,15 +133,15 @@ export default async function PlantDetailPage({ params }: PageProps) {
 
   if (!plant) notFound();
 
-  // Kolla om användaren redan odlar denna växt (auth-beroende, ej cachebar)
-  const isGrowing = profile
-    ? (await prisma.gardenDiary.count({
-        where: { userId: profile.id, plantId: plant.id, status: "growing" },
-      })) > 0
-    : false;
-
-  // Cachade relaterade guider och ordlistetermer
-  const [relatedGuides, relatedTerms] = await getPlantRelated(plant.name);
+  // Kör isGrowing-check och relaterade guider parallellt
+  const [[relatedGuides, relatedTerms], isGrowing] = await Promise.all([
+    getPlantRelated(plant.name),
+    profile
+      ? prisma.gardenDiary.count({
+          where: { userId: profile.id, plantId: plant.id, status: "growing" },
+        }).then((n) => n > 0)
+      : Promise.resolve(false),
+  ]);
 
   const navUser = profile
     ? { id: profile.id, username: profile.username, displayName: profile.fullName, avatarUrl: profile.avatarUrl, role: profile.role }
