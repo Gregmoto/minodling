@@ -93,7 +93,9 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
     }
   }
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     if (imageUrl) formData.set("imageUrl", imageUrl);
     formData.set("slug", slugValue);
 
@@ -101,8 +103,6 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
       try {
         setSaved(false);
         await action(formData);
-        // If we're creating a new plant the server action may redirect;
-        // for editing it returns normally → show confirmation.
         setSaved(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
@@ -114,7 +114,7 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <SectionTitle>Grundinformation</SectionTitle>
 
       <div className="grid sm:grid-cols-2 gap-4">
