@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
 import { ContentEditor } from "@/components/admin/ContentEditor";
 import { createArticle, updateArticle } from "@/app/admin/actions";
 import { ImageInput } from "@/components/ui/ImageInput";
@@ -37,6 +38,7 @@ export function ArticleForm({ article }: Props) {
   const [imageUrl,     setImageUrl]     = useState<string | null>(article?.imageUrl ?? null);
   const [error,        setError]        = useState<string | null>(null);
   const [isPending,    start]           = useTransition();
+  const isDuplicate = useDuplicateCheck("article", title, article?.id);
 
   function autoSlug(t: string) {
     return t.toLowerCase()
@@ -70,8 +72,14 @@ export function ArticleForm({ article }: Props) {
               setTitle(e.target.value);
               if (!isEdit) setSlug(autoSlug(e.target.value));
             }}
-            className={inputCls}
+            className={`${inputCls} ${isDuplicate ? "border-amber-400 focus:ring-amber-300" : ""}`}
           />
+          {isDuplicate && (
+            <p className="flex items-center gap-1.5 text-xs text-amber-600 mt-1">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              En artikel med den här titeln finns redan i kunskapsbanken.
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600">Slug (URL) *</label>

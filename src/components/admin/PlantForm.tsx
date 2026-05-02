@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
 import { slugify } from "@/lib/utils";
 import { ImageInput } from "@/components/ui/ImageInput";
 
@@ -81,6 +82,7 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const isDuplicate = useDuplicateCheck("plant", nameValue, defaultValues.slug ? slugValue : undefined);
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
@@ -126,8 +128,14 @@ export function PlantForm({ action, defaultValues = {}, submitLabel = "Spara" }:
             required
             maxLength={100}
             placeholder="T.ex. Tomat"
-            className={inputClass}
+            className={`${inputClass} ${isDuplicate ? "border-amber-400 focus:ring-amber-300" : ""}`}
           />
+          {isDuplicate && (
+            <p className="flex items-center gap-1.5 text-xs text-amber-600 mt-1">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              En växt med det här namnet finns redan i databasen.
+            </p>
+          )}
         </Field>
 
         <Field label="Slug (URL)" name="slug" hint="Används i webbadressen">
