@@ -56,6 +56,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     robots:      s.seoRobots,
     metadataBase: new URL(s.seoCanonical),
+    icons: {
+      icon:        [{ url: "/icon.svg", type: "image/svg+xml" }],
+      apple:       [{ url: "/icon.svg" }],
+      shortcut:    "/icon.svg",
+    },
     verification: {
       ...(s.googleVerification && { google: s.googleVerification }),
     },
