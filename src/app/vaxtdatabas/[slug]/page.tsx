@@ -151,6 +151,28 @@ export default async function PlantDetailPage({ params }: PageProps) {
   const schema  = plantSchema(plant, pageUrl, settings.siteName);
   const isAdmin = profile && ["admin", "moderator"].includes(profile.role);
 
+  // ── Parser: fritext → kalenderperiod ────────────────────────────
+  // Tolkar t.ex. "Jan–Mar (förkultivering...)" → { startMonth:1, startDay:1, endMonth:3, endDay:31 }
+  const MONTH_MAP: Record<string, number> = {
+    jan:1, feb:2, mar:3, apr:4, maj:5, jun:6,
+    jul:7, aug:8, sep:9, okt:10, nov:11, dec:12,
+  };
+  const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+  function parseMonthRange(text?: string | null) {
+    if (!text) return null;
+    const m = text.toLowerCase().match(
+      /(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)[a-z]*\s*[–\-]\s*(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)/,
+    );
+    if (!m) return null;
+    const start = MONTH_MAP[m[1]];
+    const end   = MONTH_MAP[m[2]];
+    if (!start || !end) return null;
+    return { startMonth: start, startDay: 1, endMonth: end, endDay: DAYS_IN_MONTH[end - 1] };
+  }
+
+  const indoorsStart  = parseMonthRange(plant.sowingPeriod);
+  const harvestWindow = parseMonthRange(plant.harvestPeriod);
+
   const growingInfo: { icon: React.ReactNode; label: string; value: string }[] = [
     plant.sowingPeriod    && { icon: <CalendarDays className="h-4 w-4" />, label: "Såningstid",    value: plant.sowingPeriod },
     plant.plantingPeriod  && { icon: <Sprout       className="h-4 w-4" />, label: "Planteringstid", value: plant.plantingPeriod },
@@ -361,9 +383,9 @@ export default async function PlantDetailPage({ params }: PageProps) {
                     // Fritext
                     locationNotes:   plant.locationNotes,
                     soilPreparation: plant.soilPreparation,
-                    // Strukturerad kalenderdata – null tills vidare
-                    indoorsStart:    null,
-                    harvestWindow:   null,
+                    // Kalenderdata – parsad från fritext
+                    indoorsStart,
+                    harvestWindow,
                     // Plats (strukturerat) – null tills vidare
                     hardinessZone:   null,
                     temperature:     null,
