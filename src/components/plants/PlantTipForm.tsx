@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
-import { Lightbulb, Send, Loader2, ImagePlus, X } from "lucide-react";
-import Image from "next/image";
+import { useState, useTransition, useRef, useCallback } from "react";
+import { Lightbulb, Loader2, ImagePlus, X, Upload } from "lucide-react";
 import { addPlantTip, uploadPlantImage } from "@/app/vaxtdatabas/actions";
 
 interface PlantTipFormProps {
@@ -10,18 +9,20 @@ interface PlantTipFormProps {
 }
 
 export function PlantTipForm({ plantId }: PlantTipFormProps) {
-  const [content,    setContent]    = useState("");
-  const [imageUrl,   setImageUrl]   = useState<string | null>(null);
-  const [uploading,  setUploading]  = useState(false);
-  const [uploadErr,  setUploadErr]  = useState<string | null>(null);
-  const [error,      setError]      = useState<string | null>(null);
-  const [success,    setSuccess]    = useState(false);
-  const [isPending,  startTransition] = useTransition();
+  const [content,   setContent]   = useState("");
+  const [imageUrl,  setImageUrl]  = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const [error,     setError]     = useState<string | null>(null);
+  const [success,   setSuccess]   = useState(false);
+  const [dragging,  setDragging]  = useState(false);
+  const [isPending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // ── Bilduppladdning ──────────────────────────────────────────────
+  const uploadFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/")) { setUploadErr("Endast bilder är tillåtna"); return; }
+    if (file.size > 10 * 1024 * 1024)   { setUploadErr("Max 10 MB"); return; }
     setUploadErr(null);
     setUploading(true);
     const fd = new FormData();
@@ -30,15 +31,43 @@ export function PlantTipForm({ plantId }: PlantTipFormProps) {
     setUploading(false);
     if (res.error) { setUploadErr(res.error); return; }
     if (res.url)   setImageUrl(res.url);
-    // reset file input so same file can be re-selected
     if (fileRef.current) fileRef.current.value = "";
+  }, []);
+
+  // ── Filväljare ───────────────────────────────────────────────────
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
   }
 
+  // ── Drag & drop ──────────────────────────────────────────────────
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(true);
+  }
+  function handleDragLeave(e: React.DragEvent) {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false);
+  }
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadFile(file);
+  }
+
+  // ── Klistra in från urklipp ──────────────────────────────────────
+  function handlePaste(e: React.ClipboardEvent) {
+    const file = Array.from(e.clipboardData.items)
+      .find((item) => item.type.startsWith("image/"))
+      ?.getAsFile();
+    if (file) uploadFile(file);
+  }
+
+  // ── Skicka ───────────────────────────────────────────────────────
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(false);
-
     startTransition(async () => {
       try {
         await addPlantTip(plantId, content, imageUrl);
@@ -54,12 +83,14 @@ export function PlantTipForm({ plantId }: PlantTipFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      {/* Textfält */}
+
+      {/* Textfält med paste-support */}
       <div className="relative">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Dela ett praktiskt tips om odlingen..."
+          onPaste={handlePaste}
+          placeholder="Dela ett praktiskt tips om odlingen... (klistra in bild med Ctrl+V)"
           disabled={isPending}
           rows={3}
           maxLength={1000}
@@ -70,15 +101,55 @@ export function PlantTipForm({ plantId }: PlantTipFormProps) {
         </span>
       </div>
 
-      {/* Bildförhandsgranskning */}
+      {/* Drop-zon – visas bara om ingen bild är vald */}
+      {!imageUrl && (
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => !uploading && fileRef.current?.click()}
+          className={`
+            relative flex flex-col items-center justify-center gap-2
+            border-2 border-dashed rounded-xl px-4 py-5 cursor-pointer
+            transition-colors select-none
+            ${dragging
+              ? "border-green-400 bg-green-50"
+              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"}
+            ${uploading ? "pointer-events-none opacity-60" : ""}
+          `}
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="h-6 w-6 text-green-500 animate-spin" />
+              <p className="text-xs text-gray-500">Laddar upp...</p>
+            </>
+          ) : (
+            <>
+              <Upload className={`h-6 w-6 ${dragging ? "text-green-500" : "text-gray-300"}`} />
+              <p className="text-xs text-gray-400 text-center">
+                <span className="font-medium text-gray-600">Klicka</span> eller dra och släpp en bild hit
+                <span className="block text-gray-300 mt-0.5">Du kan också klistra in med Ctrl+V i textrutan</span>
+              </p>
+            </>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={uploading || isPending}
+            onChange={handleFileChange}
+          />
+        </div>
+      )}
+
+      {/* Förhandsgranskning */}
       {imageUrl && (
         <div className="relative w-fit">
-          <Image
+          <img
             src={imageUrl}
             alt="Bifogad bild"
-            width={200}
-            height={150}
-            className="rounded-xl object-cover max-h-40 w-auto border border-gray-200"
+            className="rounded-xl max-h-48 w-auto object-cover border border-gray-200"
           />
           <button
             type="button"
@@ -90,46 +161,17 @@ export function PlantTipForm({ plantId }: PlantTipFormProps) {
         </div>
       )}
 
-      {/* Bildfelsmeddelande */}
       {uploadErr && <p className="text-xs text-red-600">{uploadErr}</p>}
 
-      {/* Knappar */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Lägg till bild */}
-        <label className={`
-          flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-colors
-          ${uploading
-            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "bg-gray-100 text-gray-600 hover:bg-gray-200"}
-        `}>
-          {uploading
-            ? <Loader2 className="h-4 w-4 animate-spin" />
-            : <ImagePlus className="h-4 w-4" />}
-          {uploading ? "Laddar upp..." : "Lägg till bild"}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            disabled={uploading || isPending}
-            onChange={handleImageChange}
-          />
-        </label>
-
-        {/* Skicka */}
-        <button
-          type="submit"
-          disabled={isPending || uploading || content.trim().length < 5}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Lightbulb className="h-4 w-4" />
-          )}
-          {isPending ? "Sparar..." : "Dela tips"}
-        </button>
-      </div>
+      {/* Skicka-knapp */}
+      <button
+        type="submit"
+        disabled={isPending || uploading || content.trim().length < 5}
+        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+      >
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
+        {isPending ? "Sparar..." : "Dela tips"}
+      </button>
 
       {error   && <p className="text-xs text-red-600">{error}</p>}
       {success && <p className="text-xs text-green-600 font-medium">✓ Tack! Ditt tips har lagts till.</p>}
