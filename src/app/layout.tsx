@@ -59,7 +59,8 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon:     [{ url: "/icon.svg", type: "image/svg+xml" }],
       shortcut: "/icon.svg",
-      apple:    [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+      // apple-touch-icon sköts av app/apple-icon.tsx (Next.js fil-konvention)
+      // Dubbel deklaration här orsakar konflikterande <link>-taggar
     },
     verification: {
       ...(s.googleVerification && { google: s.googleVerification }),
@@ -85,6 +86,10 @@ export default async function RootLayout({
 
   return (
     <html lang="sv" className={`${inter.variable} ${playfair.variable}`}>
+      <head>
+        {/* Explicit apple-touch-icon – mer tillförlitligt än Next.js metadata på iOS */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+      </head>
       <body className="min-h-screen flex flex-col font-sans">
         <JsonLd data={[organizationSchema(settings), websiteSchema(settings)]} />
 

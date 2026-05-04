@@ -195,18 +195,6 @@ export default async function HomePage() {
                 )}
               </div>
 
-              {/* Micro-stats */}
-              <div className="grid grid-cols-2 gap-6 mt-14 pt-10 border-t border-sage-200 max-w-sm mx-auto">
-                {[
-                  { value: plantCount > 0 ? `${plantCount}+` : "10+", label: "Växter i databasen" },
-                  { value: "Gratis", label: "Alltid" },
-                ].map((s) => (
-                  <div key={s.label} className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-green-700 font-display">{s.value}</div>
-                    <div className="text-sm text-gray-500 mt-1">{s.label}</div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </section>

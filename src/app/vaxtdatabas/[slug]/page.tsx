@@ -3,6 +3,7 @@ export const revalidate = 300;
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import {
@@ -14,13 +15,15 @@ import { getSettings } from "@/lib/settings";
 import { plantMetadata, plantSchema } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { createClient } from "@/lib/supabase/server";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarWithAuth } from "@/components/layout/NavbarWithAuth";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PlantDetailTabs } from "@/components/plants/PlantDetailTabs";
+import { PlantSidebarAuth } from "@/components/plants/PlantSidebarAuth";
 import { PlantSidebarStatus } from "@/components/plants/PlantSidebarStatus";
+import { PlantTipFormServer } from "@/components/plants/PlantTipFormServer";
+import { getRequestUser } from "@/lib/auth-cache";
 
 // ── Cachade DB-anrop (5 min) ──────────────────────────────────────
 const getPlant = unstable_cache(
@@ -113,46 +116,57 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
   );
 }
 
+// ── Admin-knapp (async, körs parallellt via Suspense) ─────────────
+async function AdminEditButton({ plantId }: { plantId: string }) {
+  const user = await getRequestUser();
+  if (!user) return null;
+  const profile = await prisma.profile.findUnique({
+    where: { userId: user.id },
+    select: { role: true },
+  });
+  if (!profile || !["admin", "moderator"].includes(profile.role)) return null;
+  return (
+    <Link
+      href={`/admin/vaxter/${plantId}/redigera`}
+      className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-full hover:bg-white/30 transition-colors"
+    >
+      <Pencil className="h-3.5 w-3.5" /> Redigera
+    </Link>
+  );
+}
+
+async function AdminEditButtonInline({ plantId }: { plantId: string }) {
+  const user = await getRequestUser();
+  if (!user) return null;
+  const profile = await prisma.profile.findUnique({
+    where: { userId: user.id },
+    select: { role: true },
+  });
+  if (!profile || !["admin", "moderator"].includes(profile.role)) return null;
+  return (
+    <Link
+      href={`/admin/vaxter/${plantId}/redigera`}
+      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+    >
+      <Pencil className="h-3.5 w-3.5" /> Redigera
+    </Link>
+  );
+}
+
 
 export default async function PlantDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const [plant, settings, profile] = await Promise.all([
-    getPlant(slug),
-    getSettings(),
-    user
-      ? prisma.profile.findUnique({
-          where: { userId: user.id },
-          select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
-        })
-      : null,
-  ]);
-
+  // ── Snabbväg: bara cachade anrop blockerar initial render ─────────
+  const [plant, settings] = await Promise.all([getPlant(slug), getSettings()]);
   if (!plant) notFound();
 
-  // Kör isGrowing-check och relaterade guider parallellt
-  const [[relatedGuides, relatedTerms], isGrowing] = await Promise.all([
-    getPlantRelated(plant.name),
-    profile
-      ? prisma.gardenDiary.count({
-          where: { userId: profile.id, plantId: plant.id, status: "growing" },
-        }).then((n) => n > 0)
-      : Promise.resolve(false),
-  ]);
-
-  const navUser = profile
-    ? { id: profile.id, username: profile.username, displayName: profile.fullName, avatarUrl: profile.avatarUrl, role: profile.role }
-    : null;
+  const [relatedGuides, relatedTerms] = await getPlantRelated(plant.name);
 
   const pageUrl = `${settings.seoCanonical}/vaxtdatabas/${slug}`;
   const schema  = plantSchema(plant, pageUrl, settings.siteName);
-  const isAdmin = profile && ["admin", "moderator"].includes(profile.role);
 
   // ── Parser: fritext → kalenderperiod ────────────────────────────
-  // Tolkar t.ex. "Jan–Mar (förkultivering...)" → { startMonth:1, startDay:1, endMonth:3, endDay:31 }
   const MONTH_MAP: Record<string, number> = {
     jan:1, feb:2, mar:3, apr:4, maj:5, jun:6,
     jul:7, aug:8, sep:9, okt:10, nov:11, dec:12,
@@ -187,7 +201,11 @@ export default async function PlantDetailPage({ params }: PageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={schema} />
-      <Navbar user={navUser} />
+
+      {/* Navbar – auth körs parallellt, blockerar inte sidan */}
+      <Suspense fallback={<div className="h-16 border-b border-gray-100 bg-white" />}>
+        <NavbarWithAuth />
+      </Suspense>
 
       <main className="flex-1">
 
@@ -232,14 +250,9 @@ export default async function PlantDetailPage({ params }: PageProps) {
                       {difficultyLabel(plant.difficultyLevel)}
                     </Badge>
                   )}
-                  {isAdmin && (
-                    <Link
-                      href={`/admin/vaxter/${plant.id}/redigera`}
-                      className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-full hover:bg-white/30 transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> Redigera
-                    </Link>
-                  )}
+                  <Suspense fallback={null}>
+                    <AdminEditButton plantId={plant.id} />
+                  </Suspense>
                 </div>
               </div>
             </div>
@@ -272,14 +285,9 @@ export default async function PlantDetailPage({ params }: PageProps) {
                       {difficultyLabel(plant.difficultyLevel)}
                     </Badge>
                   )}
-                  {isAdmin && (
-                    <Link
-                      href={`/admin/vaxter/${plant.id}/redigera`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> Redigera
-                    </Link>
-                  )}
+                  <Suspense fallback={null}>
+                    <AdminEditButtonInline plantId={plant.id} />
+                  </Suspense>
                 </div>
               </div>
             </div>
@@ -291,14 +299,15 @@ export default async function PlantDetailPage({ params }: PageProps) {
           <div className="container-main py-8">
             <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
 
-              {/* ── Höger sidebar – FIRST i DOM → visas överst på mobil ── */}
+              {/* ── Höger sidebar ── */}
               <div className="space-y-4 lg:space-y-5 lg:col-start-3 lg:row-start-1 lg:pt-[52px]">
 
-                {/* Svårighetsgrad + odlingsstatus + knappar */}
-                <PlantSidebarStatus
-                  difficultyLevel={plant.difficultyLevel}
-                  initialGrowing={isGrowing}
-                />
+                {/* Auth-beroende status – laddar asynkront */}
+                <Suspense fallback={
+                  <PlantSidebarStatus difficultyLevel={plant.difficultyLevel} initialGrowing={false} />
+                }>
+                  <PlantSidebarAuth plantId={plant.id} difficultyLevel={plant.difficultyLevel} />
+                </Suspense>
 
                 {/* Kom igång */}
                 {(plant.sowingPeriod || plant.plantingPeriod || plant.harvestPeriod || plant.sunRequirement || plant.wateringNeeds) && (
@@ -370,7 +379,7 @@ export default async function PlantDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* ── Vänster: flik-innehåll – SECOND i DOM → visas under sidebar på mobil ── */}
+              {/* ── Vänster: innehåll ── */}
               <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 min-w-0">
                 <PlantDetailTabs
                   plant={{
@@ -381,36 +390,43 @@ export default async function PlantDetailPage({ params }: PageProps) {
                     commonProblems:  plant.commonProblems,
                     difficultyLevel: plant.difficultyLevel,
                     category:        plant.category,
-                    // Fritext
                     locationNotes:   plant.locationNotes,
                     soilPreparation: plant.soilPreparation,
-                    // Kalenderdata – parsad från fritext
                     indoorsStart,
                     plantingWindow,
                     harvestWindow,
-                    // Plats (strukturerat) – null tills vidare
                     hardinessZone:   null,
                     temperature:     null,
                     sunlight:        [],
                     goodNeighbors:   [],
                     badNeighbors:    [],
-                    // Jord (strukturerat) – null tills vidare
                     ph:              null,
                     soilTypes:       [],
                     drainage:        null,
                     nutrientLevel:   null,
                     soilNotes:       null,
-                    // Tillväxt – default-faser visas automatiskt
                     growthPhases:    undefined,
                   }}
                   tips={plant.tips}
                   relatedGuides={relatedGuides}
                   relatedTerms={relatedTerms}
-                  isLoggedIn={!!profile}
-                  initialGrowing={isGrowing}
+                  tipFormSlot={
+                    <Suspense fallback={
+                      <div className={`text-center py-6 bg-green-50 rounded-xl animate-pulse ${plant.tips.length > 0 ? "mt-4" : ""}`}>
+                        <div className="h-4 w-48 bg-green-100 rounded mx-auto" />
+                      </div>
+                    }>
+                      <PlantTipFormServer
+                        plantId={plant.id}
+                        plantSlug={plant.slug}
+                        plantName={plant.name}
+                        hasTips={plant.tips.length > 0}
+                      />
+                    </Suspense>
+                  }
                 />
 
-                {/* Navigeringslänkar – visas på mobil under tabbar */}
+                {/* Navigeringslänkar – mobil */}
                 <div className="lg:hidden mt-6 space-y-2">
                   <Link
                     href="/vaxtdatabas"

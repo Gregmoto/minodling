@@ -24,7 +24,7 @@ export default function NyVaxtPage() {
       </div>
 
       <Card padding="lg">
-        <PlantForm action={createPlant} submitLabel="Skapa växt" />
+        <PlantForm action={createPlant} submitLabel="Lägg till växt" />
       </Card>
     </div>
   );

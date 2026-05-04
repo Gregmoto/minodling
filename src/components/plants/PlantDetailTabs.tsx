@@ -71,7 +71,10 @@ export interface PlantDetailTabsProps {
   tips:          Tip[];
   relatedGuides: Guide[];
   relatedTerms:  GlossaryTerm[];
-  isLoggedIn:    boolean;
+  /** Server-rendered tip form (or login prompt) passed via Suspense slot */
+  tipFormSlot?:  React.ReactNode;
+  /** @deprecated use tipFormSlot instead */
+  isLoggedIn?:   boolean;
   initialGrowing?: boolean;
 }
 
@@ -115,6 +118,7 @@ export function PlantDetailTabs({
   tips,
   relatedGuides,
   relatedTerms,
+  tipFormSlot,
   isLoggedIn,
   initialGrowing = false,
 }: PlantDetailTabsProps) {
@@ -305,25 +309,22 @@ export function PlantDetailTabs({
               </div>
             )}
 
-            {isLoggedIn ? (
-              <div className={cn("pt-2", tips.length > 0 && "border-t border-gray-100")}>
-                <p className="text-sm text-gray-500 mb-3">Dela ditt tips om {plant.name}:</p>
-                <PlantTipForm plantId={plant.id} />
-              </div>
-            ) : (
-              <div className={cn("text-center py-6 bg-green-50 rounded-xl", tips.length > 0 && "mt-4")}>
-                <p className="text-sm text-green-700">
-                  <Link href={`/auth/login?redirect=/vaxtdatabas/${plant.slug}`} className="font-medium underline">
-                    Logga in
-                  </Link>{" "}
-                  för att dela ditt eget tips
-                </p>
-              </div>
-            )}
-            {tips.length === 0 && !isLoggedIn && (
-              <p className="text-sm text-gray-400 text-center py-4 mt-2">
-                Inga tips än – bli den första!
-              </p>
+            {tipFormSlot ?? (
+              isLoggedIn ? (
+                <div className={cn("pt-2", tips.length > 0 && "border-t border-gray-100")}>
+                  <p className="text-sm text-gray-500 mb-3">Dela ditt tips om {plant.name}:</p>
+                  <PlantTipForm plantId={plant.id} />
+                </div>
+              ) : (
+                <div className={cn("text-center py-6 bg-green-50 rounded-xl", tips.length > 0 && "mt-4")}>
+                  <p className="text-sm text-green-700">
+                    <Link href={`/auth/login?redirect=/vaxtdatabas/${plant.slug}`} className="font-medium underline">
+                      Logga in
+                    </Link>{" "}
+                    för att dela ditt eget tips
+                  </p>
+                </div>
+              )
             )}
           </div>
         )}
