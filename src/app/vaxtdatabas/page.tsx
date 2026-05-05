@@ -34,14 +34,13 @@ const DIFFICULTY_OPTIONS = [
   { value: "hard",   label: "Svår",   stars: 5 },
 ];
 
-/** Extraherar bara månadsintervallet ur fritext, t.ex. "Jan–Mar (förkultivering...)" → "Jan–Mar" */
+/** Extraherar bara månadsintervallet ur fritext. Kräver ordgräns så "Blommar" inte triggar. */
 function extractDateRange(text: string | null): string | null {
   if (!text) return null;
-  const m = text.match(/(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)[a-z]*[\s–\-–]+(?:(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)[a-z]*)/i);
-  if (m) return m[0];
-  // Fallback: om texten är kort nog att visa direkt
-  if (text.length <= 20) return text;
-  return null;
+  const MONTHS = "jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec";
+  const re = new RegExp(`(?<![a-zåäö])(${MONTHS})[a-z]*\\s*[–\\-]\\s*(${MONTHS})[a-z]*`, "i");
+  const m = text.match(re);
+  return m ? m[0] : null;
 }
 
 function DifficultyStars({ level }: { level: string | null }) {
@@ -303,7 +302,7 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
               ) : (
                 <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   {plants.map((plant) => (
-                    <Link key={plant.id} href={`/vaxtdatabas/${plant.slug}`} className="group block">
+                    <Link key={plant.id} href={`/vaxtdatabas/${plant.slug}`} className="group block h-full">
                       <Card hover padding="none" className="overflow-hidden h-full flex flex-col">
                         {/* Bild */}
                         <div className="relative h-44 w-full bg-sage-50 shrink-0">
@@ -345,14 +344,18 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
                             <p className="text-xs text-gray-400 italic">{plant.latinName}</p>
                           )}
 
-                          <div className="flex items-center justify-between mt-auto pt-2">
+                          <div className="flex items-center justify-between mt-auto pt-2 min-h-[2rem]">
                             <div className="flex flex-col gap-0.5 text-xs text-gray-400">
-                              {extractDateRange(plant.sowingPeriod) && (
-                                <span>🌱 Sås: {extractDateRange(plant.sowingPeriod)}</span>
-                              )}
-                              {extractDateRange(plant.harvestPeriod) && (
-                                <span>🌾 Skörd: {extractDateRange(plant.harvestPeriod)}</span>
-                              )}
+                              {(() => {
+                                const sow     = extractDateRange(plant.sowingPeriod);
+                                const harvest = extractDateRange(plant.harvestPeriod);
+                                return (
+                                  <>
+                                    {sow     && <span>🌱 Sås: {sow}</span>}
+                                    {harvest && <span>🌾 Skörd: {harvest}</span>}
+                                  </>
+                                );
+                              })()}
                             </div>
                             {plant.difficultyLevel && (
                               <DifficultyStars level={plant.difficultyLevel} />
