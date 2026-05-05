@@ -80,9 +80,8 @@ export default async function VaxterPage({
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Namn</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Latinskt namn</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Kategori</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Svårighetsgrad</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Såddperiod</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Skördperiod</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Datum</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Åtgärder</th>
               </tr>
@@ -98,9 +97,16 @@ export default async function VaxterPage({
                       <span className="text-gray-300">–</span>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    {plant.category ? (
+                      <span className="text-xs font-medium text-sage-700 bg-sage-50 border border-sage-200 px-2 py-0.5 rounded-full">
+                        {plant.category}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300">–</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">{difficultyBadge(plant.difficultyLevel)}</td>
-                  <td className="px-4 py-3 text-gray-500">{plant.sowingPeriod ?? "–"}</td>
-                  <td className="px-4 py-3 text-gray-500">{plant.harvestPeriod ?? "–"}</td>
                   <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                     {formatDate(plant.createdAt)}
                   </td>
@@ -119,7 +125,7 @@ export default async function VaxterPage({
               ))}
               {plants.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
                     Inga växter hittades.
                   </td>
                 </tr>
