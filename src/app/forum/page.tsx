@@ -1,6 +1,7 @@
 export const revalidate = 60;
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getSettings } from "@/lib/settings";
 import { Plus, TrendingUp, Clock, Flame, Filter, MessageSquare, Heart } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
@@ -12,10 +13,14 @@ import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import { formatRelativeDate } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Forum",
-  description: "Diskutera odling med tusentals svenska odlare i Minodlings forum.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings();
+  return {
+    title: "Forum",
+    description: "Diskutera odling med tusentals svenska odlare i Minodlings forum.",
+    alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/forum` },
+  };
+}
 
 interface ForumPageProps {
   searchParams: Promise<{ sort?: string; kategori?: string; sida?: string }>;

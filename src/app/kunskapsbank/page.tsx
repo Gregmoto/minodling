@@ -13,11 +13,16 @@ import { Badge } from "@/components/ui/Badge";
 import Image from "next/image";
 import { formatDate } from "@/lib/utils";
 import { Library } from "lucide-react";
+import { getSettings } from "@/lib/settings";
 
-export const metadata: Metadata = {
-  title: "Kunskapsbank – Odlingskunskap",
-  description: "Fördjupa dig i odlingskunskap. Artiklar om jord, kompost, bevattning, skadedjur och mycket mer för svenska odlare.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings();
+  return {
+    title: "Kunskapsbank – Odlingskunskap",
+    description: "Fördjupa dig i odlingskunskap. Artiklar om jord, kompost, bevattning, skadedjur och mycket mer för svenska odlare.",
+    alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/kunskapsbank` },
+  };
+}
 
 export default async function KunskapsbankPage({
   searchParams,

@@ -18,9 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/kunskapsbank`,  lastModified: now, changeFrequency: "daily",   priority: 0.8 },
     { url: `${base}/ordlista`,      lastModified: now, changeFrequency: "weekly",  priority: 0.7 },
     { url: `${base}/odlingstips`,   lastModified: now, changeFrequency: "daily",   priority: 0.8 },
-    { url: `${base}/community`,     lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
-    { url: `${base}/om-oss`,        lastModified: now, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${base}/kontakt`,       lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+    // community, om-oss, kontakt finns ej som sidor – ej med i sitemap
   ];
 
   try {

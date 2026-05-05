@@ -1,6 +1,7 @@
 export const revalidate = 60;
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getSettings } from "@/lib/settings";
 import { HelpCircle, MessageCircle, CheckCircle2, TrendingUp, Clock, Search, Plus } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
@@ -12,11 +13,14 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { formatRelativeDate } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Frågor & Svar – Odlingshjälp från svenska odlare",
-  description:
-    "Få svar på dina odlingsfrågor från erfarna svenska odlare. Ställ en fråga om växtproblem, skadedjur, jord, beskärning eller nybörjartips.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings();
+  return {
+    title: "Frågor & Svar – Odlingshjälp från svenska odlare",
+    description: "Få svar på dina odlingsfrågor från erfarna svenska odlare. Ställ en fråga om växtproblem, skadedjur, jord, beskärning eller nybörjartips.",
+    alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/fragor` },
+  };
+}
 
 interface Props {
   searchParams: Promise<{

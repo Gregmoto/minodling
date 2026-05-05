@@ -13,11 +13,16 @@ import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import Image from "next/image";
 import { BookOpen } from "lucide-react";
+import { getSettings } from "@/lib/settings";
 
-export const metadata: Metadata = {
-  title: "Odlingsguider – Lär dig odla",
-  description: "Kompletta odlingsguider för svenska odlare. Från frö till skörd – steg-för-steg guides om grönsaker, blommor och trädgårdsodling.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings();
+  return {
+    title: "Odlingsguider – Lär dig odla",
+    description: "Kompletta odlingsguider för svenska odlare. Från frö till skörd – steg-för-steg guides om grönsaker, blommor och trädgårdsodling.",
+    alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/guider` },
+  };
+}
 
 const DIFFICULTY_COLORS: Record<string, "success" | "warning" | "danger" | "default"> = {
   nybörjare: "success", lätt: "success",

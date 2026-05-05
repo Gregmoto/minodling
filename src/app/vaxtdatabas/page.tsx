@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, Sprout, Star, SlidersHorizontal } from "lucide-react"; // Star används i sidofiltret
 import prisma from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
@@ -13,11 +14,14 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
-export const metadata: Metadata = {
-  title: "Växtdatabas – Odlingsguider för svenska växter",
-  description:
-    "Utforska vår växtdatabas med odlingsguider för svenska köksväxter, blommor och örter. Hitta såningstider, skötselråd och tips.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings();
+  return {
+    title: "Växtdatabas – Odlingsguider för svenska växter",
+    description: "Utforska vår växtdatabas med odlingsguider för svenska köksväxter, blommor och örter. Hitta såningstider, skötselråd och tips.",
+    alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/vaxtdatabas` },
+  };
+}
 
 interface PageProps {
   searchParams: Promise<{ q?: string; kategori?: string; svarighetsgrad?: string }>;

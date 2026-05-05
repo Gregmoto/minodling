@@ -11,11 +11,16 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { BookText, Search } from "lucide-react";
+import { getSettings } from "@/lib/settings";
 
-export const metadata: Metadata = {
-  title: "Odlingsordlista – Förstå odlingstermer",
-  description: "Lär dig odlingstermer och begrepp. Vår ordlista förklarar allt från omskolning till täckodling på enkelt svenska.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings();
+  return {
+    title: "Odlingsordlista – Förstå odlingstermer",
+    description: "Lär dig odlingstermer och begrepp. Vår ordlista förklarar allt från omskolning till täckodling på enkelt svenska.",
+    alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/ordlista` },
+  };
+}
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ".split("");
 
