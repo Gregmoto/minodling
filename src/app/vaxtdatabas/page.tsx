@@ -3,7 +3,7 @@ export const revalidate = 60;
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Sprout, Star, SlidersHorizontal } from "lucide-react";
+import { Search, Sprout, Star, SlidersHorizontal } from "lucide-react"; // Star används i sidofiltret
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { getNavUser } from "@/lib/nav-user";
@@ -43,23 +43,6 @@ function extractDateRange(text: string | null): string | null {
   return m ? m[0] : null;
 }
 
-function DifficultyStars({ level }: { level: string | null }) {
-  if (!level) return null;
-  const map: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
-  const count = map[level] ?? 0;
-  return (
-    <div className="flex items-center gap-0.5" title={
-      level === "easy" ? "Lätt" : level === "medium" ? "Medel" : "Svår"
-    }>
-      {[1, 2, 3].map((i) => (
-        <Star
-          key={i}
-          className={`h-3 w-3 ${i <= count ? "fill-amber-400 text-amber-400" : "text-gray-200"}`}
-        />
-      ))}
-    </div>
-  );
-}
 
 function difficultyVariant(level?: string | null): "success" | "warning" | "danger" | "default" {
   if (!level) return "default";
@@ -328,7 +311,8 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
                         </div>
 
                         {/* Info */}
-                        <div className="p-4 flex flex-col gap-2 flex-1">
+                        <div className="p-4 flex flex-col gap-1.5 flex-1">
+                          {/* Namn + svårighetsgrad */}
                           <div className="flex items-start justify-between gap-2">
                             <h2 className="font-semibold text-gray-900 leading-tight group-hover:text-green-700 transition-colors">
                               {plant.name}
@@ -340,31 +324,27 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
                             )}
                           </div>
 
+                          {/* Latinskt namn */}
                           {plant.latinName && (
                             <p className="text-xs text-gray-400 italic">{plant.latinName}</p>
                           )}
 
-                          <div className="flex items-center justify-between mt-auto pt-2 min-h-[2rem]">
-                            <div className="flex flex-col gap-0.5 text-xs text-gray-400">
-                              {(() => {
-                                const sow     = extractDateRange(plant.sowingPeriod);
-                                const harvest = extractDateRange(plant.harvestPeriod);
-                                return (
-                                  <>
-                                    {sow     && <span>🌱 Sås: {sow}</span>}
-                                    {harvest && <span>🌾 Skörd: {harvest}</span>}
-                                  </>
-                                );
-                              })()}
-                            </div>
-                            {plant.difficultyLevel && (
-                              <DifficultyStars level={plant.difficultyLevel} />
-                            )}
-                          </div>
+                          {/* Datum – direkt under namn, inget mt-auto */}
+                          {(() => {
+                            const sow     = extractDateRange(plant.sowingPeriod);
+                            const harvest = extractDateRange(plant.harvestPeriod);
+                            if (!sow && !harvest) return null;
+                            return (
+                              <div className="flex flex-col gap-0.5 text-xs text-gray-400 mt-1">
+                                {sow     && <span>🌱 Sås: {sow}</span>}
+                                {harvest && <span>🌾 Skörd: {harvest}</span>}
+                              </div>
+                            );
+                          })()}
 
                           {plant._count.tips > 0 && (
-                            <p className="text-xs text-green-600 font-medium">
-                              💡 {plant._count.tips} {plant._count.tips === 1 ? "tips" : "tips"} från odlare
+                            <p className="text-xs text-green-600 font-medium mt-auto">
+                              💡 {plant._count.tips} tips från odlare
                             </p>
                           )}
                         </div>
