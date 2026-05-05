@@ -34,6 +34,16 @@ const DIFFICULTY_OPTIONS = [
   { value: "hard",   label: "Svår",   stars: 5 },
 ];
 
+/** Extraherar bara månadsintervallet ur fritext, t.ex. "Jan–Mar (förkultivering...)" → "Jan–Mar" */
+function extractDateRange(text: string | null): string | null {
+  if (!text) return null;
+  const m = text.match(/(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)[a-z]*[\s–\-–]+(?:(jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)[a-z]*)/i);
+  if (m) return m[0];
+  // Fallback: om texten är kort nog att visa direkt
+  if (text.length <= 20) return text;
+  return null;
+}
+
 function DifficultyStars({ level }: { level: string | null }) {
   if (!level) return null;
   const map: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
@@ -337,11 +347,11 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
 
                           <div className="flex items-center justify-between mt-auto pt-2">
                             <div className="flex flex-col gap-0.5 text-xs text-gray-400">
-                              {plant.sowingPeriod && (
-                                <span>🌱 Sås: {plant.sowingPeriod}</span>
+                              {extractDateRange(plant.sowingPeriod) && (
+                                <span>🌱 Sås: {extractDateRange(plant.sowingPeriod)}</span>
                               )}
-                              {plant.harvestPeriod && (
-                                <span>🌾 Skörd: {plant.harvestPeriod}</span>
+                              {extractDateRange(plant.harvestPeriod) && (
+                                <span>🌾 Skörd: {extractDateRange(plant.harvestPeriod)}</span>
                               )}
                             </div>
                             {plant.difficultyLevel && (
