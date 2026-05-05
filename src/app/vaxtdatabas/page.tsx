@@ -325,25 +325,28 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
                           </div>
 
                           {/* Latinskt namn */}
-                          {plant.latinName && (
-                            <p className="text-xs text-gray-400 italic">{plant.latinName}</p>
-                          )}
+                          <p className="text-xs text-gray-400 italic min-h-[1rem]">
+                            {plant.latinName ?? ""}
+                          </p>
 
-                          {/* Datum – direkt under namn, inget mt-auto */}
+                          {/* Datum – alltid 2 rader, osynliga rader behåller höjden */}
                           {(() => {
                             const sow     = extractDateRange(plant.sowingPeriod);
                             const harvest = extractDateRange(plant.harvestPeriod);
-                            if (!sow && !harvest) return null;
                             return (
-                              <div className="flex flex-col gap-0.5 text-xs text-gray-400 mt-1">
-                                {sow     && <span>🌱 Sås: {sow}</span>}
-                                {harvest && <span>🌾 Skörd: {harvest}</span>}
+                              <div className="mt-auto flex flex-col gap-0.5 text-xs text-gray-500 pt-2">
+                                <span style={{ visibility: sow ? "visible" : "hidden" }}>
+                                  🌱 Sås: {sow ?? "–"}
+                                </span>
+                                <span style={{ visibility: harvest ? "visible" : "hidden" }}>
+                                  🌾 Skörd: {harvest ?? "–"}
+                                </span>
                               </div>
                             );
                           })()}
 
                           {plant._count.tips > 0 && (
-                            <p className="text-xs text-green-600 font-medium mt-auto">
+                            <p className="text-xs text-green-600 font-medium">
                               💡 {plant._count.tips} tips från odlare
                             </p>
                           )}
