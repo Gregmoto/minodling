@@ -26,7 +26,7 @@ import { PlantTipFormServer } from "@/components/plants/PlantTipFormServer";
 import { getRequestUser } from "@/lib/auth-cache";
 
 // ── Cachade DB-anrop (5 min) ──────────────────────────────────────
-const getPlant = unstable_cache(
+const _getPlant = unstable_cache(
   async (slug: string) =>
     prisma.plant.findUnique({
       where: { slug },
@@ -39,12 +39,14 @@ const getPlant = unstable_cache(
           },
         },
       },
-    }).catch(() => null),
+    }),
   ["plant-detail"],
   { revalidate: 300, tags: ["plants"] },
 );
+// Catch utanför cache – fel cachas ALDRIG (annars 404 i 5 min efter ett misslyckat anrop)
+const getPlant = (slug: string) => _getPlant(slug).catch(() => null);
 
-const getPlantRelated = unstable_cache(
+const _getPlantRelated = unstable_cache(
   async (plantName: string) =>
     Promise.all([
       prisma.guide.findMany({
@@ -57,7 +59,7 @@ const getPlantRelated = unstable_cache(
         },
         select: { slug: true, title: true },
         take: 3,
-      }).catch(() => []),
+      }),
       prisma.glossaryTerm.findMany({
         where: {
           OR: [
@@ -67,11 +69,13 @@ const getPlantRelated = unstable_cache(
         },
         select: { slug: true, term: true },
         take: 4,
-      }).catch(() => []),
+      }),
     ]),
   ["plant-related"],
   { revalidate: 300, tags: ["plants"] },
 );
+const getPlantRelated = (name: string) =>
+  _getPlantRelated(name).catch((): [never[], never[]] => [[], []]);
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -157,10 +161,12 @@ async function AdminEditButtonInline({ plantId }: { plantId: string }) {
 export default async function PlantDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
-  // ── Snabbväg: bara cachade anrop blockerar initial render ─────────
+  // ── Bara cachade plant-data blockerar initial render ─────────────
+  // getPlantRelated körs som Suspense-slot i PlantDetailTabs
   const [plant, settings] = await Promise.all([getPlant(slug), getSettings()]);
   if (!plant) notFound();
 
+  // Försök hämta related (cached, ~10ms warm / ~200ms cold) – blockerar EJ om det misslyckas
   const [relatedGuides, relatedTerms] = await getPlantRelated(plant.name);
 
   const pageUrl = `${settings.seoCanonical}/vaxtdatabas/${slug}`;

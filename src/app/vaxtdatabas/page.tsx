@@ -88,6 +88,7 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
       select: {
         id: true, slug: true, name: true, latinName: true, imageUrl: true,
         category: true, difficultyLevel: true, sowingPeriod: true, harvestPeriod: true,
+        sunRequirement: true, wateringNeeds: true,
         _count: { select: { tips: true } },
       },
     }).catch(() => []),
@@ -333,27 +334,24 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
                             {plant.latinName ?? ""}
                           </p>
 
-                          {/* Datum – alltid 2 rader, osynliga rader behåller höjden */}
-                          {(() => {
-                            const sow     = extractDateRange(plant.sowingPeriod);
-                            const harvest = extractDateRange(plant.harvestPeriod);
-                            return (
-                              <div className="mt-auto flex flex-col gap-0.5 text-xs text-gray-500 pt-2">
-                                <span style={{ visibility: sow ? "visible" : "hidden" }}>
-                                  🌱 Sås: {sow ?? "–"}
-                                </span>
-                                <span style={{ visibility: harvest ? "visible" : "hidden" }}>
-                                  🌾 Skörd: {harvest ?? "–"}
-                                </span>
-                              </div>
-                            );
-                          })()}
-
-                          {plant._count.tips > 0 && (
-                            <p className="text-xs text-green-600 font-medium">
-                              💡 {plant._count.tips} tips från odlare
-                            </p>
-                          )}
+                          {/* Sol + vatten + svårighetsgrad – enhetlig rad på alla kort */}
+                          <div className="mt-auto pt-3 flex items-center gap-3 text-xs text-gray-500">
+                            {plant.sunRequirement && (
+                              <span className="flex items-center gap-1" title={plant.sunRequirement}>
+                                ☀️ <span className="truncate max-w-[6rem]">{plant.sunRequirement}</span>
+                              </span>
+                            )}
+                            {plant.wateringNeeds && (
+                              <span className="flex items-center gap-1" title={plant.wateringNeeds}>
+                                💧 <span className="truncate max-w-[5rem]">{plant.wateringNeeds}</span>
+                              </span>
+                            )}
+                            {plant._count.tips > 0 && (
+                              <span className="ml-auto text-green-600 font-medium shrink-0">
+                                💡 {plant._count.tips}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </Card>
                     </Link>
