@@ -38,15 +38,6 @@ const DIFFICULTY_OPTIONS = [
   { value: "hard",   label: "Svår",   stars: 5 },
 ];
 
-/** Extraherar bara månadsintervallet ur fritext. Kräver ordgräns så "Blommar" inte triggar. */
-function extractDateRange(text: string | null): string | null {
-  if (!text) return null;
-  const MONTHS = "jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec";
-  const re = new RegExp(`(?<![a-zåäö])(${MONTHS})[a-z]*\\s*[–\\-]\\s*(${MONTHS})[a-z]*`, "i");
-  const m = text.match(re);
-  return m ? m[0] : null;
-}
-
 
 function difficultyVariant(level?: string | null): "success" | "warning" | "danger" | "default" {
   if (!level) return "default";
@@ -87,7 +78,7 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
       orderBy: { name: "asc" },
       select: {
         id: true, slug: true, name: true, latinName: true, imageUrl: true,
-        category: true, difficultyLevel: true, sowingPeriod: true, harvestPeriod: true,
+        category: true, difficultyLevel: true,
         sunRequirement: true, wateringNeeds: true,
         _count: { select: { tips: true } },
       },
@@ -329,12 +320,19 @@ export default async function VaxtdatabasePage({ searchParams }: PageProps) {
                             )}
                           </div>
 
-                          {/* Latinskt namn */}
-                          <p className="text-xs text-gray-400 italic min-h-[1rem]">
-                            {plant.latinName ?? ""}
-                          </p>
+                          {/* Kategori + latinskt namn */}
+                          <div className="flex items-center gap-2">
+                            {plant.category && (
+                              <span className="text-[11px] font-medium text-sage-700 bg-sage-50 border border-sage-200 px-2 py-0.5 rounded-full">
+                                {plant.category}
+                              </span>
+                            )}
+                            <p className="text-xs text-gray-400 italic truncate">
+                              {plant.latinName ?? ""}
+                            </p>
+                          </div>
 
-                          {/* Sol + vatten + svårighetsgrad – enhetlig rad på alla kort */}
+                          {/* Sol + vatten – enhetlig rad på alla kort */}
                           <div className="mt-auto pt-3 flex items-center gap-3 text-xs text-gray-500">
                             {plant.sunRequirement && (
                               <span className="flex items-center gap-1" title={plant.sunRequirement}>
