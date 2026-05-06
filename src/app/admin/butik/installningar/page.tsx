@@ -14,6 +14,7 @@ const ALL_KEYS = [
   "resend_api_key",
   "resend_sender_email",
   "shop_contact_email",
+  "trustpilot_bcc_email",
   "shop_shipping_cost",
   "shop_free_shipping_threshold",
   "shop_currency",
@@ -23,6 +24,8 @@ const ALL_KEYS = [
   "shop_order_confirmation_text",
   "shop_return_policy",
   "shop_shipping_info",
+  "allow_reviews_all",
+  "allow_reviews_verified_only",
 ];
 
 const DEFAULTS: Record<string, string> = {

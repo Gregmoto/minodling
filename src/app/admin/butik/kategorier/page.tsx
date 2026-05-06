@@ -19,7 +19,7 @@ export default async function AdminKategorierPage() {
   const categories = await prisma.shopCategory.findMany({
     include: { _count: { select: { products: true } } },
     orderBy: { sortOrder: "asc" },
-  });
+  }).catch(() => []);
 
   return (
     <div className="space-y-6">

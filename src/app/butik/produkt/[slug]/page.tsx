@@ -26,6 +26,8 @@ import { formatPrice } from "@/lib/utils";
 import { ProductCard, ProductCardData } from "@/components/shop/ProductCard";
 import { ProductGallery } from "@/components/shop/ProductGallery";
 import { BuyWidget } from "@/components/shop/BuyWidget";
+import { StarRating } from "@/components/shop/StarRating";
+import { ReviewSection } from "./ReviewSection";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -114,6 +116,37 @@ export default async function ProduktPage({ params }: PageProps) {
 
   if (!product) notFound();
 
+  // Reviews
+  const reviews = await prisma.shopProductReview.findMany({
+    where: { productId: product.id, status: "approved" },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true, rating: true, title: true, content: true,
+      imageUrls: true, isVerifiedPurchase: true,
+      adminReply: true, adminRepliedAt: true, createdAt: true,
+      user: { select: { fullName: true, username: true } },
+    },
+  }).catch(() => []);
+
+  const totalCount = reviews.length;
+  const avgRating = totalCount > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalCount
+    : 0;
+
+  // Current user's review
+  let userReview: { id: string; rating: number; title: string | null; content: string | null } | null = null;
+  if (user) {
+    const profile = await prisma.profile
+      .findUnique({ where: { userId: user.id }, select: { id: true } })
+      .catch(() => null);
+    if (profile) {
+      userReview = await prisma.shopProductReview.findUnique({
+        where: { productId_userId: { productId: product.id, userId: profile.id } },
+        select: { id: true, rating: true, title: true, content: true },
+      }).catch(() => null);
+    }
+  }
+
   // Relaterade produkter: samma kategori, exkl. denna produkt
   const relatedProducts = product.categoryId
     ? await prisma.shopProduct.findMany({
@@ -184,6 +217,17 @@ export default async function ProduktPage({ params }: PageProps) {
     ...(product.category
       ? { category: product.category.name }
       : {}),
+    ...(totalCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: avgRating.toFixed(1),
+            reviewCount: totalCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 
   return (
@@ -237,6 +281,16 @@ export default async function ProduktPage({ params }: PageProps) {
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                 {product.name}
               </h1>
+
+              {/* Betyg */}
+              {totalCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <StarRating rating={avgRating} size="sm" />
+                  <span className="text-sm text-gray-500">
+                    {avgRating.toFixed(1)} ({totalCount} {totalCount === 1 ? "omdöme" : "omdömen"})
+                  </span>
+                </div>
+              )}
 
               {/* Kort beskrivning */}
               {product.shortDescription && (
@@ -425,6 +479,17 @@ export default async function ProduktPage({ params }: PageProps) {
             )}
 
           </div>
+
+          {/* ── OMDÖMEN ─────────────────────────────────────── */}
+          <ReviewSection
+            productId={product.id}
+            productName={product.name}
+            reviews={reviews}
+            avgRating={avgRating}
+            totalCount={totalCount}
+            userReview={userReview}
+            isLoggedIn={!!user}
+          />
 
           {/* ── RELATERADE PRODUKTER ─────────────────────────── */}
           {relatedProducts.length > 0 && (

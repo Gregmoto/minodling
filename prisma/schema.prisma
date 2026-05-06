@@ -52,9 +52,12 @@ model Profile {
   challengeComments    ChallengeComment[]
   subscription         Subscription?
   weeklyTasks          WeeklyTask[]
-  shopOrders           ShopOrder[]
-  shopCustomer         ShopCustomer?
-  shopNewsletterSubs   ShopNewsletterSubscriber[]
+  shopOrders              ShopOrder[]
+  shopCustomer            ShopCustomer?
+  shopNewsletterSubs      ShopNewsletterSubscriber[]
+  shopReviews             ShopProductReview[]
+  loyaltyTransactions     ShopLoyaltyTransaction[]
+  loyaltyBalance          ShopLoyaltyBalance?
 
   @@map("profiles")
 }
@@ -793,6 +796,7 @@ model ShopProduct {
   category     ShopCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   orderItems   ShopOrderItem[]
   plantLinks   ShopProductPlant[]
+  reviews      ShopProductReview[]
 
   @@index([slug])
   @@index([categoryId])
@@ -834,8 +838,9 @@ model ShopOrder {
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
 
-  items   ShopOrderItem[]
-  profile Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items              ShopOrderItem[]
+  profile            Profile?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  loyaltyTransactions ShopLoyaltyTransaction[]
 
   @@index([userId])
   @@index([status])
@@ -879,19 +884,20 @@ model ShopCustomer {
 }
 
 model ShopDiscountCode {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code           String    @unique
-  description    String?
-  discountType   String    @map("discount_type")  // percent | fixed
-  discountValue  Int       @map("discount_value")  // % eller öre
-  minOrderAmount Int?      @map("min_order_amount")
-  maxUses        Int?      @map("max_uses")
-  usedCount      Int       @default(0) @map("used_count")
-  startsAt       DateTime? @map("starts_at")
-  endsAt         DateTime? @map("ends_at")
-  isActive       Boolean   @default(true) @map("is_active")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                String    @unique
+  description         String?
+  discountType        String    @map("discount_type")          // percent | fixed
+  discountValue       Int       @map("discount_value")         // % eller öre
+  minOrderAmount      Int?      @map("min_order_amount")
+  maxUses             Int?      @map("max_uses")
+  usedCount           Int       @default(0) @map("used_count")
+  excludeSaleProducts Boolean   @default(false) @map("exclude_sale_products")
+  startsAt            DateTime? @map("starts_at")
+  endsAt              DateTime? @map("ends_at")
+  isActive            Boolean   @default(true) @map("is_active")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   @@map("shop_discount_codes")
 }
@@ -934,4 +940,59 @@ model ShopSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("shop_settings")
+}
+
+model ShopProductReview {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId           String    @db.Uuid @map("product_id")
+  userId              String?   @db.Uuid @map("user_id")
+  orderId             String?   @db.Uuid @map("order_id")
+  rating              Int       // 1–5
+  title               String?
+  content             String?
+  imageUrls           String[]  @default([]) @map("image_urls")
+  isVerifiedPurchase  Boolean   @default(false) @map("is_verified_purchase")
+  status              String    @default("pending") // pending | approved | rejected | hidden
+  adminReply          String?   @map("admin_reply")
+  adminRepliedAt      DateTime? @map("admin_replied_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  product ShopProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    Profile?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([productId, userId])
+  @@index([productId, status])
+  @@index([userId])
+  @@map("shop_product_reviews")
+}
+
+model ShopLoyaltyTransaction {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid @map("user_id")
+  orderId     String?  @db.Uuid @map("order_id")
+  points      Int      // positiv = earn, negativ = spend/expire
+  type        String   // earn | spend | expire | adjust | bonus
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user    Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order   ShopOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([orderId])
+  @@map("shop_loyalty_transactions")
+}
+
+model ShopLoyaltyBalance {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @unique @db.Uuid @map("user_id")
+  balance      Int      @default(0)
+  totalEarned  Int      @default(0) @map("total_earned")
+  totalSpent   Int      @default(0) @map("total_spent")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("shop_loyalty_balances")
 }

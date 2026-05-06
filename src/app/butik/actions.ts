@@ -6,6 +6,70 @@ import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 
+// ── Omdömen ───────────────────────────────────────────────────────
+
+export async function submitReview(
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return {
+      success: false,
+      error: "Du måste vara inloggad för att lämna ett omdöme.",
+    };
+
+  const profile = await prisma.profile
+    .findUnique({ where: { userId: user.id }, select: { id: true } })
+    .catch(() => null);
+  if (!profile) return { success: false, error: "Profil saknas." };
+
+  const productId = formData.get("productId") as string;
+  const ratingRaw = parseInt(String(formData.get("rating") ?? "0"), 10);
+  if (ratingRaw < 1 || ratingRaw > 5)
+    return { success: false, error: "Välj ett betyg 1–5." };
+
+  const title = (formData.get("title") as string | null)?.trim() || null;
+  const content = (formData.get("content") as string | null)?.trim() || null;
+
+  // Check if verified purchase
+  const order = await prisma.shopOrder
+    .findFirst({
+      where: {
+        userId: profile.id,
+        status: { in: ["paid", "completed", "shipped"] },
+        items: { some: { productId } },
+      },
+      select: { id: true },
+    })
+    .catch(() => null);
+
+  const isVerifiedPurchase = !!order;
+
+  try {
+    await prisma.shopProductReview.upsert({
+      where: { productId_userId: { productId, userId: profile.id } },
+      update: { rating: ratingRaw, title, content, status: "pending" },
+      create: {
+        productId,
+        userId: profile.id,
+        orderId: order?.id ?? null,
+        rating: ratingRaw,
+        title,
+        content,
+        isVerifiedPurchase,
+        status: "pending",
+      },
+    });
+    revalidatePath(`/butik/produkt`);
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kunde inte spara omdömet." };
+  }
+}
+
 interface CartItemData {
   productId: string;
   name: string;
@@ -258,16 +322,14 @@ export async function subscribeNewsletter(
 
 export async function validateDiscount(
   code: string,
-  orderTotal: number
+  orderTotal: number,
+  cartItems?: Array<{ productId: string; price: number; quantity: number }>
 ): Promise<{ success: boolean; discountAmount?: number; type?: string; error?: string }> {
   try {
     const discount = await prisma.shopDiscountCode.findUnique({ where: { code: code.toUpperCase() } });
-    if (!discount || !discount.isActive) {
-      return { success: false, error: "Rabattkoden är ogiltig." };
-    }
-    if (discount.endsAt && discount.endsAt < new Date()) {
-      return { success: false, error: "Rabattkoden har gått ut." };
-    }
+    if (!discount || !discount.isActive) return { success: false, error: "Rabattkoden är ogiltig." };
+    if (discount.endsAt && discount.endsAt < new Date()) return { success: false, error: "Rabattkoden har gått ut." };
+    if (discount.startsAt && discount.startsAt > new Date()) return { success: false, error: "Rabattkoden är inte aktiv ännu." };
     if (discount.maxUses !== null && discount.usedCount >= discount.maxUses) {
       return { success: false, error: "Rabattkoden har nått maxgränsen." };
     }
@@ -275,13 +337,28 @@ export async function validateDiscount(
       return { success: false, error: `Minsta ordersumma för denna kod är ${discount.minOrderAmount / 100} kr.` };
     }
 
+    // Kolla om koden utesluter nedsatta produkter
+    if (discount.excludeSaleProducts && cartItems && cartItems.length > 0) {
+      const productIds = cartItems.map((i) => i.productId).filter(Boolean);
+      if (productIds.length > 0) {
+        const saleProducts = await prisma.shopProduct
+          .findMany({
+            where: { id: { in: productIds }, compareAtPrice: { not: null } },
+            select: { id: true },
+          })
+          .catch(() => []);
+        if (saleProducts.length > 0) {
+          return { success: false, error: "Denna rabattkod gäller inte på redan nedsatta produkter." };
+        }
+      }
+    }
+
     let discountAmount = 0;
     if (discount.discountType === "percent") {
       discountAmount = Math.round(orderTotal * (discount.discountValue / 100));
     } else {
-      discountAmount = discount.discountValue;
+      discountAmount = Math.min(discount.discountValue, orderTotal);
     }
-
     return { success: true, discountAmount, type: discount.discountType };
   } catch (err) {
     console.error("validateDiscount error:", err);

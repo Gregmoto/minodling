@@ -198,8 +198,9 @@ export async function createDiscount(formData: FormData) {
   const endsAtRaw = formData.get("endsAt") as string | null;
   const endsAt = endsAtRaw && endsAtRaw.trim() !== "" ? new Date(endsAtRaw) : null;
   const isActive = formData.get("isActive") === "on";
+  const excludeSaleProducts = formData.get("excludeSaleProducts") === "on";
 
-  await prisma.shopDiscountCode.create({ data: { code, description, discountType, discountValue, minOrderAmount, maxUses, startsAt, endsAt, isActive } });
+  await prisma.shopDiscountCode.create({ data: { code, description, discountType, discountValue, minOrderAmount, maxUses, startsAt, endsAt, isActive, excludeSaleProducts } });
   revalidatePath("/admin/butik/rabattkoder");
 }
 
@@ -219,9 +220,10 @@ export async function updateDiscount(id: string, formData: FormData) {
   const endsAtRaw = formData.get("endsAt") as string | null;
   const endsAt = endsAtRaw?.trim() ? new Date(endsAtRaw) : null;
   const isActive = formData.get("isActive") === "on";
+  const excludeSaleProducts = formData.get("excludeSaleProducts") === "on";
   await prisma.shopDiscountCode.update({
     where: { id },
-    data: { code, description, discountType, discountValue, minOrderAmount, maxUses, startsAt, endsAt, isActive },
+    data: { code, description, discountType, discountValue, minOrderAmount, maxUses, startsAt, endsAt, isActive, excludeSaleProducts },
   });
   revalidatePath("/admin/butik/rabattkoder");
   revalidatePath(`/admin/butik/rabattkoder/${id}`);
@@ -237,6 +239,33 @@ export async function deleteDiscount(id: string) {
   await requireAdmin();
   await prisma.shopDiscountCode.delete({ where: { id } });
   revalidatePath("/admin/butik/rabattkoder");
+}
+
+// ── Omdömen ───────────────────────────────────────────────────────
+
+export async function updateReviewStatus(id: string, status: string) {
+  await requireAdmin();
+  await prisma.shopProductReview.update({ where: { id }, data: { status } });
+  revalidatePath("/admin/butik/omdomen");
+}
+
+export async function deleteReview(id: string) {
+  await requireAdmin();
+  await prisma.shopProductReview.delete({ where: { id } });
+  revalidatePath("/admin/butik/omdomen");
+}
+
+export async function replyToReview(id: string, reply: string) {
+  await requireAdmin();
+  await prisma.shopProductReview.update({
+    where: { id },
+    data: {
+      adminReply: reply.trim() || null,
+      adminRepliedAt: reply.trim() ? new Date() : null,
+    },
+  });
+  revalidatePath("/admin/butik/omdomen");
+  revalidatePath(`/admin/butik/omdomen/${id}`);
 }
 
 // ── Nyhetsbrev ────────────────────────────────────────────────────
@@ -259,6 +288,7 @@ const ALL_SHOP_SETTING_KEYS = [
   "resend_api_key",
   "resend_sender_email",
   "shop_contact_email",
+  "trustpilot_bcc_email",
   "shop_shipping_cost",
   "shop_free_shipping_threshold",
   "shop_currency",
@@ -268,6 +298,8 @@ const ALL_SHOP_SETTING_KEYS = [
   "shop_order_confirmation_text",
   "shop_return_policy",
   "shop_shipping_info",
+  "allow_reviews_all",
+  "allow_reviews_verified_only",
 ];
 
 const SECRET_KEYS = ["stripe_secret_key", "stripe_webhook_secret", "resend_api_key"];

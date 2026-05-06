@@ -147,10 +147,22 @@ export function ShopSettingsForm({ values }: { values: Record<string, string> })
         />
         <Field
           name="shop_contact_email"
-          label="Butikens kontakt-e-post"
+          label="Butikens kontakt-e-post (admin-notiser skickas hit)"
           type="email"
           currentValue={values.shop_contact_email}
         />
+        <div>
+          <Field
+            name="trustpilot_bcc_email"
+            label="Trustpilot BCC-e-post (BCC på orderbekräftelse)"
+            type="email"
+            currentValue={values.trustpilot_bcc_email}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Din unika Trustpilot-adress, t.ex.{" "}
+            <code className="bg-gray-100 px-1 rounded">minodling.se+dc0dc4c6cd@invite.trustpilot.com</code>
+          </p>
+        </div>
       </SectionCard>
 
       {/* Frakt & priser */}
@@ -195,6 +207,27 @@ export function ShopSettingsForm({ values }: { values: Record<string, string> })
           currentValue={values.shop_enabled}
           defaultValue="true"
         />
+      </SectionCard>
+
+      {/* Omdömen */}
+      <SectionCard title="Omdömen">
+        <Field
+          name="allow_reviews_all"
+          label="Tillåt omdömen från alla (true/false)"
+          currentValue={values.allow_reviews_all}
+          defaultValue="true"
+        />
+        <Field
+          name="allow_reviews_verified_only"
+          label="Kräv verifierat köp för omdömen (true/false)"
+          currentValue={values.allow_reviews_verified_only}
+          defaultValue="false"
+        />
+        <p className="text-xs text-gray-400">
+          Om båda är false stängs omdömessystemet av. Om{" "}
+          <code className="bg-gray-100 px-1 rounded">allow_reviews_verified_only</code> är true krävs
+          verifierat köp.
+        </p>
       </SectionCard>
 
       {/* Texter */}

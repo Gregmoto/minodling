@@ -64,6 +64,10 @@ export function DiscountCreateForm() {
           <input type="checkbox" name="isActive" defaultChecked className="h-4 w-4 rounded text-green-600" />
           <span className="text-sm font-medium text-gray-700">Aktiv</span>
         </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="excludeSaleProducts" className="h-4 w-4 rounded text-green-600" />
+          <span className="text-sm font-medium text-gray-700">Uteslut nedsatta produkter</span>
+        </label>
         <button
           type="submit"
           disabled={pending}

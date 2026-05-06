@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, getWebhookSecret } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 import { sendOrderConfirmation, sendAdminOrderNotification } from "@/lib/email";
+import { awardOrderPoints } from "@/lib/loyalty";
 
 export const runtime = "nodejs";
 
@@ -46,7 +47,10 @@ export async function POST(req: NextRequest) {
         // Minska lager (om inte redan gjort)
         const order = await prisma.shopOrder.findUnique({
           where: { id: orderId },
-          include: { items: true },
+          include: {
+            items: true,
+            profile: { select: { id: true } },
+          },
         });
         if (order?.status === "paid") {
           for (const item of order.items) {
@@ -70,6 +74,11 @@ export async function POST(req: NextRequest) {
             totalAmount: order.totalAmount,
           }).catch(() => {});
           await sendAdminOrderNotification(order.id, order.email, order.fullName, order.totalAmount).catch(() => {});
+
+          // Tilldela lojalitetspoäng
+          if (order.profile?.id) {
+            await awardOrderPoints(order.profile.id, order.id, order.totalAmount).catch(() => {});
+          }
         }
       } catch (err) {
         console.error("Failed to update order from webhook:", err);

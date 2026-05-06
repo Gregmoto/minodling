@@ -51,8 +51,6 @@ export default async function AdminOrdrarPage({
     where.OR = [
       { fullName: { contains: query, mode: "insensitive" } },
       { email:    { contains: query, mode: "insensitive" } },
-      // Search by short order id prefix (8 chars)
-      { id: { startsWith: query.toLowerCase() } },
     ];
   }
 

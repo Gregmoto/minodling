@@ -27,7 +27,7 @@ export default async function AdminProdukterPage({
       : {},
     include: { category: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
-  });
+  }).catch(() => []);
 
   return (
     <div className="space-y-6">

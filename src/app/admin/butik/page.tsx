@@ -112,6 +112,7 @@ export default async function AdminButikPage() {
     { label: "Ordrar",        href: "/admin/butik/ordrar",       color: "text-amber-700 bg-amber-50 border-amber-200" },
     { label: "Kunder",        href: "/admin/butik/kunder",       color: "text-purple-700 bg-purple-50 border-purple-200" },
     { label: "Rabattkoder",   href: "/admin/butik/rabattkoder",  color: "text-pink-700 bg-pink-50 border-pink-200" },
+    { label: "Poäng",         href: "/admin/butik/poang",        color: "text-amber-700 bg-amber-50 border-amber-200" },
     { label: "Nyhetsbrev",    href: "/admin/butik/nyhetsbrev",   color: "text-teal-700 bg-teal-50 border-teal-200" },
     { label: "Inställningar", href: "/admin/butik/installningar",color: "text-gray-700 bg-gray-50 border-gray-200" },
   ];
