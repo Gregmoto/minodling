@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe, getWebhookSecret } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
+import { sendOrderConfirmation, sendAdminOrderNotification } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -56,6 +57,19 @@ export async function POST(req: NextRequest) {
               }).catch(() => {/* ignore if product deleted */});
             }
           }
+
+          // Skicka orderbekräftelse och adminnotis
+          await sendOrderConfirmation({
+            to: order.email,
+            fullName: order.fullName,
+            orderId: order.id,
+            items: order.items,
+            subtotal: order.subtotal,
+            shippingAmount: order.shippingAmount,
+            discountAmount: order.discountAmount,
+            totalAmount: order.totalAmount,
+          }).catch(() => {});
+          await sendAdminOrderNotification(order.id, order.email, order.fullName, order.totalAmount).catch(() => {});
         }
       } catch (err) {
         console.error("Failed to update order from webhook:", err);

@@ -18,11 +18,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/kunskapsbank`,  lastModified: now, changeFrequency: "daily",   priority: 0.8 },
     { url: `${base}/ordlista`,      lastModified: now, changeFrequency: "weekly",  priority: 0.7 },
     { url: `${base}/odlingstips`,   lastModified: now, changeFrequency: "daily",   priority: 0.8 },
+    { url: `${base}/butik`,         lastModified: now, changeFrequency: "daily",   priority: 0.8 },
     // community, om-oss, kontakt finns ej som sidor – ej med i sitemap
   ];
 
   try {
-    const [posts, questions, plants, guides, articles, terms] = await Promise.all([
+    const [posts, questions, plants, guides, articles, terms, shopProducts, shopCategories] = await Promise.all([
       prisma.post.findMany({
         where: { status: "published" },
         select: { id: true, updatedAt: true },
@@ -50,6 +51,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true },
         orderBy: { term: "asc" },
       }),
+      prisma.shopProduct.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+      }).catch(() => []),
+      prisma.shopCategory.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+      }).catch(() => []),
     ]);
 
     return [
@@ -89,6 +98,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: t.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.6,
+      })),
+      ...shopProducts.map((p) => ({
+        url: `${base}/butik/produkt/${p.slug}`,
+        lastModified: p.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })),
+      ...shopCategories.map((c) => ({
+        url: `${base}/butik/kategori/${c.slug}`,
+        lastModified: c.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
       })),
     ];
   } catch {

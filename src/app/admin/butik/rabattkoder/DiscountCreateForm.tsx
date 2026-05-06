@@ -30,6 +30,10 @@ export function DiscountCreateForm() {
           <input name="code" required className={inputClass} placeholder="SOMMAR25" />
         </div>
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Beskrivning</label>
+          <input name="description" className={inputClass} placeholder="T.ex. Sommarkampanj 2025" />
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Typ *</label>
           <select name="discountType" required className={inputClass}>
             <option value="percent">Procent (%)</option>
@@ -47,6 +51,10 @@ export function DiscountCreateForm() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Max användningar</label>
           <input name="maxUses" type="number" min="0" className={inputClass} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Giltig från</label>
+          <input name="startsAt" type="datetime-local" className={inputClass} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Giltig till</label>

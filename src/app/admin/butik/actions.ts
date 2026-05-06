@@ -188,15 +188,48 @@ export async function createDiscount(formData: FormData) {
   const discountType = formData.get("discountType") as string;
   const valueRaw = parseFloat(String(formData.get("discountValue") ?? "0"));
   const discountValue = discountType === "percent" ? Math.round(valueRaw) : Math.round(valueRaw * 100);
+  const description = (formData.get("description") as string | null)?.trim() || null;
   const minOrderRaw = formData.get("minOrderAmount") as string | null;
   const minOrderAmount = minOrderRaw && minOrderRaw.trim() !== "" ? Math.round(parseFloat(minOrderRaw) * 100) : null;
   const maxUsesRaw = formData.get("maxUses") as string | null;
   const maxUses = maxUsesRaw && maxUsesRaw.trim() !== "" ? parseInt(maxUsesRaw, 10) : null;
+  const startsAtRaw = formData.get("startsAt") as string | null;
+  const startsAt = startsAtRaw && startsAtRaw.trim() !== "" ? new Date(startsAtRaw) : null;
   const endsAtRaw = formData.get("endsAt") as string | null;
   const endsAt = endsAtRaw && endsAtRaw.trim() !== "" ? new Date(endsAtRaw) : null;
   const isActive = formData.get("isActive") === "on";
 
-  await prisma.shopDiscountCode.create({ data: { code, discountType, discountValue, minOrderAmount, maxUses, endsAt, isActive } });
+  await prisma.shopDiscountCode.create({ data: { code, description, discountType, discountValue, minOrderAmount, maxUses, startsAt, endsAt, isActive } });
+  revalidatePath("/admin/butik/rabattkoder");
+}
+
+export async function updateDiscount(id: string, formData: FormData) {
+  await requireAdmin();
+  const code = (formData.get("code") as string).trim().toUpperCase();
+  const discountType = formData.get("discountType") as string;
+  const valueRaw = parseFloat(String(formData.get("discountValue") ?? "0"));
+  const discountValue = discountType === "percent" ? Math.round(valueRaw) : Math.round(valueRaw * 100);
+  const description = (formData.get("description") as string | null)?.trim() || null;
+  const minOrderRaw = formData.get("minOrderAmount") as string | null;
+  const minOrderAmount = minOrderRaw?.trim() ? Math.round(parseFloat(minOrderRaw) * 100) : null;
+  const maxUsesRaw = formData.get("maxUses") as string | null;
+  const maxUses = maxUsesRaw?.trim() ? parseInt(maxUsesRaw, 10) : null;
+  const startsAtRaw = formData.get("startsAt") as string | null;
+  const startsAt = startsAtRaw?.trim() ? new Date(startsAtRaw) : null;
+  const endsAtRaw = formData.get("endsAt") as string | null;
+  const endsAt = endsAtRaw?.trim() ? new Date(endsAtRaw) : null;
+  const isActive = formData.get("isActive") === "on";
+  await prisma.shopDiscountCode.update({
+    where: { id },
+    data: { code, description, discountType, discountValue, minOrderAmount, maxUses, startsAt, endsAt, isActive },
+  });
+  revalidatePath("/admin/butik/rabattkoder");
+  revalidatePath(`/admin/butik/rabattkoder/${id}`);
+}
+
+export async function toggleDiscount(id: string, isActive: boolean) {
+  await requireAdmin();
+  await prisma.shopDiscountCode.update({ where: { id }, data: { isActive } });
   revalidatePath("/admin/butik/rabattkoder");
 }
 
@@ -206,21 +239,46 @@ export async function deleteDiscount(id: string) {
   revalidatePath("/admin/butik/rabattkoder");
 }
 
+// ── Nyhetsbrev ────────────────────────────────────────────────────
+
+export async function toggleSubscriber(id: string, isActive: boolean) {
+  await requireAdmin();
+  await prisma.shopNewsletterSubscriber.update({
+    where: { id },
+    data: { isActive, unsubscribedAt: isActive ? null : new Date() },
+  });
+  revalidatePath("/admin/butik/nyhetsbrev");
+}
+
 // ── Inställningar ─────────────────────────────────────────────────
 
-const SHOP_SETTING_KEYS = [
-  "shop_name",
-  "shop_enabled",
+const ALL_SHOP_SETTING_KEYS = [
+  "stripe_publishable_key",
+  "stripe_secret_key",
+  "stripe_webhook_secret",
+  "resend_api_key",
+  "resend_sender_email",
+  "shop_contact_email",
   "shop_shipping_cost",
   "shop_free_shipping_threshold",
   "shop_currency",
+  "shop_vat_rate",
+  "shop_name",
+  "shop_enabled",
+  "shop_order_confirmation_text",
+  "shop_return_policy",
+  "shop_shipping_info",
 ];
+
+const SECRET_KEYS = ["stripe_secret_key", "stripe_webhook_secret", "resend_api_key"];
 
 export async function saveShopSettings(formData: FormData) {
   await requireAdmin();
 
-  for (const key of SHOP_SETTING_KEYS) {
+  for (const key of ALL_SHOP_SETTING_KEYS) {
     const value = (formData.get(key) as string | null) ?? "";
+    // Don't overwrite secret keys if form sent empty (placeholder was shown)
+    if (SECRET_KEYS.includes(key) && !value.trim()) continue;
     await prisma.shopSetting.upsert({
       where: { key },
       update: { value },

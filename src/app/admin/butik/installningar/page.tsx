@@ -3,40 +3,63 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { Card } from "@/components/ui/Card";
 import { ShopSettingsForm } from "./ShopSettingsForm";
 
 export const metadata: Metadata = { title: "Butiksinställningar | Admin" };
 
-const SHOP_SETTING_KEYS = [
-  { key: "shop_name", label: "Butiksnamn", defaultValue: "Fröbutiken" },
-  { key: "shop_enabled", label: "Butik aktiv (true/false)", defaultValue: "true" },
-  { key: "shop_shipping_cost", label: "Frakt (öre, standard 4900 = 49 kr)", defaultValue: "4900" },
-  { key: "shop_free_shipping_threshold", label: "Fri frakt över (öre, standard 49900 = 499 kr)", defaultValue: "49900" },
-  { key: "shop_currency", label: "Valuta", defaultValue: "SEK" },
+const ALL_KEYS = [
+  "stripe_publishable_key",
+  "stripe_secret_key",
+  "stripe_webhook_secret",
+  "resend_api_key",
+  "resend_sender_email",
+  "shop_contact_email",
+  "shop_shipping_cost",
+  "shop_free_shipping_threshold",
+  "shop_currency",
+  "shop_vat_rate",
+  "shop_name",
+  "shop_enabled",
+  "shop_order_confirmation_text",
+  "shop_return_policy",
+  "shop_shipping_info",
 ];
+
+const DEFAULTS: Record<string, string> = {
+  shop_shipping_cost: "4900",
+  shop_free_shipping_threshold: "49900",
+  shop_currency: "SEK",
+  shop_vat_rate: "25",
+  shop_name: "Fröbutiken",
+  shop_enabled: "true",
+};
 
 export default async function ShopInstallningarPage() {
   await requireAdmin();
 
   const rows = await prisma.shopSetting.findMany({
-    where: { key: { in: SHOP_SETTING_KEYS.map((s) => s.key) } },
+    where: { key: { in: ALL_KEYS } },
   }).catch(() => []);
+
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value ?? ""]));
-  const settings = SHOP_SETTING_KEYS.map((s) => ({
-    ...s,
-    value: map[s.key] ?? s.defaultValue,
-  }));
+  const values = Object.fromEntries(
+    ALL_KEYS.map((key) => [key, map[key] ?? DEFAULTS[key] ?? ""])
+  );
 
   return (
-    <div className="space-y-6 max-w-xl">
+    <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Butiksinställningar</h1>
-        <p className="text-gray-500 text-sm mt-1">Generella inställningar för butiken</p>
+        <p className="text-gray-500 text-sm mt-1">
+          Hantera betalning, frakt, e-post och butiksinfo.
+        </p>
+        <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs mt-3">
+          Obs: Stripe- och Resend-nycklar sparas i databasen. Alternativt kan du lägga in dem i
+          .env-filen som <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_PUBLISHABLE_KEY</code>,{" "}
+          <code>STRIPE_WEBHOOK_SECRET</code>.
+        </p>
       </div>
-      <Card padding="md">
-        <ShopSettingsForm settings={settings} />
-      </Card>
+      <ShopSettingsForm values={values} />
     </div>
   );
 }
