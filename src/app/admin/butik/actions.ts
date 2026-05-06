@@ -18,6 +18,14 @@ function parseOptionalSEKtoOre(value: FormDataEntryValue | null): number | null 
   return Math.round(n * 100);
 }
 
+interface PlantLink { plantId: string; relationType: string; }
+
+function parsePlantLinks(formData: FormData): PlantLink[] {
+  const raw = formData.get("plantLinks") as string | null;
+  if (!raw) return [];
+  try { return JSON.parse(raw); } catch { return []; }
+}
+
 export async function createProduct(formData: FormData) {
   await requireAdmin();
 
@@ -35,14 +43,26 @@ export async function createProduct(formData: FormData) {
   const isFeatured = formData.get("isFeatured") === "on";
   const seoTitle = (formData.get("seoTitle") as string | null)?.trim() || null;
   const seoDescription = (formData.get("seoDescription") as string | null)?.trim() || null;
+  const plantLinks = parsePlantLinks(formData);
 
-  await prisma.shopProduct.create({
+  const difficultyLevel = (formData.get("difficultyLevel") as string | null)?.trim() || null;
+  const growingType = (formData.get("growingType") as string | null)?.trim() || null;
+
+  const product = await prisma.shopProduct.create({
     data: {
       name, slug, shortDescription, description, imageUrl,
       categoryId: categoryId || null,
-      price, compareAtPrice, sku, stockQuantity, isActive, isFeatured, seoTitle, seoDescription,
+      price, compareAtPrice, sku, stockQuantity, isActive, isFeatured,
+      seoTitle, seoDescription, difficultyLevel, growingType,
     },
   });
+
+  if (plantLinks.length > 0) {
+    await prisma.shopProductPlant.createMany({
+      data: plantLinks.map((l) => ({ productId: product.id, plantId: l.plantId, relationType: l.relationType })),
+      skipDuplicates: true,
+    });
+  }
 
   revalidatePath("/admin/butik/produkter");
   revalidatePath("/butik");
@@ -65,17 +85,31 @@ export async function updateProduct(id: string, formData: FormData) {
   const isFeatured = formData.get("isFeatured") === "on";
   const seoTitle = (formData.get("seoTitle") as string | null)?.trim() || null;
   const seoDescription = (formData.get("seoDescription") as string | null)?.trim() || null;
+  const difficultyLevel = (formData.get("difficultyLevel") as string | null)?.trim() || null;
+  const growingType = (formData.get("growingType") as string | null)?.trim() || null;
+  const plantLinks = parsePlantLinks(formData);
 
   await prisma.shopProduct.update({
     where: { id },
     data: {
       name, slug, shortDescription, description, imageUrl,
       categoryId: categoryId || null,
-      price, compareAtPrice, sku, stockQuantity, isActive, isFeatured, seoTitle, seoDescription,
+      price, compareAtPrice, sku, stockQuantity, isActive, isFeatured,
+      seoTitle, seoDescription, difficultyLevel, growingType,
     },
   });
 
+  // Ersätt alla växt-kopplingar
+  await prisma.shopProductPlant.deleteMany({ where: { productId: id } });
+  if (plantLinks.length > 0) {
+    await prisma.shopProductPlant.createMany({
+      data: plantLinks.map((l) => ({ productId: id, plantId: l.plantId, relationType: l.relationType })),
+      skipDuplicates: true,
+    });
+  }
+
   revalidatePath("/admin/butik/produkter");
+  revalidatePath(`/butik/produkt/${slug}`);
   revalidatePath("/butik");
 }
 

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
+import { headers } from "next/headers";
 
 interface CartItemData {
   productId: string;
@@ -94,6 +96,125 @@ export async function createOrder(
   } catch (err) {
     console.error("createOrder error:", err);
     return { success: false, error: "Något gick fel vid beställningen." };
+  }
+}
+
+// ── Stripe checkout session ────────────────────────────────────────
+
+export async function createCheckoutSession(
+  formData: FormData
+): Promise<{ success: boolean; sessionUrl?: string; orderId?: string; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const cartItemsJson = formData.get("cartItems") as string;
+    const cartItems: CartItemData[] = JSON.parse(cartItemsJson);
+    if (!cartItems?.length) return { success: false, error: "Varukorgen är tom." };
+
+    const fullName    = (formData.get("fullName") as string).trim();
+    const email       = (formData.get("email") as string).trim();
+    const phone       = (formData.get("phone") as string | null)?.trim() || null;
+    const address     = (formData.get("address") as string).trim();
+    const city        = (formData.get("city") as string).trim();
+    const postalCode  = (formData.get("postalCode") as string).trim();
+    const discountCode   = (formData.get("discountCode") as string | null)?.trim() || null;
+    const discountAmount = parseInt(String(formData.get("discountAmount") ?? "0"), 10) || 0;
+
+    const subtotal      = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
+    const shipping      = subtotal >= 49900 ? 0 : 4900;
+    const totalAmount   = Math.max(0, subtotal + shipping - discountAmount);
+
+    // Koppla till profil om inloggad, eller sök via e-post
+    let profileId: string | null = null;
+    if (user) {
+      const prof = await prisma.profile.findUnique({ where: { userId: user.id }, select: { id: true } });
+      profileId = prof?.id ?? null;
+    }
+
+    // Verifiera lager
+    for (const item of cartItems) {
+      const product = await prisma.shopProduct.findUnique({
+        where: { id: item.productId },
+        select: { stockQuantity: true, isActive: true },
+      });
+      if (!product?.isActive) return { success: false, error: `"${item.name}" är inte tillgänglig.` };
+      if (product.stockQuantity < item.quantity) return { success: false, error: `Otillräckligt lager för "${item.name}".` };
+    }
+
+    // Skapa order (pending_payment)
+    const order = await prisma.shopOrder.create({
+      data: {
+        userId: profileId,
+        email, fullName, phone,
+        shippingAddress: { address, city, postalCode, country: "SE" },
+        subtotal, shippingAmount: shipping, discountAmount, totalAmount,
+        status: "pending_payment",
+        items: {
+          create: cartItems.map((item) => ({
+            productId: item.productId,
+            productName: item.name,
+            unitPrice:   item.price,
+            quantity:    item.quantity,
+            totalPrice:  item.price * item.quantity,
+          })),
+        },
+      },
+    });
+
+    // Om Stripe inte är konfigurerat → direkt-order utan betalning
+    if (!stripe) {
+      await prisma.shopOrder.update({ where: { id: order.id }, data: { status: "pending" } });
+      for (const item of cartItems) {
+        await prisma.shopProduct.update({
+          where: { id: item.productId },
+          data: { stockQuantity: { decrement: item.quantity } },
+        }).catch(() => {});
+      }
+      revalidatePath("/admin/butik/ordrar");
+      return { success: true, orderId: order.id };
+    }
+
+    // Skapa Stripe Checkout Session
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "localhost:3000";
+    const proto = host.includes("localhost") ? "http" : "https";
+    const baseUrl = `${proto}://${host}`;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: email,
+      line_items: cartItems.map((item) => ({
+        price_data: {
+          currency: "sek",
+          unit_amount: item.price, // öre
+          product_data: { name: item.name },
+        },
+        quantity: item.quantity,
+      })),
+      // Frakt som extra rad om det finns
+      ...(shipping > 0 ? {
+        shipping_options: [{
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: { amount: shipping, currency: "sek" },
+            display_name: "Standard frakt",
+            delivery_estimate: {
+              minimum: { unit: "business_day", value: 2 },
+              maximum: { unit: "business_day", value: 4 },
+            },
+          },
+        }],
+      } : {}),
+      metadata: { orderId: order.id },
+      success_url: `${baseUrl}/butik/kassa/bekraftelse?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
+      cancel_url: `${baseUrl}/butik/varukorg`,
+    });
+
+    return { success: true, sessionUrl: session.url ?? undefined, orderId: order.id };
+  } catch (err) {
+    console.error("createCheckoutSession error:", err);
+    return { success: false, error: "Något gick fel, försök igen." };
   }
 }
 

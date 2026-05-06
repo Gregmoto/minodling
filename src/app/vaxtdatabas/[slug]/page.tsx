@@ -169,6 +169,20 @@ export default async function PlantDetailPage({ params }: PageProps) {
   // Försök hämta related (cached, ~10ms warm / ~200ms cold) – blockerar EJ om det misslyckas
   const [relatedGuides, relatedTerms] = await getPlantRelated(plant.name);
 
+  // Butiksprodukter kopplade till denna växt
+  const linkedProducts = await prisma.shopProductPlant.findMany({
+    where: { plantId: plant.id },
+    include: {
+      product: {
+        select: {
+          id: true, slug: true, name: true, shortDescription: true,
+          price: true, compareAtPrice: true, imageUrl: true, isActive: true,
+        },
+      },
+    },
+  }).then((rows) => rows.filter((r) => r.product.isActive).map((r) => r.product))
+    .catch(() => []);
+
   const pageUrl = `${settings.seoCanonical}/vaxtdatabas/${slug}`;
   const schema  = plantSchema(plant, pageUrl, settings.siteName);
 
@@ -455,6 +469,63 @@ export default async function PlantDetailPage({ params }: PageProps) {
           </div>
         </div>
       </main>
+
+      {/* ── KOPPLADE BUTIKSPRODUKTER ─────────────────── */}
+      {linkedProducts.length > 0 && (
+        <section className="border-t border-sage-100 bg-cream-50 py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Sprout className="h-5 w-5 text-green-600" />
+              Rekommenderade produkter för {plant.name}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {linkedProducts.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/butik/produkt/${p.slug}`}
+                  className="group bg-white rounded-2xl border border-sage-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col"
+                >
+                  <div className="relative aspect-[4/3] bg-sage-50">
+                    {p.imageUrl ? (
+                      <Image
+                        src={p.imageUrl}
+                        alt={p.name}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 640px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <Leaf className="h-8 w-8 text-sage-200" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 flex flex-col gap-1.5 flex-1">
+                    <h3 className="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors line-clamp-2">
+                      {p.name}
+                    </h3>
+                    <div className="mt-auto flex items-baseline gap-1.5">
+                      <span className={`text-base font-bold ${p.compareAtPrice && p.compareAtPrice > p.price ? "text-red-600" : "text-gray-900"}`}>
+                        {(p.price / 100).toLocaleString("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 0 })}
+                      </span>
+                      {p.compareAtPrice && p.compareAtPrice > p.price && (
+                        <span className="text-xs text-gray-400 line-through">
+                          {(p.compareAtPrice / 100).toLocaleString("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 0 })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-6 text-center">
+              <Link href="/butik" className="text-sm font-medium text-green-700 hover:underline">
+                Se alla produkter i butiken →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <Footer />
     </div>

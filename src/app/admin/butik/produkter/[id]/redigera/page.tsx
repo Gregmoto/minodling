@@ -16,13 +16,21 @@ export default async function RedigeraProduktPage({ params }: PageProps) {
   await requireAdmin();
   const { id } = await params;
 
-  const [product, categories] = await Promise.all([
-    prisma.shopProduct.findUnique({ where: { id } }),
+  const [product, categories, plants, existingLinks] = await Promise.all([
+    prisma.shopProduct.findUnique({ where: { id } }).catch(() => null),
     prisma.shopCategory.findMany({
       where: { isActive: true },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
-    }),
+    }).catch(() => []),
+    prisma.plant.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true, latinName: true, imageUrl: true },
+    }).catch(() => []),
+    prisma.shopProductPlant.findMany({
+      where: { productId: id },
+      select: { plantId: true, relationType: true },
+    }).catch(() => []),
   ]);
 
   if (!product) notFound();
@@ -33,7 +41,12 @@ export default async function RedigeraProduktPage({ params }: PageProps) {
         <h1 className="text-2xl font-bold text-gray-900">Redigera produkt</h1>
         <p className="text-gray-500 text-sm mt-1">{product.name}</p>
       </div>
-      <ProductForm categories={categories} product={product} />
+      <ProductForm
+        categories={categories}
+        product={product}
+        plants={plants}
+        existingLinks={existingLinks}
+      />
     </div>
   );
 }
