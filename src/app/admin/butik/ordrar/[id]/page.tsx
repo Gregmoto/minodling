@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, CreditCard, Tag, User } from "lucide-react";
+import { ExternalLink, CreditCard, Tag, User, Clock } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
@@ -17,6 +17,12 @@ const STATUS_LABELS: Record<string, string> = {
   paid: "Betald", pending: "Mottagen", processing: "Behandlas",
   shipped: "Skickad", completed: "Avslutad", cancelled: "Avbruten",
   pending_payment: "Väntar betalning", refunded: "Återbetald",
+};
+
+const STATUS_ICONS: Record<string, string> = {
+  paid: "💳", pending: "⏳", pending_payment: "⏳",
+  processing: "⚙️", shipped: "📦", completed: "✅",
+  cancelled: "❌", refunded: "↩️",
 };
 
 const STATUS_VARIANT: Record<string, "success" | "warning" | "danger" | "info" | "default"> = {
@@ -40,6 +46,12 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
   });
 
   if (!order) notFound();
+
+  // Hämta orderlogg
+  const orderLogs = await prisma.shopOrderLog.findMany({
+    where: { orderId: id },
+    orderBy: { createdAt: "desc" },
+  }).catch(() => []);
 
   // Försök hitta profil via e-post eller userId
   const linkedProfile = await prisma.profile.findFirst({
@@ -190,6 +202,41 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
       <Card padding="md">
         <h2 className="font-semibold text-gray-900 mb-3">Uppdatera status</h2>
         <OrderStatusForm orderId={order.id} currentStatus={order.status} />
+      </Card>
+
+      {/* Orderlogg */}
+      <Card padding="none">
+        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+          <Clock className="h-4 w-4 text-gray-400" />
+          <h2 className="font-semibold text-gray-900">Orderhistorik</h2>
+        </div>
+        {orderLogs.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">Inga loggposter ännu.</p>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {orderLogs.map((log) => (
+              <div key={log.id} className="flex gap-3 px-4 py-3">
+                <div className="mt-0.5 h-6 w-6 rounded-full bg-sage-100 flex items-center justify-center shrink-0">
+                  <span className="text-xs">{STATUS_ICONS[log.status] ?? "📋"}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-gray-900">
+                      {STATUS_LABELS[log.status] ?? log.status}
+                    </span>
+                    {log.createdBy && (
+                      <span className="text-xs text-gray-400">av {log.createdBy}</span>
+                    )}
+                  </div>
+                  {log.note && (
+                    <p className="text-xs text-gray-600 mt-0.5 italic">{log.note}</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-0.5">{formatDate(log.createdAt)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Varor */}

@@ -96,7 +96,7 @@ export default async function ProduktPage({ params }: PageProps) {
   const s = await getSettings();
 
   const [product, navUser] = await Promise.all([
-    prisma.shopProduct.findUnique({
+    prisma.shopProduct.findFirst({
       where: { slug, isActive: true },
       include: {
         category: { select: { name: true, slug: true } },

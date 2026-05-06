@@ -68,7 +68,7 @@ export default async function KategoriPage({ params, searchParams }: PageProps) 
 
   // Hämta kategori + alla andra aktiva kategorier + växter kopplade till produkter i denna kategori
   const [category, allCategories, navUser] = await Promise.all([
-    prisma.shopCategory.findUnique({
+    prisma.shopCategory.findFirst({
       where: { slug, isActive: true },
     }).catch(() => null),
     prisma.shopCategory.findMany({

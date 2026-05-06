@@ -199,9 +199,17 @@ export async function deleteCategory(id: string) {
 
 // ── Ordrar ────────────────────────────────────────────────────────
 
-export async function updateOrderStatus(orderId: string, status: string) {
-  await requireAdmin();
+export async function updateOrderStatus(orderId: string, status: string, note?: string) {
+  const profile = await requireAdmin();
   await prisma.shopOrder.update({ where: { id: orderId }, data: { status } });
+  await prisma.shopOrderLog.create({
+    data: {
+      orderId,
+      status,
+      note: note?.trim() || null,
+      createdBy: profile?.fullName ?? profile?.username ?? "admin",
+    },
+  }).catch(() => null); // non-critical – don't break status update if log fails
   revalidatePath(`/admin/butik/ordrar/${orderId}`);
   revalidatePath("/admin/butik/ordrar");
   revalidatePath("/admin/butik");

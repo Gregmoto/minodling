@@ -64,21 +64,26 @@ function SecretField({
 function TextareaField({
   name,
   label,
+  hint,
   currentValue,
+  rows = 6,
 }: {
   name: string;
   label: string;
+  hint?: string;
   currentValue: string;
+  rows?: number;
 }) {
   return (
     <div>
       <label className={labelClass}>{label}</label>
       <textarea
         name={name}
-        rows={4}
+        rows={rows}
         defaultValue={currentValue}
-        className={inputClass + " resize-y"}
+        className={inputClass + " resize-y font-mono text-xs leading-relaxed"}
       />
+      {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
     </div>
   );
 }
@@ -232,20 +237,29 @@ export function ShopSettingsForm({ values }: { values: Record<string, string> })
 
       {/* Texter */}
       <SectionCard title="Texter">
+        <p className="text-xs text-gray-500 -mt-1 mb-2">
+          Du kan använda HTML i dessa fält (t.ex. <code className="bg-gray-100 px-1 rounded">&lt;b&gt;fetstil&lt;/b&gt;</code>, <code className="bg-gray-100 px-1 rounded">&lt;br&gt;</code>, <code className="bg-gray-100 px-1 rounded">&lt;a href=&quot;...&quot;&gt;länk&lt;/a&gt;</code>).
+        </p>
         <TextareaField
           name="shop_order_confirmation_text"
-          label="Orderbekräftelse-text (visas i e-post)"
+          label="Orderbekräftelse-text (visas i orderbekräftelse-e-post)"
+          hint="Visas under orderdetaljer i det automatiska e-postmeddelandet till kunden."
           currentValue={values.shop_order_confirmation_text}
+          rows={6}
         />
         <TextareaField
           name="shop_return_policy"
           label="Returpolicy-text"
+          hint="Visas på kassan och i orderbekräftelsen."
           currentValue={values.shop_return_policy}
+          rows={8}
         />
         <TextareaField
           name="shop_shipping_info"
           label="Leveransinformation"
+          hint="Visas på kassan och produktsidor."
           currentValue={values.shop_shipping_info}
+          rows={6}
         />
       </SectionCard>
 

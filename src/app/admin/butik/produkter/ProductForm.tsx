@@ -186,6 +186,7 @@ function QuickCategoryModal({
 
 export function ProductForm({ categories: initialCategories, plants, existingLinks, product }: Props) {
   const [pending, startTransition] = useTransition();
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
 
   // Kategori-state (kan utökas via QuickCategoryModal)
@@ -226,6 +227,7 @@ export function ProductForm({ categories: initialCategories, plants, existingLin
 
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSubmitError(null);
     const fd = new FormData(e.currentTarget);
     // Inject controlled values
     fd.set("categoryId", selectedCategory);
@@ -233,12 +235,23 @@ export function ProductForm({ categories: initialCategories, plants, existingLin
     fd.set("seoTitle", seoTitle);
     fd.set("seoDescription", seoDesc);
     startTransition(async () => {
-      if (product) {
-        await updateProduct(product.id, fd);
-      } else {
-        await createProduct(fd);
+      try {
+        if (product) {
+          await updateProduct(product.id, fd);
+        } else {
+          await createProduct(fd);
+        }
+        router.push("/admin/butik/produkter");
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Okänt fel – försök igen.";
+        // Show slug conflict hint
+        const display = msg.includes("Unique constraint") || msg.includes("unique")
+          ? "En produkt med samma slug finns redan. Ändra slugen och försök igen."
+          : msg.length < 200
+            ? msg
+            : "Något gick fel. Kontrollera att alla fält är korrekt ifyllda.";
+        setSubmitError(display);
       }
-      router.push("/admin/butik/produkter");
     });
   }, [product, router, selectedCategory, imageUrl, seoTitle, seoDesc]);
 
@@ -442,6 +455,12 @@ export function ProductForm({ categories: initialCategories, plants, existingLin
             <span className="text-sm font-medium text-gray-700">Utvald produkt</span>
           </label>
         </div>
+
+        {submitError && (
+          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            ⚠️ {submitError}
+          </div>
+        )}
 
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={pending}

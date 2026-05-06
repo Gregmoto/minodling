@@ -843,11 +843,26 @@ model ShopOrder {
   items              ShopOrderItem[]
   profile            Profile?                @relation(fields: [userId], references: [id], onDelete: SetNull)
   loyaltyTransactions ShopLoyaltyTransaction[]
+  logs               ShopOrderLog[]
 
   @@index([userId])
   @@index([status])
   @@index([email])
   @@map("shop_orders")
+}
+
+model ShopOrderLog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId   String   @db.Uuid @map("order_id")
+  status    String
+  note      String?
+  createdBy String?  @map("created_by")  // "admin" | email | "system"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  order ShopOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("shop_order_logs")
 }
 
 model ShopOrderItem {

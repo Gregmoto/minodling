@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, X, Check } from "lucide-react";
 import { createSlide, updateSlide, deleteSlide, toggleSlide } from "./actions";
@@ -95,6 +96,7 @@ export function SlidesManager({ slides: initialSlides }: { slides: Slide[] }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const router = useRouter();
 
   function handleDelete(id: string) {
     if (!confirm("Ta bort slide?")) return;
@@ -114,14 +116,15 @@ export function SlidesManager({ slides: initialSlides }: { slides: Slide[] }) {
   async function handleCreate(fd: FormData, imageUrl: string | null) {
     if (imageUrl) fd.set("imageUrl", imageUrl); else fd.delete("imageUrl");
     await createSlide(fd);
-    // Refresh slides list by reloading
-    window.location.reload();
+    router.refresh();
+    setShowCreate(false);
   }
 
   async function handleUpdate(id: string, fd: FormData, imageUrl: string | null) {
     if (imageUrl) fd.set("imageUrl", imageUrl); else fd.delete("imageUrl");
     await updateSlide(id, fd);
-    window.location.reload();
+    router.refresh();
+    setEditing(null);
   }
 
   return (
