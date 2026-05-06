@@ -7,7 +7,7 @@ import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import { getNavUser } from "@/lib/nav-user";
-import { Navbar } from "@/components/layout/Navbar";
+import { ShopNavbarServer } from "@/components/shop/ShopNavbarServer";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ProductCard, ProductCardData } from "@/components/shop/ProductCard";
@@ -141,7 +141,7 @@ export default async function ProdukterPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar user={navUser} />
+      <ShopNavbarServer user={navUser} />
 
       <main className="flex-1 bg-cream-50">
         {/* Hero-header */}

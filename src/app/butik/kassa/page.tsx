@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import { getNavUser } from "@/lib/nav-user";
-import { Navbar } from "@/components/layout/Navbar";
+import { ShopNavbarServer } from "@/components/shop/ShopNavbarServer";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { CheckoutForm } from "./CheckoutForm";
@@ -22,7 +22,7 @@ export default async function KassaPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar user={navUser} />
+      <ShopNavbarServer user={navUser} />
 
       <main className="flex-1 bg-cream-50 py-8 sm:py-12">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">

@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { getNavUser } from "@/lib/nav-user";
-import { Navbar } from "@/components/layout/Navbar";
+import { ShopNavbarServer } from "@/components/shop/ShopNavbarServer";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { formatPrice, formatDate } from "@/lib/utils";
@@ -69,7 +69,7 @@ export default async function BekraftelsePage({ searchParams }: PageProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar user={navUser} />
+      <ShopNavbarServer user={navUser} />
 
       <main className="flex-1 bg-cream-50 py-10 sm:py-16">
         <div className="mx-auto max-w-xl px-4 sm:px-6">

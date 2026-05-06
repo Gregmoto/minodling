@@ -17,7 +17,7 @@ import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { getCurrentUser } from "@/lib/auth";
 import { getNavUser } from "@/lib/nav-user";
-import { Navbar } from "@/components/layout/Navbar";
+import { ShopNavbarServer } from "@/components/shop/ShopNavbarServer";
 import { Footer } from "@/components/layout/Footer";
 import { Badge } from "@/components/ui/Badge";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -227,7 +227,7 @@ export default async function ProduktPage({ params }: PageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={jsonLd} />
-      <Navbar user={navUser} />
+      <ShopNavbarServer user={navUser} />
 
       <main className="flex-1 bg-cream-50">
         <div className="container-main py-6 sm:py-10">
