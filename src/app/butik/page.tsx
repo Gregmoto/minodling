@@ -11,7 +11,10 @@ import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSlider } from "@/components/shop/HeroSlider";
-import { ProductCard } from "@/components/shop/ProductCard";
+import { ProductCarousel } from "@/components/shop/ProductCarousel";
+import { QuickLinks } from "@/components/shop/QuickLinks";
+import { CampaignBanner } from "@/components/shop/CampaignBanner";
+import { CampaignDual } from "@/components/shop/CampaignDual";
 import { NewsletterForm } from "./NewsletterForm";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -51,9 +54,12 @@ export default async function ButikPage() {
   const [
     slides,
     categories,
+    homeLinks,
+    homeSections,
     featuredProducts,
     newProducts,
     seasonProducts,
+    easyProducts,
     popularProductIds,
     navUser,
     seoRow,
@@ -66,39 +72,65 @@ export default async function ButikPage() {
     prisma.shopCategory.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
-      include: { _count: { select: { products: { where: { isActive: true } } } } },
+      select: {
+        id: true, name: true, slug: true, imageUrl: true,
+        _count: { select: { products: { where: { isActive: true } } } },
+      },
     }).catch(() => []),
 
+    prisma.shopHomeLink.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    }).catch(() => []),
+
+    prisma.shopHomeSection.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+      include: {
+        category: { select: { id: true, name: true, slug: true } },
+        plant: { select: { id: true, name: true, slug: true } },
+      },
+    }).catch(() => []),
+
+    // Featured products
     prisma.shopProduct.findMany({
       where: { isActive: true, isFeatured: true },
       orderBy: { updatedAt: "desc" },
-      take: 8,
+      take: 10,
       select: productSelect,
     }).catch(() => []),
 
+    // New products
     prisma.shopProduct.findMany({
       where: { isActive: true },
       orderBy: { createdAt: "desc" },
-      take: 8,
+      take: 10,
       select: productSelect,
     }).catch(() => []),
 
-    // Säsongsprodukter: matchas på growingType
+    // Season products
     prisma.shopProduct.findMany({
       where: {
         isActive: true,
         growingType: { contains: season.label, mode: "insensitive" },
       },
-      take: 8,
+      take: 10,
       select: productSelect,
     }).catch(() => []),
 
-    // Populära: de mest beställda produkt-id:n
+    // Easy/beginner products
+    prisma.shopProduct.findMany({
+      where: { isActive: true, difficultyLevel: "easy" },
+      take: 10,
+      select: productSelect,
+    }).catch(() => []),
+
+    // Popular (most ordered)
     prisma.shopOrderItem.groupBy({
       by: ["productId"],
       _count: { productId: true },
       orderBy: { _count: { productId: "desc" } },
-      take: 8,
+      take: 10,
     }).catch(() => []),
 
     getNavUser(user?.id),
@@ -108,7 +140,10 @@ export default async function ButikPage() {
   ]);
 
   // Hämta populära produkter baserat på ids
-  const popularIds = popularProductIds.map((p) => p.productId).filter(Boolean) as string[];
+  const popularIds = popularProductIds
+    .map((p) => p.productId)
+    .filter(Boolean) as string[];
+
   const popularProducts = popularIds.length > 0
     ? await prisma.shopProduct.findMany({
         where: { id: { in: popularIds }, isActive: true },
@@ -121,19 +156,38 @@ export default async function ButikPage() {
     .map((id) => popularProducts.find((p) => p.id === id))
     .filter(Boolean) as typeof popularProducts;
 
+  // Fetch plant-linked products for homeSections with plantId
+  const plantSectionIds = homeSections
+    .filter((s) => s.sectionType === "plant_feature" && s.plantId)
+    .map((s) => s.plantId as string);
+
+  const plantLinkedProductsMap: Record<string, typeof featuredProducts> = {};
+  if (plantSectionIds.length > 0) {
+    for (const plantId of plantSectionIds) {
+      const linked = await prisma.shopProduct.findMany({
+        where: {
+          isActive: true,
+          plantLinks: { some: { plantId } },
+        },
+        take: 10,
+        select: productSelect,
+      }).catch(() => []);
+      plantLinkedProductsMap[plantId] = linked;
+    }
+  }
+
   const seoText = seoRow?.value ?? null;
 
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} />
 
-      <main className="flex-1 bg-cream-50">
+      <main className="flex-1 bg-white">
 
         {/* ── HERO SLIDER ────────────────────────────────── */}
         {slides.length > 0 ? (
           <HeroSlider slides={slides} />
         ) : (
-          /* Fallback-hero om inga slides */
           <section className="bg-gradient-to-br from-sage-800 to-sage-600 py-20">
             <div className="container-main">
               <div className="max-w-2xl">
@@ -160,6 +214,38 @@ export default async function ButikPage() {
           </section>
         )}
 
+        {/* ── SNABBLÄNKAR ────────────────────────────────── */}
+        {homeLinks.length > 0 && (
+          <section className="border-b border-gray-100 bg-white">
+            <div className="container-main py-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                Populärt just nu
+              </p>
+              <QuickLinks links={homeLinks} />
+            </div>
+          </section>
+        )}
+
+        {/* ── SÄSONGSPRODUKTER ────────────────────────────── */}
+        {seasonProducts.length > 0 && (
+          <section className="py-12 bg-sage-50/40">
+            <div className="container-main">
+              <div className="mb-1">
+                <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-200 mb-3">
+                  🌱 Nu i säsong
+                </span>
+              </div>
+              <ProductCarousel
+                title={`${season.label}ens produkter`}
+                subtitle="Perfekt att odla just nu"
+                products={seasonProducts}
+                ctaText="Se alla produkter"
+                ctaHref="/butik/produkter"
+              />
+            </div>
+          </section>
+        )}
+
         {/* ── KATEGORIER ─────────────────────────────────── */}
         {categories.length > 0 && (
           <section id="kategorier" className="py-14">
@@ -167,7 +253,9 @@ export default async function ButikPage() {
               <div className="flex items-center justify-between mb-7">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Kategorier</h2>
-                  <p className="text-gray-500 text-sm mt-1">Bläddra bland {categories.length} kategorier</p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Bläddra bland {categories.length} kategorier
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -205,96 +293,135 @@ export default async function ButikPage() {
           </section>
         )}
 
+        {/* ── DYNAMISKA STARTSIDESSEKTIONER ──────────────── */}
+        {homeSections.map((section) => {
+          if (section.sectionType === "campaign_full") {
+            return (
+              <CampaignBanner
+                key={section.id}
+                title={section.title}
+                subtitle={section.subtitle}
+                content={section.content}
+                imageUrl={section.imageUrl}
+                buttonText={section.buttonText}
+                buttonUrl={section.buttonUrl}
+              />
+            );
+          }
+
+          if (section.sectionType === "campaign_dual") {
+            return (
+              <CampaignDual
+                key={section.id}
+                cards={[
+                  {
+                    title: section.title,
+                    subtitle: section.subtitle,
+                    imageUrl: section.imageUrl,
+                    buttonText: section.buttonText,
+                    buttonUrl: section.buttonUrl,
+                  },
+                  {
+                    title: section.title2 ?? "",
+                    subtitle: section.subtitle2,
+                    imageUrl: section.imageUrl2,
+                    buttonText: section.buttonText2,
+                    buttonUrl: section.buttonUrl2,
+                  },
+                ].filter((c) => c.title)}
+              />
+            );
+          }
+
+          if (section.sectionType === "plant_feature" && section.plantId && section.plant) {
+            const plantProducts = plantLinkedProductsMap[section.plantId] ?? [];
+            if (plantProducts.length === 0) return null;
+            return (
+              <section key={section.id} className="py-12 bg-emerald-50/30">
+                <div className="container-main">
+                  <ProductCarousel
+                    title={section.title || `Odlar du ${section.plant.name}?`}
+                    subtitle={section.subtitle ?? undefined}
+                    products={plantProducts}
+                    ctaText={section.buttonText ?? undefined}
+                    ctaHref={section.buttonUrl ?? undefined}
+                  />
+                </div>
+              </section>
+            );
+          }
+
+          return null;
+        })}
+
         {/* ── UTVALDA PRODUKTER ───────────────────────────── */}
         {featuredProducts.length > 0 && (
-          <section className="py-14 bg-white border-y border-sage-100">
+          <section className="py-12">
             <div className="container-main">
-              <div className="flex items-center justify-between mb-7">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Utvalda produkter</h2>
-                  <p className="text-gray-500 text-sm mt-1">Noggrant utvalda av oss för dig</p>
-                </div>
-                <Link href="/butik/kategori" className="text-sm font-medium text-green-700 hover:underline flex items-center gap-1">
-                  Se alla <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {featuredProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
+              <ProductCarousel
+                title="Utvalda produkter"
+                subtitle="Handplockat av oss för dig"
+                products={featuredProducts}
+                ctaText="Se alla"
+                ctaHref="/butik/produkter"
+              />
             </div>
           </section>
         )}
 
-        {/* ── SÄSONGSPRODUKTER ────────────────────────────── */}
-        {seasonProducts.length > 0 && (
-          <section className="py-14">
+        {/* ── NYBÖRJARPRODUKTER ───────────────────────────── */}
+        {easyProducts.length > 0 && (
+          <section className="py-12 bg-emerald-50/40">
             <div className="container-main">
-              <div className="flex items-center justify-between mb-7">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-200 mb-2">
-                    🌱 Nu i säsong
-                  </span>
-                  <h2 className="text-2xl font-bold text-gray-900">{season.label}ens produkter</h2>
-                  <p className="text-gray-500 text-sm mt-1">Perfekt att börja med just nu</p>
-                </div>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {seasonProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
+              <ProductCarousel
+                title="Nybörjarfavoriter"
+                subtitle="Enkla att lyckas med – perfekt att börja odla"
+                products={easyProducts}
+              />
             </div>
           </section>
         )}
 
         {/* ── POPULÄRA PRODUKTER ──────────────────────────── */}
         {sortedPopular.length > 0 && (
-          <section className="py-14 bg-white border-y border-sage-100">
+          <section className="py-12">
             <div className="container-main">
-              <div className="flex items-center justify-between mb-7">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Populära produkter</h2>
-                  <p className="text-gray-500 text-sm mt-1">Mest beställda av andra odlare</p>
-                </div>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {sortedPopular.map((p) => (
-                  <ProductCard key={p.id} product={p} isPopular />
-                ))}
-              </div>
+              <ProductCarousel
+                title="Populära produkter"
+                subtitle="Mest beställda av andra odlare"
+                products={sortedPopular}
+              />
             </div>
           </section>
         )}
 
         {/* ── NYA PRODUKTER ───────────────────────────────── */}
         {newProducts.length > 0 && (
-          <section className="py-14">
+          <section className="py-12 bg-gray-50/50">
             <div className="container-main">
-              <div className="flex items-center justify-between mb-7">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Nyheter i butiken</h2>
-                  <p className="text-gray-500 text-sm mt-1">Senast tillagda produkter</p>
-                </div>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {newProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
+              <ProductCarousel
+                title="Nyheter i butiken"
+                subtitle="Senast inlagda produkter"
+                products={newProducts}
+                ctaText="Se alla nyheter"
+                ctaHref="/butik/produkter?sort=new"
+              />
             </div>
           </section>
         )}
 
         {/* ── TOMT TILLSTÅND ──────────────────────────────── */}
-        {featuredProducts.length === 0 && newProducts.length === 0 && (
+        {featuredProducts.length === 0 && newProducts.length === 0 &&
+          seasonProducts.length === 0 && easyProducts.length === 0 && (
           <section className="py-24">
             <div className="container-main text-center">
               <Sprout className="h-16 w-16 text-sage-200 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-600 mb-2">Sortimentet fylls på snart</h2>
+              <h2 className="text-xl font-semibold text-gray-600 mb-2">
+                Sortimentet fylls på snart
+              </h2>
               <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                Vi håller på att fylla butiken med produkter. Prenumerera på nyhetsbrevet för att få besked när vi öppnar.
+                Vi håller på att fylla butiken med produkter. Prenumerera på nyhetsbrevet
+                för att få besked när vi öppnar.
               </p>
             </div>
           </section>

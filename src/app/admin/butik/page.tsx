@@ -106,6 +106,7 @@ export default async function AdminButikPage() {
   };
 
   const NAV_LINKS = [
+    { label: "Startsida",     href: "/admin/butik/startsida",    color: "text-violet-700 bg-violet-50 border-violet-200" },
     { label: "Slides",        href: "/admin/butik/slides",       color: "text-cyan-700 bg-cyan-50 border-cyan-200" },
     { label: "Produkter",     href: "/admin/butik/produkter",    color: "text-blue-700 bg-blue-50 border-blue-200" },
     { label: "Kategorier",    href: "/admin/butik/kategorier",   color: "text-indigo-700 bg-indigo-50 border-indigo-200" },
