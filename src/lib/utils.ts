@@ -48,3 +48,12 @@ export function truncate(str: string, maxLength: number): string {
 export function pluralize(count: number, singular: string, plural: string): string {
   return count === 1 ? singular : plural;
 }
+
+export function formatPrice(ore: number): string {
+  return new Intl.NumberFormat("sv-SE", {
+    style: "currency",
+    currency: "SEK",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(ore / 100);
+}

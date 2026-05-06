@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Users, Shield, ShieldCheck, FileText, MessageSquare,
   HelpCircle, Leaf, CalendarDays, BookOpen, Library, BookText,
   Megaphone, Star, Flag, Search, Settings, ChevronRight,
+  ShoppingBag, Package, FolderOpen, Receipt, UserCheck, Tag, Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,19 @@ const groups = [
       { label: "Guider",             href: "/admin/guider",        icon: BookOpen },
       { label: "Kunskapsbank",       href: "/admin/kunskapsbank",  icon: Library },
       { label: "Odlingsordlista",    href: "/admin/ordlista",      icon: BookText },
+    ],
+  },
+  {
+    label: "Butik",
+    items: [
+      { label: "Översikt",       href: "/admin/butik",               icon: ShoppingBag, exact: true },
+      { label: "Produkter",      href: "/admin/butik/produkter",      icon: Package },
+      { label: "Kategorier",     href: "/admin/butik/kategorier",     icon: FolderOpen },
+      { label: "Ordrar",         href: "/admin/butik/ordrar",         icon: Receipt },
+      { label: "Kunder",         href: "/admin/butik/kunder",         icon: UserCheck },
+      { label: "Rabattkoder",    href: "/admin/butik/rabattkoder",    icon: Tag },
+      { label: "Nyhetsbrev",     href: "/admin/butik/nyhetsbrev",     icon: Mail },
+      { label: "Inställningar",  href: "/admin/butik/installningar",  icon: Settings },
     ],
   },
   {

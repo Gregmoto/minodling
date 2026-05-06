@@ -52,6 +52,7 @@ model Profile {
   challengeComments    ChallengeComment[]
   subscription         Subscription?
   weeklyTasks          WeeklyTask[]
+  shopOrders           ShopOrder[]
 
   @@map("profiles")
 }
@@ -738,4 +739,127 @@ model Subscription {
 
   @@index([stripeCustomerId])
   @@map("subscriptions")
+}
+
+model ShopCategory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  slug        String   @unique
+  description String?
+  imageUrl    String?  @map("image_url")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  products ShopProduct[]
+
+  @@map("shop_categories")
+}
+
+model ShopProduct {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  slug         String   @unique
+  description  String?
+  shortDesc    String?  @map("short_desc")
+  imageUrl     String?  @map("image_url")
+  images       String[]
+  categoryId   String?  @db.Uuid @map("category_id")
+  price        Int      // i öre (SEK * 100)
+  comparePrice Int?     @map("compare_price")
+  sku          String?  @unique
+  stock        Int      @default(0)
+  isActive     Boolean  @default(true) @map("is_active")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  weight       Int?
+  tags         String[]
+  seoTitle     String?  @map("seo_title")
+  seoDesc      String?  @map("seo_desc")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  category   ShopCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  orderItems ShopOrderItem[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@map("shop_products")
+}
+
+model ShopOrder {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderNumber    String   @unique @map("order_number")
+  userId         String?  @db.Uuid @map("user_id")
+  email          String
+  firstName      String   @map("first_name")
+  lastName       String   @map("last_name")
+  phone          String?
+  address        String
+  city           String
+  postalCode     String   @map("postal_code")
+  country        String   @default("SE")
+  subtotal       Int
+  shippingCost   Int      @default(0) @map("shipping_cost")
+  discountAmount Int      @default(0) @map("discount_amount")
+  total          Int
+  status         String   @default("pending")
+  paymentStatus  String   @default("unpaid") @map("payment_status")
+  paymentMethod  String?  @map("payment_method")
+  discountCode   String?  @map("discount_code")
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  items   ShopOrderItem[]
+  profile Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+  @@map("shop_orders")
+}
+
+model ShopOrderItem {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId   String   @db.Uuid @map("order_id")
+  productId String?  @db.Uuid @map("product_id")
+  name      String
+  sku       String?
+  price     Int
+  quantity  Int
+  total     Int
+
+  order   ShopOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product ShopProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("shop_order_items")
+}
+
+model ShopDiscount {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String    @unique
+  type      String    // percent | fixed
+  value     Int
+  minOrder  Int?      @map("min_order")
+  maxUses   Int?      @map("max_uses")
+  usedCount Int       @default(0) @map("used_count")
+  isActive  Boolean   @default(true) @map("is_active")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("shop_discounts")
+}
+
+model ShopNewsletter {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+  firstName String?  @map("first_name")
+  isActive  Boolean  @default(true) @map("is_active")
+  source    String   @default("shop")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("shop_newsletter")
 }
