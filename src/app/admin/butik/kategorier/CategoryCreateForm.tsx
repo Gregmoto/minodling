@@ -45,7 +45,12 @@ export function CategoryCreateForm() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Beskrivning</label>
-          <input name="description" className={inputClass} />
+          <textarea
+            name="description"
+            rows={4}
+            placeholder="Beskriv kategorin – visas på kategorisidan och används för SEO…"
+            className={`${inputClass} resize-none`}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Bild-URL</label>
