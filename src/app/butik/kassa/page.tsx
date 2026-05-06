@@ -4,7 +4,6 @@ import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { FreeShippingBanner } from "@/components/shop/FreeShippingBanner";
 import { CheckoutForm } from "./CheckoutForm";
 import prisma from "@/lib/prisma";
 
@@ -35,10 +34,7 @@ export default async function KassaPage() {
             ]}
             className="mb-6"
           />
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Kassa</h1>
-          <div className="mb-6">
-            <FreeShippingBanner />
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Kassa</h1>
           <CheckoutForm
             profile={{
               email:    profile?.email ?? user?.email ?? null,

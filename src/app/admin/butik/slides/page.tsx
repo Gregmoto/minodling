@@ -12,7 +12,7 @@ export default async function AdminSlidesPage() {
 
   const slides = await prisma.shopSlide.findMany({
     orderBy: { sortOrder: "asc" },
-  });
+  }).catch(() => []);
 
   return (
     <div className="space-y-6">

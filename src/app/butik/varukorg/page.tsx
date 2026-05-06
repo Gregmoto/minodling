@@ -7,7 +7,6 @@ import {
   Minus, Plus, Trash2, ShoppingBag, ArrowRight, Package, Tag, X,
 } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
-import { FreeShippingBanner } from "@/components/shop/FreeShippingBanner";
 import { validateDiscount } from "@/app/butik/actions";
 import { formatPrice } from "@/lib/utils";
 
@@ -63,11 +62,6 @@ export default function VarukorgsPage() {
             Varukorg
             <span className="ml-2 text-base sm:text-lg text-gray-400 font-normal">({count} {count === 1 ? "vara" : "varor"})</span>
           </h1>
-
-          {/* Fri frakt-banner */}
-          <div className="mb-6">
-            <FreeShippingBanner />
-          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Produktlista */}
