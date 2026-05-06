@@ -15,19 +15,17 @@ interface Product {
   name: string;
   slug: string;
   description: string | null;
-  shortDesc: string | null;
+  shortDescription: string | null;
   imageUrl: string | null;
   categoryId: string | null;
   price: number;
-  comparePrice: number | null;
+  compareAtPrice: number | null;
   sku: string | null;
-  stock: number;
+  stockQuantity: number;
   isActive: boolean;
   isFeatured: boolean;
-  weight: number | null;
-  tags: string[];
   seoTitle: string | null;
-  seoDesc: string | null;
+  seoDescription: string | null;
 }
 
 interface Props {
@@ -85,7 +83,7 @@ export function ProductForm({ categories, product }: Props) {
 
       <div>
         <label className={labelClass}>Kort beskrivning</label>
-        <input name="shortDesc" defaultValue={product?.shortDesc ?? ""} className={inputClass} />
+        <input name="shortDescription" defaultValue={product?.shortDescription ?? ""} className={inputClass} />
       </div>
 
       <div>
@@ -114,22 +112,22 @@ export function ProductForm({ categories, product }: Props) {
         <div>
           <label className={labelClass}>Jämförpris (SEK)</label>
           <input
-            name="comparePrice"
+            name="compareAtPrice"
             type="number"
             step="0.01"
             min="0"
-            defaultValue={product?.comparePrice ? (product.comparePrice / 100).toFixed(2) : ""}
+            defaultValue={product?.compareAtPrice ? (product.compareAtPrice / 100).toFixed(2) : ""}
             className={inputClass}
           />
         </div>
         <div>
           <label className={labelClass}>Lager *</label>
           <input
-            name="stock"
+            name="stockQuantity"
             type="number"
             min="0"
             required
-            defaultValue={product?.stock ?? 0}
+            defaultValue={product?.stockQuantity ?? 0}
             className={inputClass}
           />
         </div>
@@ -156,11 +154,6 @@ export function ProductForm({ categories, product }: Props) {
         <input name="imageUrl" type="url" defaultValue={product?.imageUrl ?? ""} className={inputClass} />
       </div>
 
-      <div>
-        <label className={labelClass}>Taggar (kommaseparerade)</label>
-        <input name="tags" defaultValue={product?.tags.join(", ") ?? ""} className={inputClass} />
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>SEO-titel</label>
@@ -168,7 +161,7 @@ export function ProductForm({ categories, product }: Props) {
         </div>
         <div>
           <label className={labelClass}>SEO-beskrivning</label>
-          <input name="seoDesc" defaultValue={product?.seoDesc ?? ""} className={inputClass} />
+          <input name="seoDescription" defaultValue={product?.seoDescription ?? ""} className={inputClass} />
         </div>
       </div>
 

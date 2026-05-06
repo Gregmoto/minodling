@@ -16,22 +16,22 @@ export default async function AdminButikPage() {
 
   const [orderCount, revenueAgg, pendingCount, productCount, recentOrders] = await Promise.all([
     prisma.shopOrder.count(),
-    prisma.shopOrder.aggregate({ _sum: { total: true } }),
+    prisma.shopOrder.aggregate({ _sum: { totalAmount: true } }),
     prisma.shopOrder.count({ where: { status: "pending" } }),
     prisma.shopProduct.count({ where: { isActive: true } }),
     prisma.shopOrder.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,
       select: {
-        id: true, orderNumber: true, firstName: true, lastName: true,
-        email: true, total: true, status: true, paymentStatus: true, createdAt: true,
+        id: true, fullName: true,
+        email: true, totalAmount: true, status: true, createdAt: true,
       },
     }),
   ]);
 
   const stats = [
     { label: "Totala ordrar", value: orderCount, icon: Receipt, color: "text-blue-600 bg-blue-50" },
-    { label: "Total omsättning", value: formatPrice(revenueAgg._sum.total ?? 0), icon: TrendingUp, color: "text-green-600 bg-green-50" },
+    { label: "Total omsättning", value: formatPrice(revenueAgg._sum.totalAmount ?? 0), icon: TrendingUp, color: "text-green-600 bg-green-50" },
     { label: "Väntande ordrar", value: pendingCount, icon: ShoppingBag, color: "text-amber-600 bg-amber-50" },
     { label: "Aktiva produkter", value: productCount, icon: Package, color: "text-purple-600 bg-purple-50" },
   ];
@@ -41,10 +41,6 @@ export default async function AdminButikPage() {
       completed: "success", pending: "warning", cancelled: "danger",
     };
     return <Badge variant={map[status] ?? "default"}>{status}</Badge>;
-  }
-
-  function paymentBadge(status: string) {
-    return <Badge variant={status === "paid" ? "success" : "warning"}>{status === "paid" ? "Betald" : "Obetald"}</Badge>;
   }
 
   return (
@@ -111,7 +107,6 @@ export default async function AdminButikPage() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Kund</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Belopp</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Betalning</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Datum</th>
               </tr>
             </thead>
@@ -120,22 +115,21 @@ export default async function AdminButikPage() {
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <Link href={`/admin/butik/ordrar/${order.id}`} className="font-medium text-green-700 hover:underline">
-                      {order.orderNumber}
+                      {order.id.slice(0, 8).toUpperCase()}
                     </Link>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{order.firstName} {order.lastName}</p>
+                    <p className="font-medium text-gray-900">{order.fullName}</p>
                     <p className="text-gray-400 text-xs">{order.email}</p>
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{formatPrice(order.total)}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{formatPrice(order.totalAmount)}</td>
                   <td className="px-4 py-3">{statusBadge(order.status)}</td>
-                  <td className="px-4 py-3">{paymentBadge(order.paymentStatus)}</td>
                   <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{formatDate(order.createdAt)}</td>
                 </tr>
               ))}
               {recentOrders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-400">Inga ordrar ännu.</td>
+                  <td colSpan={5} className="px-4 py-10 text-center text-gray-400">Inga ordrar ännu.</td>
                 </tr>
               )}
             </tbody>

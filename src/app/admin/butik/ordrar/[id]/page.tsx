@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { OrderStatusForm } from "./OrderStatusForm";
 
@@ -26,17 +25,14 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
   if (!order) notFound();
 
+  const addr = order.shippingAddress as { address: string; city: string; postalCode: string; country: string };
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{order.orderNumber}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</h1>
           <p className="text-gray-500 text-sm mt-1">{formatDate(order.createdAt)}</p>
-        </div>
-        <div className="flex gap-2">
-          <Badge variant={order.paymentStatus === "paid" ? "success" : "warning"} size="md">
-            {order.paymentStatus === "paid" ? "Betald" : "Obetald"}
-          </Badge>
         </div>
       </div>
 
@@ -46,7 +42,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-gray-500">Namn</p>
-            <p className="font-medium text-gray-900">{order.firstName} {order.lastName}</p>
+            <p className="font-medium text-gray-900">{order.fullName}</p>
           </div>
           <div>
             <p className="text-gray-500">E-post</p>
@@ -61,16 +57,10 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           <div>
             <p className="text-gray-500">Adress</p>
             <p className="font-medium text-gray-900">
-              {order.address}, {order.postalCode} {order.city}
+              {addr.address}, {addr.postalCode} {addr.city}
             </p>
           </div>
         </div>
-        {order.notes && (
-          <div className="mt-3 pt-3 border-t border-sage-100">
-            <p className="text-gray-500 text-sm">Anteckningar</p>
-            <p className="text-sm text-gray-700 mt-1">{order.notes}</p>
-          </div>
-        )}
       </Card>
 
       {/* Orderstatus */}
@@ -88,11 +78,10 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           {order.items.map((item) => (
             <div key={item.id} className="flex justify-between items-center px-4 py-3 text-sm">
               <div>
-                <p className="font-medium text-gray-900">{item.name}</p>
-                {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
-                <p className="text-gray-500 text-xs">Antal: {item.quantity} × {formatPrice(item.price)}</p>
+                <p className="font-medium text-gray-900">{item.productName}</p>
+                <p className="text-gray-500 text-xs">Antal: {item.quantity} × {formatPrice(item.unitPrice)}</p>
               </div>
-              <p className="font-semibold text-gray-900">{formatPrice(item.total)}</p>
+              <p className="font-semibold text-gray-900">{formatPrice(item.totalPrice)}</p>
             </div>
           ))}
         </div>
@@ -103,17 +92,17 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           </div>
           <div className="flex justify-between text-sm text-gray-600">
             <span>Frakt</span>
-            <span>{order.shippingCost === 0 ? "Gratis" : formatPrice(order.shippingCost)}</span>
+            <span>{order.shippingAmount === 0 ? "Gratis" : formatPrice(order.shippingAmount)}</span>
           </div>
           {order.discountAmount > 0 && (
             <div className="flex justify-between text-sm text-green-700">
-              <span>Rabatt {order.discountCode && `(${order.discountCode})`}</span>
+              <span>Rabatt</span>
               <span>-{formatPrice(order.discountAmount)}</span>
             </div>
           )}
           <div className="flex justify-between font-bold text-gray-900 text-base border-t border-sage-100 pt-2">
             <span>Totalt</span>
-            <span>{formatPrice(order.total)}</span>
+            <span>{formatPrice(order.totalAmount)}</span>
           </div>
         </div>
       </Card>

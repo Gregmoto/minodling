@@ -96,8 +96,8 @@ export default async function AdminProdukterPage({
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{formatPrice(product.price)}</td>
                   <td className="px-4 py-3">
-                    <Badge variant={product.stock > 0 ? "success" : "danger"}>
-                      {product.stock}
+                    <Badge variant={product.stockQuantity > 0 ? "success" : "danger"}>
+                      {product.stockQuantity}
                     </Badge>
                   </td>
                   <td className="px-4 py-3">

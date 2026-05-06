@@ -11,11 +11,8 @@ export const metadata: Metadata = { title: "Kunder | Butik | Admin" };
 export default async function AdminKunderPage() {
   await requireAdmin();
 
-  const customers = await prisma.shopOrder.groupBy({
-    by: ["email", "firstName", "lastName"],
-    _count: { id: true },
-    _sum: { total: true },
-    orderBy: { _sum: { total: "desc" } },
+  const customers = await prisma.shopCustomer.findMany({
+    orderBy: { totalSpent: "desc" },
   });
 
   return (
@@ -38,14 +35,14 @@ export default async function AdminKunderPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {customers.map((c) => (
-                <tr key={c.email} className="hover:bg-gray-50">
+                <tr key={c.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    {c.firstName} {c.lastName}
+                    {c.fullName ?? "–"}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{c.email}</td>
-                  <td className="px-4 py-3">{c._count.id}</td>
+                  <td className="px-4 py-3">{c.totalOrders}</td>
                   <td className="px-4 py-3 font-semibold text-gray-900">
-                    {formatPrice(c._sum.total ?? 0)}
+                    {formatPrice(c.totalSpent)}
                   </td>
                 </tr>
               ))}

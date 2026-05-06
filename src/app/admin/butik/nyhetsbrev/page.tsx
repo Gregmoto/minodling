@@ -13,8 +13,8 @@ export default async function AdminNyhetsbrevPage() {
   await requireAdmin();
 
   const [subscribers, activeCount] = await Promise.all([
-    prisma.shopNewsletter.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.shopNewsletter.count({ where: { isActive: true } }),
+    prisma.shopNewsletterSubscriber.findMany({ orderBy: { subscribedAt: "desc" } }),
+    prisma.shopNewsletterSubscriber.count({ where: { isActive: true } }),
   ]);
 
   return (
@@ -32,7 +32,6 @@ export default async function AdminNyhetsbrevPage() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 font-medium text-gray-600">E-post</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Namn</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Källa</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Datum</th>
@@ -42,7 +41,6 @@ export default async function AdminNyhetsbrevPage() {
               {subscribers.map((sub) => (
                 <tr key={sub.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">{sub.email}</td>
-                  <td className="px-4 py-3 text-gray-600">{sub.firstName ?? "–"}</td>
                   <td className="px-4 py-3">
                     <span className="text-xs font-medium text-sage-700 bg-sage-50 border border-sage-200 px-2 py-0.5 rounded-full">
                       {sub.source}
@@ -53,12 +51,12 @@ export default async function AdminNyhetsbrevPage() {
                       {sub.isActive ? "Aktiv" : "Avregistrerad"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{formatDate(sub.createdAt)}</td>
+                  <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{formatDate(sub.subscribedAt)}</td>
                 </tr>
               ))}
               {subscribers.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-400">Inga prenumeranter ännu.</td>
+                  <td colSpan={4} className="px-4 py-10 text-center text-gray-400">Inga prenumeranter ännu.</td>
                 </tr>
               )}
             </tbody>

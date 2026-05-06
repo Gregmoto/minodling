@@ -24,6 +24,10 @@ export default async function AdminOrdrarPage({
   const orders = await prisma.shopOrder.findMany({
     where: statusFilter ? { status: statusFilter } : {},
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true, fullName: true, email: true,
+      totalAmount: true, status: true, createdAt: true,
+    },
   });
 
   function statusBadge(status: string) {
@@ -64,7 +68,6 @@ export default async function AdminOrdrarPage({
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Kund</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Belopp</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Betalning</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Datum</th>
               </tr>
             </thead>
@@ -73,26 +76,21 @@ export default async function AdminOrdrarPage({
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <Link href={`/admin/butik/ordrar/${order.id}`} className="font-medium text-green-700 hover:underline">
-                      {order.orderNumber}
+                      {order.id.slice(0, 8).toUpperCase()}
                     </Link>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{order.firstName} {order.lastName}</p>
+                    <p className="font-medium text-gray-900">{order.fullName}</p>
                     <p className="text-gray-400 text-xs">{order.email}</p>
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{formatPrice(order.total)}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{formatPrice(order.totalAmount)}</td>
                   <td className="px-4 py-3">{statusBadge(order.status)}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={order.paymentStatus === "paid" ? "success" : "warning"}>
-                      {order.paymentStatus === "paid" ? "Betald" : "Obetald"}
-                    </Badge>
-                  </td>
                   <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{formatDate(order.createdAt)}</td>
                 </tr>
               ))}
               {orders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-400">Inga ordrar hittades.</td>
+                  <td colSpan={5} className="px-4 py-10 text-center text-gray-400">Inga ordrar hittades.</td>
                 </tr>
               )}
             </tbody>

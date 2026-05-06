@@ -154,7 +154,7 @@ export default async function ButikPage() {
                             Utvald
                           </span>
                         )}
-                        {product.stock === 0 && (
+                        {product.stockQuantity === 0 && (
                           <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
                             Slut i lager
                           </span>
@@ -169,13 +169,13 @@ export default async function ButikPage() {
                         <h3 className="font-semibold text-gray-900 leading-tight group-hover:text-green-700 transition-colors">
                           {product.name}
                         </h3>
-                        {product.shortDesc && (
-                          <p className="text-xs text-gray-500 line-clamp-2">{product.shortDesc}</p>
+                        {product.shortDescription && (
+                          <p className="text-xs text-gray-500 line-clamp-2">{product.shortDescription}</p>
                         )}
                         <div className="mt-auto pt-2 flex items-center gap-2">
                           <span className="text-lg font-bold text-green-700">{formatPrice(product.price)}</span>
-                          {product.comparePrice && product.comparePrice > product.price && (
-                            <span className="text-sm text-gray-400 line-through">{formatPrice(product.comparePrice)}</span>
+                          {product.compareAtPrice && product.compareAtPrice > product.price && (
+                            <span className="text-sm text-gray-400 line-through">{formatPrice(product.compareAtPrice)}</span>
                           )}
                         </div>
                       </div>

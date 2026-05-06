@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!product) return { title: "Produkt hittades inte" };
   return {
     title: `${product.seoTitle ?? product.name} – Butik | Minodling`,
-    description: product.seoDesc ?? product.shortDesc ?? product.description?.slice(0, 160) ?? "",
+    description: product.seoDescription ?? product.shortDescription ?? product.description?.slice(0, 160) ?? "",
     alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/butik/produkt/${slug}` },
   };
 }
@@ -56,14 +56,14 @@ export default async function ProduktPage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description ?? product.shortDesc ?? "",
+    description: product.description ?? product.shortDescription ?? "",
     image: product.imageUrl ? [product.imageUrl] : [],
     sku: product.sku ?? undefined,
     offers: {
       "@type": "Offer",
       price: (product.price / 100).toFixed(2),
       priceCurrency: "SEK",
-      availability: product.stock > 0
+      availability: product.stockQuantity > 0
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
       url: `${baseUrl}/butik/produkt/${slug}`,
@@ -114,18 +114,18 @@ export default async function ProduktPage({ params }: PageProps) {
 
               <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
 
-              {product.shortDesc && (
-                <p className="text-gray-600 leading-relaxed">{product.shortDesc}</p>
+              {product.shortDescription && (
+                <p className="text-gray-600 leading-relaxed">{product.shortDescription}</p>
               )}
 
               {/* Pris */}
               <div className="flex items-center gap-3">
                 <span className="text-3xl font-bold text-green-700">{formatPrice(product.price)}</span>
-                {product.comparePrice && product.comparePrice > product.price && (
+                {product.compareAtPrice && product.compareAtPrice > product.price && (
                   <>
-                    <span className="text-xl text-gray-400 line-through">{formatPrice(product.comparePrice)}</span>
+                    <span className="text-xl text-gray-400 line-through">{formatPrice(product.compareAtPrice)}</span>
                     <Badge variant="danger" size="sm">
-                      -{Math.round((1 - product.price / product.comparePrice) * 100)}%
+                      -{Math.round((1 - product.price / product.compareAtPrice) * 100)}%
                     </Badge>
                   </>
                 )}
@@ -133,9 +133,9 @@ export default async function ProduktPage({ params }: PageProps) {
 
               {/* Lagerstatus */}
               <div>
-                {product.stock > 0 ? (
+                {product.stockQuantity > 0 ? (
                   <Badge variant="success" dot>
-                    I lager ({product.stock} kvar)
+                    I lager ({product.stockQuantity} kvar)
                   </Badge>
                 ) : (
                   <Badge variant="danger" dot>
@@ -152,24 +152,13 @@ export default async function ProduktPage({ params }: PageProps) {
                   name: product.name,
                   price: product.price,
                   imageUrl: product.imageUrl,
-                  stock: product.stock,
+                  stock: product.stockQuantity,
                 }}
               />
 
               {/* SKU */}
               {product.sku && (
                 <p className="text-xs text-gray-400">Artikelnr: {product.sku}</p>
-              )}
-
-              {/* Taggar */}
-              {product.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {product.tags.map((tag) => (
-                    <span key={tag} className="text-xs bg-sage-50 border border-sage-200 text-sage-700 px-2 py-0.5 rounded-full">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
               )}
             </div>
           </div>

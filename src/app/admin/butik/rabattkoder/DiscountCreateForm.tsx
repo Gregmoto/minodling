@@ -31,18 +31,18 @@ export function DiscountCreateForm() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Typ *</label>
-          <select name="type" required className={inputClass}>
+          <select name="discountType" required className={inputClass}>
             <option value="percent">Procent (%)</option>
             <option value="fixed">Fast belopp (SEK)</option>
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Värde *</label>
-          <input name="value" type="number" min="0" step="0.01" required className={inputClass} />
+          <input name="discountValue" type="number" min="0" step="0.01" required className={inputClass} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Min. ordervärde (SEK)</label>
-          <input name="minOrder" type="number" min="0" step="0.01" className={inputClass} />
+          <input name="minOrderAmount" type="number" min="0" step="0.01" className={inputClass} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Max användningar</label>
@@ -50,7 +50,7 @@ export function DiscountCreateForm() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Giltig till</label>
-          <input name="expiresAt" type="datetime-local" className={inputClass} />
+          <input name="endsAt" type="datetime-local" className={inputClass} />
         </div>
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" name="isActive" defaultChecked className="h-4 w-4 rounded text-green-600" />

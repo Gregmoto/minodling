@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Rabattkoder | Butik | Admin" };
 export default async function AdminRabattkodePage() {
   await requireAdmin();
 
-  const discounts = await prisma.shopDiscount.findMany({ orderBy: { createdAt: "desc" } });
+  const discounts = await prisma.shopDiscountCode.findMany({ orderBy: { createdAt: "desc" } });
 
   return (
     <div className="space-y-6">
@@ -45,16 +45,16 @@ export default async function AdminRabattkodePage() {
                     <tr key={d.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-mono font-bold text-gray-900">{d.code}</td>
                       <td className="px-4 py-3">
-                        <Badge variant="default">{d.type === "percent" ? "Procent" : "Fast"}</Badge>
+                        <Badge variant="default">{d.discountType === "percent" ? "Procent" : "Fast"}</Badge>
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {d.type === "percent" ? `${d.value}%` : formatPrice(d.value)}
+                        {d.discountType === "percent" ? `${d.discountValue}%` : formatPrice(d.discountValue)}
                       </td>
                       <td className="px-4 py-3">
                         {d.usedCount}{d.maxUses !== null ? `/${d.maxUses}` : ""}
                       </td>
                       <td className="px-4 py-3 text-gray-400">
-                        {d.expiresAt ? formatDate(d.expiresAt) : "–"}
+                        {d.endsAt ? formatDate(d.endsAt) : "–"}
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={d.isActive ? "success" : "danger"}>

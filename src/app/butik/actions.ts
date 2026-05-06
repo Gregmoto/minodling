@@ -14,13 +14,6 @@ interface CartItemData {
   stock: number;
 }
 
-function generateOrderNumber(): string {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `MIN-${date}-${rand}`;
-}
-
 export async function createOrder(
   formData: FormData
 ): Promise<{ success: boolean; orderId?: string; error?: string }> {
@@ -41,63 +34,48 @@ export async function createOrder(
       return { success: false, error: "Varukorgen är tom." };
     }
 
-    const firstName = (formData.get("firstName") as string).trim();
-    const lastName = (formData.get("lastName") as string).trim();
+    const fullName = (formData.get("fullName") as string).trim();
     const email = (formData.get("email") as string).trim();
     const phone = (formData.get("phone") as string | null)?.trim() ?? null;
     const address = (formData.get("address") as string).trim();
     const city = (formData.get("city") as string).trim();
     const postalCode = (formData.get("postalCode") as string).trim();
-    const notes = (formData.get("notes") as string | null)?.trim() ?? null;
-    const shippingCost = Number(formData.get("shippingCost") ?? 0);
+    const shippingAmount = Number(formData.get("shippingAmount") ?? 0);
 
     const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-    const total = subtotal + shippingCost;
+    const totalAmount = subtotal + shippingAmount;
 
     // Verify stock and build items
     for (const item of cartItems) {
       const product = await prisma.shopProduct.findUnique({
         where: { id: item.productId },
-        select: { stock: true, isActive: true },
+        select: { stockQuantity: true, isActive: true },
       });
       if (!product || !product.isActive) {
         return { success: false, error: `Produkten "${item.name}" är inte tillgänglig.` };
       }
-      if (product.stock < item.quantity) {
+      if (product.stockQuantity < item.quantity) {
         return { success: false, error: `Otillräckligt lager för "${item.name}".` };
       }
     }
 
-    let orderNumber = generateOrderNumber();
-    // Ensure unique
-    let attempts = 0;
-    while (await prisma.shopOrder.findUnique({ where: { orderNumber } }) && attempts < 5) {
-      orderNumber = generateOrderNumber();
-      attempts++;
-    }
-
     const order = await prisma.shopOrder.create({
       data: {
-        orderNumber,
         userId: profile.id,
         email,
-        firstName,
-        lastName,
+        fullName,
         phone,
-        address,
-        city,
-        postalCode,
+        shippingAddress: { address, city, postalCode, country: "SE" },
         subtotal,
-        shippingCost,
-        total,
-        notes,
+        shippingAmount,
+        totalAmount,
         items: {
           create: cartItems.map((item) => ({
             productId: item.productId,
-            name: item.name,
-            price: item.price,
+            productName: item.name,
+            unitPrice: item.price,
             quantity: item.quantity,
-            total: item.price * item.quantity,
+            totalPrice: item.price * item.quantity,
           })),
         },
       },
@@ -107,7 +85,7 @@ export async function createOrder(
     for (const item of cartItems) {
       await prisma.shopProduct.update({
         where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } },
+        data: { stockQuantity: { decrement: item.quantity } },
       });
     }
 
@@ -120,14 +98,13 @@ export async function createOrder(
 }
 
 export async function subscribeNewsletter(
-  email: string,
-  firstName?: string
+  email: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.shopNewsletter.upsert({
+    await prisma.shopNewsletterSubscriber.upsert({
       where: { email },
-      update: { isActive: true, firstName: firstName ?? null },
-      create: { email, firstName: firstName ?? null, source: "shop" },
+      update: { isActive: true },
+      create: { email, source: "shop" },
     });
     return { success: true };
   } catch (err) {
@@ -141,28 +118,28 @@ export async function validateDiscount(
   orderTotal: number
 ): Promise<{ success: boolean; discountAmount?: number; type?: string; error?: string }> {
   try {
-    const discount = await prisma.shopDiscount.findUnique({ where: { code: code.toUpperCase() } });
+    const discount = await prisma.shopDiscountCode.findUnique({ where: { code: code.toUpperCase() } });
     if (!discount || !discount.isActive) {
       return { success: false, error: "Rabattkoden är ogiltig." };
     }
-    if (discount.expiresAt && discount.expiresAt < new Date()) {
+    if (discount.endsAt && discount.endsAt < new Date()) {
       return { success: false, error: "Rabattkoden har gått ut." };
     }
     if (discount.maxUses !== null && discount.usedCount >= discount.maxUses) {
       return { success: false, error: "Rabattkoden har nått maxgränsen." };
     }
-    if (discount.minOrder !== null && orderTotal < discount.minOrder) {
-      return { success: false, error: `Minsta ordersumma för denna kod är ${discount.minOrder / 100} kr.` };
+    if (discount.minOrderAmount !== null && orderTotal < discount.minOrderAmount) {
+      return { success: false, error: `Minsta ordersumma för denna kod är ${discount.minOrderAmount / 100} kr.` };
     }
 
     let discountAmount = 0;
-    if (discount.type === "percent") {
-      discountAmount = Math.round(orderTotal * (discount.value / 100));
+    if (discount.discountType === "percent") {
+      discountAmount = Math.round(orderTotal * (discount.discountValue / 100));
     } else {
-      discountAmount = discount.value;
+      discountAmount = discount.discountValue;
     }
 
-    return { success: true, discountAmount, type: discount.type };
+    return { success: true, discountAmount, type: discount.discountType };
   } catch (err) {
     console.error("validateDiscount error:", err);
     return { success: false, error: "Kunde inte validera rabattkoden." };

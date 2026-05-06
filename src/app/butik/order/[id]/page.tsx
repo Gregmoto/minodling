@@ -33,6 +33,8 @@ export default async function OrderPage({ params }: PageProps) {
 
   if (!order) notFound();
 
+  const addr = order.shippingAddress as { address: string; city: string; postalCode: string; country: string };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} />
@@ -43,7 +45,7 @@ export default async function OrderPage({ params }: PageProps) {
             <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-gray-900">Tack för din beställning!</h1>
             <p className="text-gray-600 mt-2">
-              Din order <span className="font-semibold">{order.orderNumber}</span> har tagits emot.
+              Din order <span className="font-semibold">#{order.id.slice(0, 8).toUpperCase()}</span> har tagits emot.
             </p>
             <p className="text-sm text-gray-400 mt-1">
               En bekräftelse skickas till {order.email}
@@ -55,7 +57,7 @@ export default async function OrderPage({ params }: PageProps) {
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm mb-5">
               <div>
                 <p className="text-gray-500">Ordernummer</p>
-                <p className="font-semibold text-gray-900">{order.orderNumber}</p>
+                <p className="font-semibold text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</p>
               </div>
               <div>
                 <p className="text-gray-500">Datum</p>
@@ -65,19 +67,13 @@ export default async function OrderPage({ params }: PageProps) {
                 <p className="text-gray-500">Status</p>
                 <Badge variant="warning" dot>{order.status}</Badge>
               </div>
-              <div>
-                <p className="text-gray-500">Betalning</p>
-                <Badge variant={order.paymentStatus === "paid" ? "success" : "warning"} dot>
-                  {order.paymentStatus === "paid" ? "Betald" : "Väntar"}
-                </Badge>
-              </div>
             </div>
 
             <h3 className="font-semibold text-gray-900 mb-2">Leveransadress</h3>
             <p className="text-sm text-gray-600">
-              {order.firstName} {order.lastName}<br />
-              {order.address}<br />
-              {order.postalCode} {order.city}
+              {order.fullName}<br />
+              {addr.address}<br />
+              {addr.postalCode} {addr.city}
             </p>
           </Card>
 
@@ -89,10 +85,10 @@ export default async function OrderPage({ params }: PageProps) {
               {order.items.map((item) => (
                 <div key={item.id} className="flex justify-between items-center px-5 py-3 text-sm">
                   <div>
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-gray-400 text-xs">Antal: {item.quantity} × {formatPrice(item.price)}</p>
+                    <p className="font-medium text-gray-900">{item.productName}</p>
+                    <p className="text-gray-400 text-xs">Antal: {item.quantity} × {formatPrice(item.unitPrice)}</p>
                   </div>
-                  <p className="font-semibold text-gray-900">{formatPrice(item.total)}</p>
+                  <p className="font-semibold text-gray-900">{formatPrice(item.totalPrice)}</p>
                 </div>
               ))}
             </div>
@@ -103,17 +99,17 @@ export default async function OrderPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Frakt</span>
-                <span>{order.shippingCost === 0 ? "Gratis" : formatPrice(order.shippingCost)}</span>
+                <span>{order.shippingAmount === 0 ? "Gratis" : formatPrice(order.shippingAmount)}</span>
               </div>
               {order.discountAmount > 0 && (
                 <div className="flex justify-between text-sm text-green-700">
-                  <span>Rabatt ({order.discountCode})</span>
+                  <span>Rabatt</span>
                   <span>-{formatPrice(order.discountAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-gray-900 text-base border-t border-sage-100 pt-2">
                 <span>Totalt</span>
-                <span>{formatPrice(order.total)}</span>
+                <span>{formatPrice(order.totalAmount)}</span>
               </div>
             </div>
           </Card>

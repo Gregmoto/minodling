@@ -20,10 +20,6 @@ export function CheckoutForm({ profile }: { profile: Profile }) {
   const shipping = total >= 49900 ? 0 : 4900;
   const orderTotal = total + shipping;
 
-  const nameParts = profile.fullName?.split(" ") ?? [];
-  const defaultFirst = nameParts[0] ?? "";
-  const defaultLast = nameParts.slice(1).join(" ") ?? "";
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -32,7 +28,7 @@ export function CheckoutForm({ profile }: { profile: Profile }) {
     const form = e.currentTarget;
     const fd = new FormData(form);
     fd.set("cartItems", JSON.stringify(items));
-    fd.set("shippingCost", String(shipping));
+    fd.set("shippingAmount", String(shipping));
 
     try {
       const result = await createOrder(fd);
@@ -63,25 +59,14 @@ export function CheckoutForm({ profile }: { profile: Profile }) {
       <div className="space-y-5">
         <h2 className="text-lg font-bold text-gray-900">Leveransuppgifter</h2>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Förnamn</label>
-            <input
-              name="firstName"
-              defaultValue={defaultFirst}
-              required
-              className="w-full px-3 py-2.5 rounded-xl border border-sage-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Efternamn</label>
-            <input
-              name="lastName"
-              defaultValue={defaultLast}
-              required
-              className="w-full px-3 py-2.5 rounded-xl border border-sage-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Namn</label>
+          <input
+            name="fullName"
+            defaultValue={profile.fullName ?? ""}
+            required
+            className="w-full px-3 py-2.5 rounded-xl border border-sage-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+          />
         </div>
 
         <div>
@@ -130,15 +115,6 @@ export function CheckoutForm({ profile }: { profile: Profile }) {
               className="w-full px-3 py-2.5 rounded-xl border border-sage-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
             />
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Anteckningar (valfritt)</label>
-          <textarea
-            name="notes"
-            rows={3}
-            className="w-full px-3 py-2.5 rounded-xl border border-sage-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none"
-          />
         </div>
 
         {error && (

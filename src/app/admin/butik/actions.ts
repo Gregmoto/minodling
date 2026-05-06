@@ -23,26 +23,24 @@ export async function createProduct(formData: FormData) {
 
   const name = (formData.get("name") as string).trim();
   const slug = (formData.get("slug") as string).trim();
-  const shortDesc = (formData.get("shortDesc") as string | null)?.trim() || null;
+  const shortDescription = (formData.get("shortDescription") as string | null)?.trim() || null;
   const description = (formData.get("description") as string | null)?.trim() || null;
   const imageUrl = (formData.get("imageUrl") as string | null)?.trim() || null;
   const categoryId = (formData.get("categoryId") as string | null)?.trim() || null;
   const price = parseSEKtoOre(formData.get("price"));
-  const comparePrice = parseOptionalSEKtoOre(formData.get("comparePrice"));
+  const compareAtPrice = parseOptionalSEKtoOre(formData.get("compareAtPrice"));
   const sku = (formData.get("sku") as string | null)?.trim() || null;
-  const stock = parseInt(String(formData.get("stock") ?? "0"), 10);
+  const stockQuantity = parseInt(String(formData.get("stockQuantity") ?? "0"), 10);
   const isActive = formData.get("isActive") === "on";
   const isFeatured = formData.get("isFeatured") === "on";
-  const tagsRaw = (formData.get("tags") as string | null)?.trim() ?? "";
-  const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
   const seoTitle = (formData.get("seoTitle") as string | null)?.trim() || null;
-  const seoDesc = (formData.get("seoDesc") as string | null)?.trim() || null;
+  const seoDescription = (formData.get("seoDescription") as string | null)?.trim() || null;
 
   await prisma.shopProduct.create({
     data: {
-      name, slug, shortDesc, description, imageUrl,
+      name, slug, shortDescription, description, imageUrl,
       categoryId: categoryId || null,
-      price, comparePrice, sku, stock, isActive, isFeatured, tags, seoTitle, seoDesc,
+      price, compareAtPrice, sku, stockQuantity, isActive, isFeatured, seoTitle, seoDescription,
     },
   });
 
@@ -55,27 +53,25 @@ export async function updateProduct(id: string, formData: FormData) {
 
   const name = (formData.get("name") as string).trim();
   const slug = (formData.get("slug") as string).trim();
-  const shortDesc = (formData.get("shortDesc") as string | null)?.trim() || null;
+  const shortDescription = (formData.get("shortDescription") as string | null)?.trim() || null;
   const description = (formData.get("description") as string | null)?.trim() || null;
   const imageUrl = (formData.get("imageUrl") as string | null)?.trim() || null;
   const categoryId = (formData.get("categoryId") as string | null)?.trim() || null;
   const price = parseSEKtoOre(formData.get("price"));
-  const comparePrice = parseOptionalSEKtoOre(formData.get("comparePrice"));
+  const compareAtPrice = parseOptionalSEKtoOre(formData.get("compareAtPrice"));
   const sku = (formData.get("sku") as string | null)?.trim() || null;
-  const stock = parseInt(String(formData.get("stock") ?? "0"), 10);
+  const stockQuantity = parseInt(String(formData.get("stockQuantity") ?? "0"), 10);
   const isActive = formData.get("isActive") === "on";
   const isFeatured = formData.get("isFeatured") === "on";
-  const tagsRaw = (formData.get("tags") as string | null)?.trim() ?? "";
-  const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
   const seoTitle = (formData.get("seoTitle") as string | null)?.trim() || null;
-  const seoDesc = (formData.get("seoDesc") as string | null)?.trim() || null;
+  const seoDescription = (formData.get("seoDescription") as string | null)?.trim() || null;
 
   await prisma.shopProduct.update({
     where: { id },
     data: {
-      name, slug, shortDesc, description, imageUrl,
+      name, slug, shortDescription, description, imageUrl,
       categoryId: categoryId || null,
-      price, comparePrice, sku, stock, isActive, isFeatured, tags, seoTitle, seoDesc,
+      price, compareAtPrice, sku, stockQuantity, isActive, isFeatured, seoTitle, seoDescription,
     },
   });
 
@@ -129,24 +125,24 @@ export async function createDiscount(formData: FormData) {
   await requireAdmin();
 
   const code = (formData.get("code") as string).trim().toUpperCase();
-  const type = formData.get("type") as string;
-  const valueRaw = parseFloat(String(formData.get("value") ?? "0"));
-  const value = type === "percent" ? Math.round(valueRaw) : Math.round(valueRaw * 100);
-  const minOrderRaw = formData.get("minOrder") as string | null;
-  const minOrder = minOrderRaw && minOrderRaw.trim() !== "" ? Math.round(parseFloat(minOrderRaw) * 100) : null;
+  const discountType = formData.get("discountType") as string;
+  const valueRaw = parseFloat(String(formData.get("discountValue") ?? "0"));
+  const discountValue = discountType === "percent" ? Math.round(valueRaw) : Math.round(valueRaw * 100);
+  const minOrderRaw = formData.get("minOrderAmount") as string | null;
+  const minOrderAmount = minOrderRaw && minOrderRaw.trim() !== "" ? Math.round(parseFloat(minOrderRaw) * 100) : null;
   const maxUsesRaw = formData.get("maxUses") as string | null;
   const maxUses = maxUsesRaw && maxUsesRaw.trim() !== "" ? parseInt(maxUsesRaw, 10) : null;
-  const expiresAtRaw = formData.get("expiresAt") as string | null;
-  const expiresAt = expiresAtRaw && expiresAtRaw.trim() !== "" ? new Date(expiresAtRaw) : null;
+  const endsAtRaw = formData.get("endsAt") as string | null;
+  const endsAt = endsAtRaw && endsAtRaw.trim() !== "" ? new Date(endsAtRaw) : null;
   const isActive = formData.get("isActive") === "on";
 
-  await prisma.shopDiscount.create({ data: { code, type, value, minOrder, maxUses, expiresAt, isActive } });
+  await prisma.shopDiscountCode.create({ data: { code, discountType, discountValue, minOrderAmount, maxUses, endsAt, isActive } });
   revalidatePath("/admin/butik/rabattkoder");
 }
 
 export async function deleteDiscount(id: string) {
   await requireAdmin();
-  await prisma.shopDiscount.delete({ where: { id } });
+  await prisma.shopDiscountCode.delete({ where: { id } });
   revalidatePath("/admin/butik/rabattkoder");
 }
 

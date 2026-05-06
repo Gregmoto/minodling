@@ -4,7 +4,6 @@ import { subscribeNewsletter } from "./actions";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -12,12 +11,11 @@ export function NewsletterForm() {
     e.preventDefault();
     setStatus("loading");
     try {
-      const result = await subscribeNewsletter(email, firstName);
+      const result = await subscribeNewsletter(email);
       if (result.success) {
         setStatus("success");
         setMessage("Tack! Du är nu prenumerant.");
         setEmail("");
-        setFirstName("");
       } else {
         setStatus("error");
         setMessage(result.error ?? "Något gick fel, försök igen.");
@@ -39,13 +37,6 @@ export function NewsletterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="flex gap-2">
-        <input
-          type="text"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          placeholder="Förnamn (valfritt)"
-          className="flex-1 px-3 py-2.5 rounded-xl border border-sage-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-        />
         <input
           type="email"
           value={email}
