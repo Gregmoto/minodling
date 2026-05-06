@@ -131,6 +131,11 @@ export default async function ButikPage() {
 
       <main className="flex-1 bg-cream-50">
 
+        {/* ── FRI FRAKT-BANNER ───────────────────────────── */}
+        <div className="container-main pt-4 pb-2">
+          <FreeShippingBanner />
+        </div>
+
         {/* ── HERO SLIDER ────────────────────────────────── */}
         {slides.length > 0 ? (
           <HeroSlider slides={slides} />
@@ -161,11 +166,6 @@ export default async function ButikPage() {
             </div>
           </section>
         )}
-
-        {/* ── FRI FRAKT-BANNER ───────────────────────────── */}
-        <div className="container-main pt-6">
-          <FreeShippingBanner />
-        </div>
 
         {/* ── KATEGORIER ─────────────────────────────────── */}
         {categories.length > 0 && (
