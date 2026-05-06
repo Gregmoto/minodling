@@ -1,8 +1,14 @@
 "use client";
+
 import { useState } from "react";
 import { subscribeNewsletter } from "./actions";
+import { Mail, Check } from "lucide-react";
 
-export function NewsletterForm() {
+interface Props {
+  variant?: "light" | "dark";
+}
+
+export function NewsletterForm({ variant = "light" }: Props) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -14,7 +20,6 @@ export function NewsletterForm() {
       const result = await subscribeNewsletter(email);
       if (result.success) {
         setStatus("success");
-        setMessage("Tack! Du är nu prenumerant.");
         setEmail("");
       } else {
         setStatus("error");
@@ -28,33 +33,59 @@ export function NewsletterForm() {
 
   if (status === "success") {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-2xl px-6 py-4 text-green-700 font-medium">
-        {message}
+      <div className={`flex items-center gap-3 justify-center rounded-2xl px-6 py-4 ${
+        variant === "dark"
+          ? "bg-white/10 text-white border border-white/20"
+          : "bg-green-50 text-green-700 border border-green-200"
+      }`}>
+        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+          variant === "dark" ? "bg-white/20" : "bg-green-100"
+        }`}>
+          <Check className="h-4 w-4" />
+        </div>
+        <p className="font-medium">Tack! Du är nu prenumerant 🌱</p>
       </div>
     );
   }
 
+  const isDark = variant === "dark";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="flex gap-2">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Din e-post"
-          required
-          className="flex-1 px-3 py-2.5 rounded-xl border border-sage-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-        />
+    <form onSubmit={handleSubmit}>
+      <div className={`flex gap-2 rounded-2xl p-1.5 ${
+        isDark ? "bg-white/10 border border-white/20" : "bg-white border border-sage-200 shadow-sm"
+      }`}>
+        <div className="relative flex-1 flex items-center">
+          <Mail className={`absolute left-3 h-4 w-4 pointer-events-none ${isDark ? "text-white/50" : "text-gray-400"}`} />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="din@epost.se"
+            required
+            className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-transparent focus:outline-none ${
+              isDark
+                ? "text-white placeholder:text-white/40 focus:ring-2 focus:ring-white/30"
+                : "text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-green-500/20"
+            }`}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors disabled:opacity-60 whitespace-nowrap ${
+            isDark
+              ? "bg-green-500 hover:bg-green-400 text-white"
+              : "bg-green-600 hover:bg-green-700 text-white"
+          }`}
+        >
+          {status === "loading" ? "…" : "Prenumerera"}
+        </button>
       </div>
-      <button
-        type="submit"
-        disabled={status === "loading"}
-        className="w-full py-2.5 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 disabled:opacity-60 transition-colors"
-      >
-        {status === "loading" ? "Prenumererar..." : "Prenumerera"}
-      </button>
       {status === "error" && (
-        <p className="text-sm text-red-600 text-center">{message}</p>
+        <p className={`text-sm mt-2 text-center ${isDark ? "text-red-300" : "text-red-600"}`}>
+          {message}
+        </p>
       )}
     </form>
   );

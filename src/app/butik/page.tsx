@@ -3,97 +3,186 @@ export const revalidate = 60;
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Sprout, ShoppingBag, ArrowRight, Package } from "lucide-react";
+import { Sprout, Package, ArrowRight, Leaf, Mail } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { formatPrice } from "@/lib/utils";
+import { HeroSlider } from "@/components/shop/HeroSlider";
+import { ProductCard } from "@/components/shop/ProductCard";
 import { NewsletterForm } from "./NewsletterForm";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   return {
-    title: "Butik – Fröbutiken | Minodling",
-    description: "Köp frön, odlingsverktyg och tillbehör i Minodlings butik. Allt för din trädgård.",
+    title: "Butik – Frön & odlingstillbehör | Minodling",
+    description:
+      "Handla frön, jord och odlingstillbehör i Minodlings butik. Noggrant utvalda produkter för svenska odlare. Snabb leverans.",
     alternates: { canonical: `${s.seoCanonical.replace(/\/$/, "")}/butik` },
+    openGraph: {
+      title: "Minodling Butik – Frön & odlingstillbehör",
+      description: "Allt du behöver för en rik skörd. Frön, jord och tillbehör för svenska odlare.",
+    },
   };
 }
+
+// Säsong baserat på aktuell månad
+function currentSeason(): { label: string; months: number[] } {
+  const m = new Date().getMonth() + 1; // 1–12
+  if (m >= 3 && m <= 5) return { label: "Vår",    months: [3, 4, 5] };
+  if (m >= 6 && m <= 8) return { label: "Sommar", months: [6, 7, 8] };
+  if (m >= 9 && m <= 11) return { label: "Höst",  months: [9, 10, 11] };
+  return { label: "Vinter", months: [12, 1, 2] };
+}
+
+const productSelect = {
+  id: true, slug: true, name: true, shortDescription: true,
+  price: true, compareAtPrice: true, imageUrl: true,
+  stockQuantity: true, isFeatured: true,
+  category: { select: { name: true, slug: true } },
+} as const;
 
 export default async function ButikPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const season = currentSeason();
 
-  const [categories, featuredProducts, navUser] = await Promise.all([
+  const [
+    slides,
+    categories,
+    featuredProducts,
+    newProducts,
+    seasonProducts,
+    popularProductIds,
+    navUser,
+    seoRow,
+  ] = await Promise.all([
+    prisma.shopSlide.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    }).catch(() => []),
+
     prisma.shopCategory.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
-      take: 8,
+      include: { _count: { select: { products: { where: { isActive: true } } } } },
     }).catch(() => []),
+
     prisma.shopProduct.findMany({
       where: { isActive: true, isFeatured: true },
-      include: { category: { select: { name: true, slug: true } } },
+      orderBy: { updatedAt: "desc" },
+      take: 8,
+      select: productSelect,
+    }).catch(() => []),
+
+    prisma.shopProduct.findMany({
+      where: { isActive: true },
       orderBy: { createdAt: "desc" },
       take: 8,
+      select: productSelect,
     }).catch(() => []),
+
+    // Säsongsprodukter: matchas på growingType
+    prisma.shopProduct.findMany({
+      where: {
+        isActive: true,
+        growingType: { contains: season.label, mode: "insensitive" },
+      },
+      take: 8,
+      select: productSelect,
+    }).catch(() => []),
+
+    // Populära: de mest beställda produkt-id:n
+    prisma.shopOrderItem.groupBy({
+      by: ["productId"],
+      _count: { productId: true },
+      orderBy: { _count: { productId: "desc" } },
+      take: 8,
+    }).catch(() => []),
+
     getNavUser(user?.id),
+
+    // SEO-text längst ner (valfri)
+    prisma.shopSetting.findUnique({ where: { key: "shop_seo_text" } }).catch(() => null),
   ]);
+
+  // Hämta populära produkter baserat på ids
+  const popularIds = popularProductIds.map((p) => p.productId).filter(Boolean) as string[];
+  const popularProducts = popularIds.length > 0
+    ? await prisma.shopProduct.findMany({
+        where: { id: { in: popularIds }, isActive: true },
+        select: productSelect,
+      }).catch(() => [])
+    : [];
+
+  // Sortera populära i samma ordning som groupBy-resultatet
+  const sortedPopular = popularIds
+    .map((id) => popularProducts.find((p) => p.id === id))
+    .filter(Boolean) as typeof popularProducts;
+
+  const seoText = seoRow?.value ?? null;
 
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} />
 
       <main className="flex-1 bg-cream-50">
-        {/* Hero */}
-        <section className="bg-gradient-to-b from-sage-50 to-cream-50 border-b border-sage-100 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 text-sm font-medium px-3 py-1.5 rounded-full mb-4">
-                <ShoppingBag className="h-4 w-4" />
-                Fröbutiken
-              </div>
-              <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl leading-tight">
-                Odla mer med rätt verktyg
-              </h1>
-              <p className="mt-4 text-lg text-gray-600 leading-relaxed">
-                Frön, jord och tillbehör noggrant utvalda för svenska odlare. Allt du behöver för en rik skörd.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="#kategorier"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-sm"
-                >
-                  Utforska sortimentet
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+
+        {/* ── HERO SLIDER ────────────────────────────────── */}
+        {slides.length > 0 ? (
+          <HeroSlider slides={slides} />
+        ) : (
+          /* Fallback-hero om inga slides */
+          <section className="bg-gradient-to-br from-sage-800 to-sage-600 py-20">
+            <div className="container-main">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 bg-white/15 text-white text-sm font-medium px-3 py-1.5 rounded-full mb-4">
+                  <Leaf className="h-4 w-4" /> Minodling Butik
+                </span>
+                <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
+                  Odla mer med rätt verktyg
+                </h1>
+                <p className="mt-4 text-lg text-white/80 leading-relaxed max-w-xl">
+                  Frön, jord och tillbehör noggrant utvalda för svenska odlare.
+                  Allt du behöver för en rik skörd – direkt hem till dörren.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link
+                    href="#kategorier"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition-colors"
+                  >
+                    Utforska sortimentet <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* Kategorier */}
+        {/* ── KATEGORIER ─────────────────────────────────── */}
         {categories.length > 0 && (
-          <section id="kategorier" className="py-12">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Kategorier</h2>
+          <section id="kategorier" className="py-14">
+            <div className="container-main">
+              <div className="flex items-center justify-between mb-7">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Kategorier</h2>
+                  <p className="text-gray-500 text-sm mt-1">Bläddra bland {categories.length} kategorier</p>
+                </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {categories.map((cat) => (
                   <Link key={cat.id} href={`/butik/kategori/${cat.slug}`} className="group">
-                    <Card hover padding="none" className="overflow-hidden">
-                      <div className="relative h-28 bg-sage-50">
+                    <div className="bg-white rounded-2xl border border-sage-100 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
+                      <div className="relative h-32 bg-sage-50">
                         {cat.imageUrl ? (
                           <Image
                             src={cat.imageUrl}
                             alt={cat.name}
                             fill
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
-                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center">
@@ -102,14 +191,14 @@ export default async function ButikPage() {
                         )}
                       </div>
                       <div className="p-3">
-                        <p className="font-semibold text-gray-900 text-sm group-hover:text-green-700 transition-colors">
+                        <p className="font-semibold text-gray-900 text-sm group-hover:text-green-700 transition-colors leading-tight">
                           {cat.name}
                         </p>
-                        {cat.description && (
-                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{cat.description}</p>
-                        )}
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {cat._count.products} produkter
+                        </p>
                       </div>
-                    </Card>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -117,89 +206,135 @@ export default async function ButikPage() {
           </section>
         )}
 
-        {/* Utvalda produkter */}
-        <section className="py-12 bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Utvalda produkter</h2>
-            </div>
-
-            {featuredProducts.length === 0 ? (
-              <Card className="text-center py-20">
-                <Sprout className="h-14 w-14 text-sage-200 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">Sortimentet fylls på snart</h3>
-                <p className="text-sm text-gray-400">Vi arbetar med att fylla butiken med produkter.</p>
-              </Card>
-            ) : (
+        {/* ── UTVALDA PRODUKTER ───────────────────────────── */}
+        {featuredProducts.length > 0 && (
+          <section className="py-14 bg-white border-y border-sage-100">
+            <div className="container-main">
+              <div className="flex items-center justify-between mb-7">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Utvalda produkter</h2>
+                  <p className="text-gray-500 text-sm mt-1">Noggrant utvalda av oss för dig</p>
+                </div>
+                <Link href="/butik/kategori" className="text-sm font-medium text-green-700 hover:underline flex items-center gap-1">
+                  Se alla <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {featuredProducts.map((product) => (
-                  <Link key={product.id} href={`/butik/produkt/${product.slug}`} className="group block h-full">
-                    <Card hover padding="none" className="overflow-hidden h-full flex flex-col">
-                      <div className="relative h-48 bg-sage-50 shrink-0">
-                        {product.imageUrl ? (
-                          <Image
-                            src={product.imageUrl}
-                            alt={product.name}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center">
-                            <Package className="h-12 w-12 text-sage-200" />
-                          </div>
-                        )}
-                        {product.isFeatured && (
-                          <span className="absolute top-2 left-2 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            Utvald
-                          </span>
-                        )}
-                        {product.stockQuantity === 0 && (
-                          <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            Slut i lager
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-4 flex flex-col gap-2 flex-1">
-                        {product.category && (
-                          <span className="text-[11px] font-medium text-sage-700 bg-sage-50 border border-sage-200 px-2 py-0.5 rounded-full self-start">
-                            {product.category.name}
-                          </span>
-                        )}
-                        <h3 className="font-semibold text-gray-900 leading-tight group-hover:text-green-700 transition-colors">
-                          {product.name}
-                        </h3>
-                        {product.shortDescription && (
-                          <p className="text-xs text-gray-500 line-clamp-2">{product.shortDescription}</p>
-                        )}
-                        <div className="mt-auto pt-2 flex items-center gap-2">
-                          <span className="text-lg font-bold text-green-700">{formatPrice(product.price)}</span>
-                          {product.compareAtPrice && product.compareAtPrice > product.price && (
-                            <span className="text-sm text-gray-400 line-through">{formatPrice(product.compareAtPrice)}</span>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
+                {featuredProducts.map((p) => (
+                  <ProductCard key={p.id} product={p} badge="Utvald" />
                 ))}
               </div>
-            )}
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
 
-        {/* Nyhetsbrev */}
-        <section className="py-12 bg-gradient-to-br from-sage-50 to-green-50 border-t border-sage-100">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="max-w-xl mx-auto text-center">
-              <Sprout className="h-10 w-10 text-green-600 mx-auto mb-3" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Få odlingstips i inkorgen</h2>
-              <p className="text-gray-600 mb-6">
-                Prenumerera på vårt nyhetsbrev och få exklusiva erbjudanden och säsongsanpassade odlingstips.
+        {/* ── SÄSONGSPRODUKTER ────────────────────────────── */}
+        {seasonProducts.length > 0 && (
+          <section className="py-14">
+            <div className="container-main">
+              <div className="flex items-center justify-between mb-7">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-200 mb-2">
+                    🌱 Nu i säsong
+                  </span>
+                  <h2 className="text-2xl font-bold text-gray-900">{season.label}ens produkter</h2>
+                  <p className="text-gray-500 text-sm mt-1">Perfekt att börja med just nu</p>
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {seasonProducts.map((p) => (
+                  <ProductCard key={p.id} product={p} badge={`${season.label}`} badgeColor="bg-amber-500" />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── POPULÄRA PRODUKTER ──────────────────────────── */}
+        {sortedPopular.length > 0 && (
+          <section className="py-14 bg-white border-y border-sage-100">
+            <div className="container-main">
+              <div className="flex items-center justify-between mb-7">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Populära produkter</h2>
+                  <p className="text-gray-500 text-sm mt-1">Mest beställda av andra odlare</p>
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {sortedPopular.map((p, i) => (
+                  <ProductCard key={p.id} product={p} badge={i === 0 ? "Bästsäljare" : undefined} badgeColor="bg-orange-500" />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── NYA PRODUKTER ───────────────────────────────── */}
+        {newProducts.length > 0 && (
+          <section className="py-14">
+            <div className="container-main">
+              <div className="flex items-center justify-between mb-7">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Nyheter i butiken</h2>
+                  <p className="text-gray-500 text-sm mt-1">Senast tillagda produkter</p>
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {newProducts.map((p) => (
+                  <ProductCard key={p.id} product={p} badge="Nyhet" badgeColor="bg-blue-500" />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── TOMT TILLSTÅND ──────────────────────────────── */}
+        {featuredProducts.length === 0 && newProducts.length === 0 && (
+          <section className="py-24">
+            <div className="container-main text-center">
+              <Sprout className="h-16 w-16 text-sage-200 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-600 mb-2">Sortimentet fylls på snart</h2>
+              <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                Vi håller på att fylla butiken med produkter. Prenumerera på nyhetsbrevet för att få besked när vi öppnar.
               </p>
-              <NewsletterForm />
+            </div>
+          </section>
+        )}
+
+        {/* ── NYHETSBREV ──────────────────────────────────── */}
+        <section className="py-16 bg-gradient-to-br from-sage-700 to-sage-900">
+          <div className="container-main">
+            <div className="max-w-2xl mx-auto text-center">
+              <div className="h-12 w-12 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-4">
+                <Mail className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                Odlingstips &amp; erbjudanden
+              </h2>
+              <p className="text-white/75 mb-8 leading-relaxed">
+                Prenumerera och få exklusiva erbjudanden, säsongsanpassade odlingstips
+                och nyheter direkt i inkorgen. Avprenumerera när du vill.
+              </p>
+              <div className="max-w-md mx-auto">
+                <NewsletterForm variant="dark" />
+              </div>
+              <p className="text-white/40 text-xs mt-4">
+                Inga spammail. Vi värnar om din integritet.
+              </p>
             </div>
           </div>
         </section>
+
+        {/* ── SEO-TEXT ────────────────────────────────────── */}
+        {seoText && (
+          <section className="py-12 border-t border-sage-100">
+            <div className="container-main">
+              <div className="max-w-3xl mx-auto prose prose-sm prose-gray">
+                <div dangerouslySetInnerHTML={{ __html: seoText }} />
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

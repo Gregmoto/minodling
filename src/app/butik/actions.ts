@@ -98,13 +98,35 @@ export async function createOrder(
 }
 
 export async function subscribeNewsletter(
-  email: string
+  email: string,
+  source = "shop"
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Koppla till profil-id om inloggad
+    let profileId: string | null = null;
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const profile = await prisma.profile.findUnique({
+          where: { userId: user.id },
+          select: { id: true },
+        });
+        profileId = profile?.id ?? null;
+      }
+    } catch { /* anonym */ }
+
     await prisma.shopNewsletterSubscriber.upsert({
       where: { email },
-      update: { isActive: true },
-      create: { email, source: "shop" },
+      update: {
+        isActive: true,
+        ...(profileId ? { userId: profileId } : {}),
+      },
+      create: {
+        email,
+        source,
+        ...(profileId ? { userId: profileId } : {}),
+      },
     });
     return { success: true };
   } catch (err) {
