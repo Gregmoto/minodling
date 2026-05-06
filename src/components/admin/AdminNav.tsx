@@ -27,6 +27,12 @@ const groups = [
     ],
   },
   {
+    label: "Support",
+    items: [
+      { label: "Kontaktärenden",     href: "/admin/kontakt",       icon: Inbox },
+    ],
+  },
+  {
     label: "Innehåll",
     items: [
       { label: "Inlägg",             href: "/admin/inlagg",        icon: FileText },
@@ -63,12 +69,6 @@ const groups = [
       { label: "Omdömen",        href: "/admin/butik/omdomen",        icon: ThumbsUp },
       { label: "Nyhetsbrev",     href: "/admin/butik/nyhetsbrev",     icon: Mail },
       { label: "Inställningar",  href: "/admin/butik/installningar",  icon: Settings },
-    ],
-  },
-  {
-    label: "Support",
-    items: [
-      { label: "Kontaktärenden",     href: "/admin/kontakt",       icon: Inbox },
     ],
   },
   {
