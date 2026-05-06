@@ -122,6 +122,34 @@ export async function deleteProduct(id: string) {
 
 // ── Kategorier ────────────────────────────────────────────────────
 
+/** Snabbskapa kategori direkt från produktformuläret – returnerar id + name */
+export async function createQuickCategory(
+  name: string
+): Promise<{ id: string; name: string } | { error: string }> {
+  await requireAdmin();
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Namn saknas" };
+  const slug = trimmed
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  try {
+    const cat = await prisma.shopCategory.create({
+      data: { name: trimmed, slug, isActive: true, sortOrder: 0 },
+      select: { id: true, name: true },
+    });
+    revalidatePath("/admin/butik/kategorier");
+    revalidatePath("/butik");
+    return cat;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Okänt fel";
+    if (msg.includes("Unique constraint")) return { error: "Kategorinamn eller slug finns redan" };
+    return { error: msg };
+  }
+}
+
 export async function createCategory(formData: FormData) {
   await requireAdmin();
 
