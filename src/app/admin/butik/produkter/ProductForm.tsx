@@ -223,6 +223,7 @@ export function ProductForm({ categories: initialCategories, plants, existingLin
     setCategories((prev) => [...prev, cat]);
     setSelectedCategory(cat.id);
     setShowCategoryModal(false);
+    router.refresh(); // Invalidate router cache so admin kategorier page shows fresh data
   }
 
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
