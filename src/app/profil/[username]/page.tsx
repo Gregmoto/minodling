@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -68,8 +68,7 @@ export default async function ProfilPage({
   const [{ username }, sp] = await Promise.all([params, searchParams]);
   const activeTab = (sp.flik ?? "inlagg") as TabType;
 
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const authUser = await getCurrentUser();
 
   const profile = await prisma.profile.findUnique({
     where: { username },

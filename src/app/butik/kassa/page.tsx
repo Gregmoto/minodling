@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -11,8 +11,7 @@ import prisma from "@/lib/prisma";
 export const metadata: Metadata = { title: "Kassa – Butik | Minodling" };
 
 export default async function KassaPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const [profile, navUser] = await Promise.all([
     user ? prisma.profile.findUnique({

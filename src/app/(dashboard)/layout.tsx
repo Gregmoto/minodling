@@ -1,18 +1,13 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, getUserProfile } from "@/lib/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import prisma from "@/lib/prisma";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/auth/login");
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: user.id },
-    select: { id: true, userId: true, username: true, fullName: true, avatarUrl: true, role: true },
-  });
+  const profile = await getUserProfile();
 
   const navUser = profile ? {
     id: profile.id,

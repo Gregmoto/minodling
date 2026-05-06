@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Sprout, MessageSquare, Heart, Star, TrendingUp, Plus, ArrowRight, Bell, AlertTriangle, CalendarDays } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -17,8 +17,7 @@ import { getOrGenerateWeeklyTasks, getISOWeek } from "@/lib/weeklyTasks";
 export const metadata: Metadata = { title: "Min dashboard" };
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/auth/login");
 
   const profile = await prisma.profile.findUnique({

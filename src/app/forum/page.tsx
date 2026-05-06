@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import { Plus, TrendingUp, Clock, Flame, Filter, MessageSquare, Heart } from "lucide-react";
 import prisma from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
@@ -31,8 +31,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
   const sort         = params.sort ?? "new";
   const kategori     = params.kategori;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const [categoryGroups, posts, profile] = await Promise.all([
     prisma.post.groupBy({

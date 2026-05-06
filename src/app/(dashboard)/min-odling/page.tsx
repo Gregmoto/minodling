@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, Sprout, BookOpen, Calendar } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -12,8 +12,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Min odling" };
 
 export default async function MinOdlingPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/auth/login");
 
   const profile = await prisma.profile.findUnique({

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Crown, Check, Sparkles, ArrowRight, Lock } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import prisma from "@/lib/prisma";
+import { getCurrentUser, getUserProfile } from "@/lib/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PREMIUM_FEATURES, PLANS } from "./constants";
@@ -13,13 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default async function PremiumPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const [user, navProfile] = await Promise.all([
+    getCurrentUser(),
+    getUserProfile(),
+  ]);
 
-  const navProfile = user ? await prisma.profile.findUnique({
-    where: { userId: user.id },
-    select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
-  }) : null;
   const navUser = navProfile
     ? { id: navProfile.id, username: navProfile.username, displayName: navProfile.fullName, avatarUrl: navProfile.avatarUrl, role: navProfile.role }
     : null;

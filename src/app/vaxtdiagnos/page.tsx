@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Stethoscope } from "lucide-react";
 import prisma from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -24,15 +24,12 @@ export default async function VaxtdiagnosPage({
   const status  = params.status ?? "";
   const typ     = params.typ    ?? "";
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
-  const navProfile = user ? await import("@/lib/prisma").then((m) =>
-    m.default.profile.findUnique({
-      where: { userId: user.id },
-      select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
-    })
-  ) : null;
+  const navProfile = user ? await prisma.profile.findUnique({
+    where: { userId: user.id },
+    select: { id: true, username: true, fullName: true, avatarUrl: true, role: true },
+  }) : null;
   const navUser = navProfile
     ? { id: navProfile.id, username: navProfile.username, displayName: navProfile.fullName, avatarUrl: navProfile.avatarUrl, role: navProfile.role }
     : null;

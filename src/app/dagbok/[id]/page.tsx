@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Bell, Calendar, Edit2, Globe, Lock, Leaf } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -31,8 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DiaryDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect(`/auth/login?redirect=/dagbok/${id}`);
 
   const profile = await prisma.profile.findUnique({

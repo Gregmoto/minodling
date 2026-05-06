@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import { HelpCircle, MessageCircle, CheckCircle2, TrendingUp, Clock, Search, Plus } from "lucide-react";
 import prisma from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
@@ -48,8 +48,7 @@ export default async function FragorPage({ searchParams }: Props) {
   const kategori = sp.kategori ?? "";
   const q        = sp.q?.trim() ?? "";
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const where = {
     status: { in: ["open", "answered"] as string[] },

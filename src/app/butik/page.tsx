@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Sprout, Package, ArrowRight, Leaf, Mail } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -46,8 +46,7 @@ const productSelect = {
 } as const;
 
 export default async function ButikPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const season = currentSeason();
 
   const [

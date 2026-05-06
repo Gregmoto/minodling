@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -92,8 +92,7 @@ function relationLabel(relationType: string): string {
 export default async function ProduktPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const s = await getSettings();
 
   const [product, navUser] = await Promise.all([
