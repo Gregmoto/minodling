@@ -95,11 +95,36 @@ export async function createCategory(formData: FormData) {
   const slug = (formData.get("slug") as string).trim();
   const description = (formData.get("description") as string | null)?.trim() || null;
   const imageUrl = (formData.get("imageUrl") as string | null)?.trim() || null;
+  const seoTitle = (formData.get("seoTitle") as string | null)?.trim() || null;
+  const seoDescription = (formData.get("seoDescription") as string | null)?.trim() || null;
+  const seoText = (formData.get("seoText") as string | null)?.trim() || null;
   const sortOrder = parseInt(String(formData.get("sortOrder") ?? "0"), 10);
   const isActive = formData.get("isActive") === "on";
 
-  await prisma.shopCategory.create({ data: { name, slug, description, imageUrl, sortOrder, isActive } });
+  await prisma.shopCategory.create({ data: { name, slug, description, imageUrl, seoTitle, seoDescription, seoText, sortOrder, isActive } });
   revalidatePath("/admin/butik/kategorier");
+  revalidatePath("/butik");
+}
+
+export async function updateCategory(id: string, formData: FormData) {
+  await requireAdmin();
+
+  const name = (formData.get("name") as string).trim();
+  const slug = (formData.get("slug") as string).trim();
+  const description = (formData.get("description") as string | null)?.trim() || null;
+  const imageUrl = (formData.get("imageUrl") as string | null)?.trim() || null;
+  const seoTitle = (formData.get("seoTitle") as string | null)?.trim() || null;
+  const seoDescription = (formData.get("seoDescription") as string | null)?.trim() || null;
+  const seoText = (formData.get("seoText") as string | null)?.trim() || null;
+  const sortOrder = parseInt(String(formData.get("sortOrder") ?? "0"), 10);
+  const isActive = formData.get("isActive") === "on";
+
+  await prisma.shopCategory.update({
+    where: { id },
+    data: { name, slug, description, imageUrl, seoTitle, seoDescription, seoText, sortOrder, isActive },
+  });
+  revalidatePath("/admin/butik/kategorier");
+  revalidatePath(`/butik/kategori/${slug}`);
   revalidatePath("/butik");
 }
 
@@ -107,6 +132,7 @@ export async function deleteCategory(id: string) {
   await requireAdmin();
   await prisma.shopCategory.delete({ where: { id } });
   revalidatePath("/admin/butik/kategorier");
+  revalidatePath("/butik");
 }
 
 // ── Ordrar ────────────────────────────────────────────────────────

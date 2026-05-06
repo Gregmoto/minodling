@@ -1,6 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Pencil, ExternalLink } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
@@ -44,7 +46,12 @@ export default async function AdminKategorierPage() {
                 <tbody className="divide-y divide-gray-100">
                   {categories.map((cat) => (
                     <tr key={cat.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-900">{cat.name}</p>
+                        {cat.seoText && (
+                          <p className="text-[11px] text-gray-400 mt-0.5">SEO-text ✓</p>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-gray-400 font-mono text-xs">{cat.slug}</td>
                       <td className="px-4 py-3">{cat._count.products}</td>
                       <td className="px-4 py-3">{cat.sortOrder}</td>
@@ -54,13 +61,29 @@ export default async function AdminKategorierPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <DeleteButton
-                          action={async () => {
-                            "use server";
-                            await deleteCategory(cat.id);
-                          }}
-                          confirmText={`Är du säker på att du vill radera "${cat.name}"?`}
-                        />
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/admin/butik/kategorier/${cat.id}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" /> Redigera
+                          </Link>
+                          <Link
+                            href={`/butik/kategori/${cat.slug}`}
+                            target="_blank"
+                            className="inline-flex items-center px-2 py-1.5 text-xs text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            title="Visa på sidan"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                          <DeleteButton
+                            action={async () => {
+                              "use server";
+                              await deleteCategory(cat.id);
+                            }}
+                            confirmText={`Är du säker på att du vill radera "${cat.name}"?`}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
