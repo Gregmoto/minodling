@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   Sprout, Users, MessageSquare, Leaf, BookOpen, ArrowRight,
   TrendingUp, Heart, Calendar, Flower2, Library, Image as ImageIcon,
-  ChevronRight,
+  ChevronRight, Mail,
 } from "lucide-react";
 import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
@@ -13,6 +13,7 @@ import { getNavUser } from "@/lib/nav-user";
 import { getSettings } from "@/lib/settings";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { NewsletterSignupForm } from "@/app/nyhetsbrev/NewsletterSignupForm";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -518,6 +519,30 @@ export default async function HomePage() {
                   </Link>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Nyhetsbrev ────────────────────────────────────────── */}
+        <section className="section-padding bg-green-700 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none" />
+          <div className="absolute top-0 right-0 h-72 w-72 rounded-full bg-green-500/20 blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+          <div className="container-main relative">
+            <div className="mx-auto max-w-2xl text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-1.5 text-sm font-medium text-green-100 mb-5">
+                <Mail className="h-4 w-4" />
+                Gratis nyhetsbrev
+              </div>
+              <h2 className="font-display text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">
+                Odlingstips direkt i din inkorg
+              </h2>
+              <p className="text-green-100 mb-8 text-lg">
+                Säsongsanpassade tips, nyheter från butiken och inspiration från communityn – varje vecka.
+              </p>
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5 max-w-lg mx-auto">
+                <NewsletterSignupForm source="homepage" />
+                <p className="text-xs text-green-200 mt-3">Inga spam. Avprenumerera när du vill.</p>
+              </div>
             </div>
           </div>
         </section>
