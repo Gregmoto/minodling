@@ -19,9 +19,9 @@ const SHOP_SETTING_KEYS = [
 export default async function ShopInstallningarPage() {
   await requireAdmin();
 
-  const rows = await prisma.adminSetting.findMany({
+  const rows = await prisma.shopSetting.findMany({
     where: { key: { in: SHOP_SETTING_KEYS.map((s) => s.key) } },
-  });
+  }).catch(() => []);
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value ?? ""]));
   const settings = SHOP_SETTING_KEYS.map((s) => ({
     ...s,

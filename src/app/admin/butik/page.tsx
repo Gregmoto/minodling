@@ -11,37 +11,35 @@ import { formatPrice, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Butik – Översikt | Admin" };
 
+async function safeCount(fn: () => Promise<number>): Promise<number> {
+  try { return await fn(); } catch { return 0; }
+}
+
 export default async function AdminButikPage() {
   await requireAdmin();
 
   const [orderCount, revenueAgg, pendingCount, productCount, recentOrders] = await Promise.all([
-    prisma.shopOrder.count(),
-    prisma.shopOrder.aggregate({ _sum: { totalAmount: true } }),
-    prisma.shopOrder.count({ where: { status: "pending" } }),
-    prisma.shopProduct.count({ where: { isActive: true } }),
+    safeCount(() => prisma.shopOrder.count()),
+    prisma.shopOrder.aggregate({ _sum: { totalAmount: true } }).catch(() => ({ _sum: { totalAmount: 0 } })),
+    safeCount(() => prisma.shopOrder.count({ where: { status: "pending" } })),
+    safeCount(() => prisma.shopProduct.count({ where: { isActive: true } })),
     prisma.shopOrder.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,
-      select: {
-        id: true, fullName: true,
-        email: true, totalAmount: true, status: true, createdAt: true,
-      },
-    }),
+      select: { id: true, fullName: true, email: true, totalAmount: true, status: true, createdAt: true },
+    }).catch(() => []),
   ]);
 
   const stats = [
-    { label: "Totala ordrar", value: orderCount, icon: Receipt, color: "text-blue-600 bg-blue-50" },
-    { label: "Total omsättning", value: formatPrice(revenueAgg._sum.totalAmount ?? 0), icon: TrendingUp, color: "text-green-600 bg-green-50" },
-    { label: "Väntande ordrar", value: pendingCount, icon: ShoppingBag, color: "text-amber-600 bg-amber-50" },
-    { label: "Aktiva produkter", value: productCount, icon: Package, color: "text-purple-600 bg-purple-50" },
+    { label: "Totala ordrar",    value: orderCount,                                      icon: Receipt,    color: "text-blue-600 bg-blue-50" },
+    { label: "Total omsättning", value: formatPrice(revenueAgg._sum.totalAmount ?? 0),   icon: TrendingUp, color: "text-green-600 bg-green-50" },
+    { label: "Väntande ordrar",  value: pendingCount,                                    icon: ShoppingBag,color: "text-amber-600 bg-amber-50" },
+    { label: "Aktiva produkter", value: productCount,                                    icon: Package,    color: "text-purple-600 bg-purple-50" },
   ];
 
-  function statusBadge(status: string) {
-    const map: Record<string, "success" | "warning" | "danger" | "default"> = {
-      completed: "success", pending: "warning", cancelled: "danger",
-    };
-    return <Badge variant={map[status] ?? "default"}>{status}</Badge>;
-  }
+  const statusVariant: Record<string, "success" | "warning" | "danger" | "default" | "info"> = {
+    completed: "success", pending: "warning", cancelled: "danger", shipped: "info",
+  };
 
   return (
     <div className="space-y-6">
@@ -50,7 +48,6 @@ export default async function AdminButikPage() {
         <p className="text-gray-500 text-sm mt-1">Statistik och senaste ordrar</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -70,34 +67,28 @@ export default async function AdminButikPage() {
         })}
       </div>
 
-      {/* Snabbåtkomst */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {[
-          { label: "Produkter", href: "/admin/butik/produkter" },
-          { label: "Kategorier", href: "/admin/butik/kategorier" },
-          { label: "Ordrar", href: "/admin/butik/ordrar" },
-          { label: "Kunder", href: "/admin/butik/kunder" },
-          { label: "Rabattkoder", href: "/admin/butik/rabattkoder" },
-          { label: "Nyhetsbrev", href: "/admin/butik/nyhetsbrev" },
+          { label: "Slides",        href: "/admin/butik/slides" },
+          { label: "Produkter",     href: "/admin/butik/produkter" },
+          { label: "Kategorier",    href: "/admin/butik/kategorier" },
+          { label: "Ordrar",        href: "/admin/butik/ordrar" },
+          { label: "Kunder",        href: "/admin/butik/kunder" },
+          { label: "Rabattkoder",   href: "/admin/butik/rabattkoder" },
+          { label: "Nyhetsbrev",    href: "/admin/butik/nyhetsbrev" },
           { label: "Inställningar", href: "/admin/butik/installningar" },
         ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
+          <Link key={item.href} href={item.href}
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
             {item.label}
           </Link>
         ))}
       </div>
 
-      {/* Senaste ordrar */}
       <Card padding="none">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">Senaste ordrar</h2>
-          <Link href="/admin/butik/ordrar" className="text-sm text-green-700 hover:underline">
-            Visa alla
-          </Link>
+          <Link href="/admin/butik/ordrar" className="text-sm text-green-700 hover:underline">Visa alla</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -114,7 +105,7 @@ export default async function AdminButikPage() {
               {recentOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/butik/ordrar/${order.id}`} className="font-medium text-green-700 hover:underline">
+                    <Link href={`/admin/butik/ordrar/${order.id}`} className="font-mono text-xs font-medium text-green-700 hover:underline">
                       {order.id.slice(0, 8).toUpperCase()}
                     </Link>
                   </td>
@@ -123,13 +114,17 @@ export default async function AdminButikPage() {
                     <p className="text-gray-400 text-xs">{order.email}</p>
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{formatPrice(order.totalAmount)}</td>
-                  <td className="px-4 py-3">{statusBadge(order.status)}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant={statusVariant[order.status] ?? "default"} size="sm">{order.status}</Badge>
+                  </td>
                   <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{formatDate(order.createdAt)}</td>
                 </tr>
               ))}
               {recentOrders.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-400">Inga ordrar ännu.</td>
+                  <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                    Inga ordrar ännu. Kör SQL-migrationen om tabeller saknas.
+                  </td>
                 </tr>
               )}
             </tbody>

@@ -40,7 +40,7 @@ function currentSeason(): { label: string; months: number[] } {
 const productSelect = {
   id: true, slug: true, name: true, shortDescription: true,
   price: true, compareAtPrice: true, imageUrl: true,
-  stockQuantity: true, isFeatured: true,
+  stockQuantity: true, isFeatured: true, difficultyLevel: true, createdAt: true,
   category: { select: { name: true, slug: true } },
 } as const;
 
@@ -221,7 +221,7 @@ export default async function ButikPage() {
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {featuredProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} badge="Utvald" />
+                  <ProductCard key={p.id} product={p} />
                 ))}
               </div>
             </div>
@@ -243,7 +243,7 @@ export default async function ButikPage() {
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {seasonProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} badge={`${season.label}`} badgeColor="bg-amber-500" />
+                  <ProductCard key={p.id} product={p} />
                 ))}
               </div>
             </div>
@@ -261,8 +261,8 @@ export default async function ButikPage() {
                 </div>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {sortedPopular.map((p, i) => (
-                  <ProductCard key={p.id} product={p} badge={i === 0 ? "Bästsäljare" : undefined} badgeColor="bg-orange-500" />
+                {sortedPopular.map((p) => (
+                  <ProductCard key={p.id} product={p} isPopular />
                 ))}
               </div>
             </div>
@@ -281,7 +281,7 @@ export default async function ButikPage() {
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {newProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} badge="Nyhet" badgeColor="bg-blue-500" />
+                  <ProductCard key={p.id} product={p} />
                 ))}
               </div>
             </div>

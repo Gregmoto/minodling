@@ -161,7 +161,7 @@ export async function saveShopSettings(formData: FormData) {
 
   for (const key of SHOP_SETTING_KEYS) {
     const value = (formData.get(key) as string | null) ?? "";
-    await prisma.adminSetting.upsert({
+    await prisma.shopSetting.upsert({
       where: { key },
       update: { value },
       create: { key, value },
