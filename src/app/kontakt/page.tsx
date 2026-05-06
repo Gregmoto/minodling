@@ -120,7 +120,7 @@ export default async function KontaktPage() {
         {/* ── FORM + INFO ─────────────────────────────────────── */}
         <section className="py-16">
           <div className="container-main">
-            <div className="grid md:grid-cols-5 gap-12 max-w-4xl">
+            <div className="grid md:grid-cols-5 gap-12">
 
               {/* Form */}
               <div className="md:col-span-3">
