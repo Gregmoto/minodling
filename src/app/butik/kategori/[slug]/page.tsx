@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Package } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { getNavUser } from "@/lib/nav-user";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -63,11 +63,9 @@ export default async function KategoriPage({ params, searchParams }: PageProps) 
 
   const hasActiveFilters = !!(prisMin || prisMax || svarighet || odling || vaxt || lager || (sort && sort !== "nyast"));
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Hämta kategori + alla andra aktiva kategorier + växter kopplade till produkter i denna kategori
-  const [category, allCategories, navUser] = await Promise.all([
+  // Kör auth + kategori-lookup parallellt
+  const [user, category, allCategories] = await Promise.all([
+    getCurrentUser(),
     prisma.shopCategory.findFirst({
       where: { slug, isActive: true },
     }).catch(() => null),
@@ -76,7 +74,6 @@ export default async function KategoriPage({ params, searchParams }: PageProps) 
       orderBy: { sortOrder: "asc" },
       select: { name: true, slug: true, imageUrl: true, _count: { select: { products: { where: { isActive: true } } } } },
     }).catch(() => []),
-    getNavUser(user?.id),
   ]);
 
   if (!category) notFound();
@@ -93,27 +90,6 @@ export default async function KategoriPage({ params, searchParams }: PageProps) 
   if (odling) where.growingType = { contains: odling, mode: "insensitive" };
   if (lager) where.stockQuantity = { gt: 0 };
 
-  // Filter: kopplad växt (via plantLinks)
-  if (vaxt) {
-    const plant = await prisma.plant.findUnique({ where: { slug: vaxt }, select: { id: true } }).catch(() => null);
-    if (plant) {
-      where.plantLinks = { some: { plantId: plant.id } };
-    }
-  }
-
-  // Hämta växter som faktiskt är kopplade till produkter i denna kategori
-  const linkedPlants = await prisma.plant.findMany({
-    where: {
-      productLinks: {
-        some: {
-          product: { categoryId: category.id, isActive: true },
-        },
-      },
-    },
-    select: { id: true, name: true, slug: true },
-    orderBy: { name: "asc" },
-  }).catch(() => []);
-
   // Ordning
   function buildOrderBy(s: string) {
     if (s === "pris-asc") return { price: "asc" as const };
@@ -128,8 +104,29 @@ export default async function KategoriPage({ params, searchParams }: PageProps) 
     category: { select: { name: true, slug: true } },
   } as const;
 
-  const [totalCount, products] = await Promise.all([
+  // Filter: kopplad växt (via plantLinks) — behöver plantId innan vi kan filtrera
+  let plantFilter: { plantId: string } | null = null;
+  if (vaxt) {
+    const plant = await prisma.plant.findUnique({ where: { slug: vaxt }, select: { id: true } }).catch(() => null);
+    if (plant) {
+      where.plantLinks = { some: { plantId: plant.id } };
+      plantFilter = { plantId: plant.id };
+    }
+  }
+  void plantFilter; // används i where ovan
+
+  // Kör linkedPlants, navUser, count och produkter parallellt
+  const [linkedPlants, navUser, totalCount, products] = await Promise.all([
+    prisma.plant.findMany({
+      where: { productLinks: { some: { product: { categoryId: category.id, isActive: true } } } },
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: "asc" },
+    }).catch(() => []),
+
+    getNavUser(user?.id),
+
     prisma.shopProduct.count({ where }).catch(() => 0),
+
     prisma.shopProduct.findMany({
       where,
       orderBy: buildOrderBy(sort),

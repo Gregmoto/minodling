@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import prisma from "./prisma";
 
 // ── Nycklar ─────────────────────────────────────────────────────
@@ -68,7 +69,9 @@ export const SETTING_DEFAULTS: SiteSettings = {
 };
 
 // ── Cached loader ────────────────────────────────────────────────
-export const getSettings = unstable_cache(
+// unstable_cache: persistent cache 300s across requests
+// React.cache: per-request deduplication so generateMetadata + page body share one DB call
+const _getSettings = unstable_cache(
   async (): Promise<SiteSettings> => {
     try {
       const rows = await prisma.adminSetting.findMany();
@@ -105,3 +108,5 @@ export const getSettings = unstable_cache(
   ["site-settings"],
   { tags: ["settings"], revalidate: 300 }
 );
+
+export const getSettings = cache(_getSettings);

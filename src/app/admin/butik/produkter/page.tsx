@@ -25,8 +25,13 @@ export default async function AdminProdukterPage({
     where: params.search
       ? { name: { contains: params.search, mode: "insensitive" } }
       : {},
-    include: { category: { select: { name: true } } },
+    select: {
+      id: true, name: true, slug: true, sku: true,
+      price: true, stockQuantity: true, isActive: true, isFeatured: true, createdAt: true,
+      category: { select: { name: true } },
+    },
     orderBy: { createdAt: "desc" },
+    take: 200,
   }).catch(() => []);
 
   return (

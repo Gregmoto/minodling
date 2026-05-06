@@ -13,7 +13,11 @@ export default async function AdminUsersPage() {
   const users = await prisma.profile.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
-    include: { _count: { select: { posts: true, comments: true } } },
+    select: {
+      id: true, username: true, fullName: true, avatarUrl: true,
+      role: true, points: true, createdAt: true,
+      _count: { select: { posts: true, comments: true } },
+    },
   });
 
   const roleConfig: Record<string, { label: string; variant: "default" | "warning" | "danger" | "success" }> = {

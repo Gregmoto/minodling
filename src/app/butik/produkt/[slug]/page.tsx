@@ -92,10 +92,9 @@ function relationLabel(relationType: string): string {
 export default async function ProduktPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const user = await getCurrentUser();
-  const s = await getSettings();
-
-  const [product, navUser] = await Promise.all([
+  const [user, s, product] = await Promise.all([
+    getCurrentUser(),
+    getSettings(),
     prisma.shopProduct.findFirst({
       where: { slug, isActive: true },
       include: {
@@ -110,60 +109,56 @@ export default async function ProduktPage({ params }: PageProps) {
         },
       },
     }).catch(() => null),
-    getNavUser(user?.id),
   ]);
 
   if (!product) notFound();
 
-  // Reviews
-  const reviews = await prisma.shopProductReview.findMany({
-    where: { productId: product.id, status: "approved" },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true, rating: true, title: true, content: true,
-      imageUrls: true, isVerifiedPurchase: true,
-      adminReply: true, adminRepliedAt: true, createdAt: true,
-      user: { select: { fullName: true, username: true } },
-    },
-  }).catch(() => []);
+  // Kör alla post-produkt-queries parallellt
+  const [reviews, relatedProducts, navUser, profileForReview] = await Promise.all([
+    prisma.shopProductReview.findMany({
+      where: { productId: product.id, status: "approved" },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, rating: true, title: true, content: true,
+        imageUrls: true, isVerifiedPurchase: true,
+        adminReply: true, adminRepliedAt: true, createdAt: true,
+        user: { select: { fullName: true, username: true } },
+      },
+    }).catch(() => []),
+
+    product.categoryId
+      ? prisma.shopProduct.findMany({
+          where: { isActive: true, categoryId: product.categoryId, id: { not: product.id } },
+          orderBy: { isFeatured: "desc" },
+          take: 4,
+          select: {
+            id: true, slug: true, name: true, shortDescription: true,
+            price: true, compareAtPrice: true, imageUrl: true,
+            stockQuantity: true, isFeatured: true, difficultyLevel: true, createdAt: true,
+            category: { select: { name: true, slug: true } },
+          },
+        }).catch(() => [])
+      : Promise.resolve([]),
+
+    getNavUser(user?.id),
+
+    user
+      ? prisma.profile.findUnique({ where: { userId: user.id }, select: { id: true } }).catch(() => null)
+      : Promise.resolve(null),
+  ]);
 
   const totalCount = reviews.length;
   const avgRating = totalCount > 0
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalCount
     : 0;
 
-  // Current user's review
-  let userReview: { id: string; rating: number; title: string | null; content: string | null } | null = null;
-  if (user) {
-    const profile = await prisma.profile
-      .findUnique({ where: { userId: user.id }, select: { id: true } })
-      .catch(() => null);
-    if (profile) {
-      userReview = await prisma.shopProductReview.findUnique({
-        where: { productId_userId: { productId: product.id, userId: profile.id } },
+  // Användarens egen recension (om inloggad)
+  const userReview = profileForReview
+    ? await prisma.shopProductReview.findUnique({
+        where: { productId_userId: { productId: product.id, userId: profileForReview.id } },
         select: { id: true, rating: true, title: true, content: true },
-      }).catch(() => null);
-    }
-  }
-
-  // Relaterade produkter: samma kategori, exkl. denna produkt
-  const relatedProducts = product.categoryId
-    ? await prisma.shopProduct.findMany({
-        where: {
-          isActive: true,
-          categoryId: product.categoryId,
-          id: { not: product.id },
-        },
-        orderBy: { isFeatured: "desc" },
-        take: 4,
-        select: {
-          id: true, slug: true, name: true, shortDescription: true,
-          price: true, compareAtPrice: true, imageUrl: true,
-          stockQuantity: true, isFeatured: true, difficultyLevel: true, createdAt: true,
-          category: { select: { name: true, slug: true } },
-        },
-      }).catch(() => [])
-    : [];
+      }).catch(() => null)
+    : null;
 
   const baseUrl = s.seoCanonical.replace(/\/$/, "");
   const canonicalUrl = `${baseUrl}/butik/produkt/${slug}`;

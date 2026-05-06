@@ -48,7 +48,6 @@ const productSelect = {
 } as const;
 
 export default async function ButikPage() {
-  const user = await getCurrentUser();
   const season = currentSeason();
 
   const [
@@ -61,8 +60,8 @@ export default async function ButikPage() {
     seasonProducts,
     easyProducts,
     popularProductIds,
-    navUser,
     seoRow,
+    user,
   ] = await Promise.all([
     prisma.shopSlide.findMany({
       where: { isActive: true },
@@ -133,11 +132,13 @@ export default async function ButikPage() {
       take: 10,
     }).catch(() => []),
 
-    getNavUser(user?.id),
-
     // SEO-text längst ner (valfri)
     prisma.shopSetting.findUnique({ where: { key: "shop_seo_text" } }).catch(() => null),
+
+    getCurrentUser(),
   ]);
+
+  const navUser = await getNavUser(user?.id);
 
   // Hämta populära produkter baserat på ids
   const popularIds = popularProductIds
@@ -163,17 +164,19 @@ export default async function ButikPage() {
 
   const plantLinkedProductsMap: Record<string, typeof featuredProducts> = {};
   if (plantSectionIds.length > 0) {
-    for (const plantId of plantSectionIds) {
-      const linked = await prisma.shopProduct.findMany({
-        where: {
-          isActive: true,
-          plantLinks: { some: { plantId } },
-        },
-        take: 10,
-        select: productSelect,
-      }).catch(() => []);
-      plantLinkedProductsMap[plantId] = linked;
-    }
+    // Kör alla plant-queries parallellt istället för sekventiellt
+    const results = await Promise.all(
+      plantSectionIds.map((plantId) =>
+        prisma.shopProduct.findMany({
+          where: { isActive: true, plantLinks: { some: { plantId } } },
+          take: 10,
+          select: productSelect,
+        }).catch(() => [])
+      )
+    );
+    plantSectionIds.forEach((plantId, i) => {
+      plantLinkedProductsMap[plantId] = results[i];
+    });
   }
 
   const seoText = seoRow?.value ?? null;

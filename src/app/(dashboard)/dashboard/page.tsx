@@ -22,8 +22,14 @@ export default async function DashboardPage() {
 
   const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
-    include: {
+    select: {
+      id: true, userId: true, username: true, fullName: true,
+      avatarUrl: true, role: true, points: true, experienceLevel: true,
       posts: {
+        select: {
+          id: true, title: true, category: true, createdAt: true,
+          likesCount: true, commentsCount: true,
+        },
         orderBy: { createdAt: "desc" },
         take: 3,
       },
@@ -36,10 +42,10 @@ export default async function DashboardPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const weeklyTasks = await getOrGenerateWeeklyTasks(profile.id);
   const { weekNumber } = getISOWeek(new Date());
 
-  const [upcomingReminders, overdueReminders] = await Promise.all([
+  const [weeklyTasks, upcomingReminders, overdueReminders] = await Promise.all([
+    getOrGenerateWeeklyTasks(profile.id),
     prisma.reminder.findMany({
       where:   { userId: profile.id, isCompleted: false, dueDate: { gte: today, lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) } },
       orderBy: { dueDate: "asc" },
