@@ -12,6 +12,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSlider } from "@/components/shop/HeroSlider";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { FreeShippingBanner } from "@/components/shop/FreeShippingBanner";
 import { NewsletterForm } from "./NewsletterForm";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -160,6 +161,11 @@ export default async function ButikPage() {
             </div>
           </section>
         )}
+
+        {/* ── FRI FRAKT-BANNER ───────────────────────────── */}
+        <div className="container-main pt-6">
+          <FreeShippingBanner />
+        </div>
 
         {/* ── KATEGORIER ─────────────────────────────────── */}
         {categories.length > 0 && (

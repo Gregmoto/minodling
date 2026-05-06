@@ -4,23 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Minus, Plus, Trash2, ShoppingBag, ArrowRight, Package, Tag, X, Check,
+  Minus, Plus, Trash2, ShoppingBag, ArrowRight, Package, Tag, X,
 } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
+import { FreeShippingBanner } from "@/components/shop/FreeShippingBanner";
 import { validateDiscount } from "@/app/butik/actions";
 import { formatPrice } from "@/lib/utils";
 
 export default function VarukorgsPage() {
-  const { items, count, total, removeItem, updateQty } = useCart();
+  const { items, count, total, shipping, shippingCost, freeShippingThreshold, removeItem, updateQty } = useCart();
   const [discountCode, setDiscountCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState<{ code: string; amount: number } | null>(null);
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
 
-  const shipping = total >= 49900 ? 0 : 4900;
   const discountAmount = discountApplied?.amount ?? 0;
   const orderTotal = Math.max(0, total + shipping - discountAmount);
-  const freeShippingLeft = 49900 - total;
 
   async function applyDiscount() {
     if (!discountCode.trim()) return;
@@ -65,21 +64,10 @@ export default function VarukorgsPage() {
             <span className="ml-2 text-base sm:text-lg text-gray-400 font-normal">({count} {count === 1 ? "vara" : "varor"})</span>
           </h1>
 
-          {/* Fri frakt-bar */}
-          {freeShippingLeft > 0 && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-sm text-amber-800">
-              <span>🚚</span>
-              <span>
-                Handla för <strong>{formatPrice(freeShippingLeft)}</strong> till för att få fri frakt!
-              </span>
-            </div>
-          )}
-          {freeShippingLeft <= 0 && (
-            <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2 text-sm text-green-800">
-              <Check className="h-4 w-4 shrink-0" />
-              <span>Du har fri frakt på den här beställningen!</span>
-            </div>
-          )}
+          {/* Fri frakt-banner */}
+          <div className="mb-6">
+            <FreeShippingBanner />
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Produktlista */}

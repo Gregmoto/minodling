@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
@@ -5,14 +6,19 @@ import prisma from "@/lib/prisma";
 export type UserRole = "admin" | "moderator" | "user";
 
 // ── Hämta inloggad Supabase-användare ─────────────────────────
-export async function getCurrentUser() {
+// Wrapped with React cache() for per-request deduplication –
+// multiple server components calling getCurrentUser() in the same
+// request will share a single Supabase auth call.
+export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user ?? null;
-}
+});
 
 // ── Hämta profil + roll från databasen ────────────────────────
-export async function getUserProfile() {
+// Also cached per request – avoids redundant DB lookups when
+// requireAdmin / requireAuth / getUserProfile all called on same page.
+export const getUserProfile = cache(async () => {
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -27,8 +33,8 @@ export async function getUserProfile() {
       role: true,
       points: true,
     },
-  });
-}
+  }).catch(() => null);
+});
 
 // ── Hämta enbart rollen ────────────────────────────────────────
 export async function getUserRole(): Promise<UserRole | null> {

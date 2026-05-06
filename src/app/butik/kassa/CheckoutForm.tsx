@@ -14,7 +14,7 @@ interface Profile {
 }
 
 export function CheckoutForm({ profile }: { profile: Profile }) {
-  const { items, total, clearCart } = useCart();
+  const { items, total, shipping, clearCart } = useCart();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,6 @@ export function CheckoutForm({ profile }: { profile: Profile }) {
   const [discountCode]   = useState(searchParams.get("discount") ?? "");
   const [discountAmount] = useState(parseInt(searchParams.get("discountAmount") ?? "0") || 0);
 
-  const shipping    = total >= 49900 ? 0 : 4900;
   const orderTotal  = Math.max(0, total + shipping - discountAmount);
 
   useEffect(() => {
