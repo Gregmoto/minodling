@@ -15,7 +15,7 @@ interface CartCtx {
   items: CartItem[];
   count: number;
   total: number; // öre
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity">, qty?: number) => void;
   removeItem: (productId: string) => void;
   updateQty: (productId: string, qty: number) => void;
   clearCart: () => void;
@@ -39,17 +39,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (mounted) localStorage.setItem("minodling_cart", JSON.stringify(items));
   }, [items, mounted]);
 
-  const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
+  const addItem = useCallback((item: Omit<CartItem, "quantity">, qty = 1) => {
     setItems(prev => {
       const existing = prev.find(i => i.productId === item.productId);
       if (existing) {
         return prev.map(i =>
           i.productId === item.productId
-            ? { ...i, quantity: Math.min(i.quantity + 1, i.stock) }
+            ? { ...i, quantity: Math.min(i.quantity + qty, i.stock) }
             : i
         );
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, quantity: Math.min(qty, item.stock) }];
     });
   }, []);
 
