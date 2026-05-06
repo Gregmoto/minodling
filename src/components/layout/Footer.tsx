@@ -6,9 +6,10 @@ import { CookieSettingsButton } from "@/components/cookies/CookieSettingsButton"
 const footerLinks = {
   community: [
     { label: "Forum",           href: "/forum" },
+    { label: "Frågor & svar",   href: "/fragor" },
     { label: "Odlingstips",     href: "/odlingstips" },
     { label: "Min odling",      href: "/min-odling" },
-    { label: "Senaste inlägg",  href: "/forum?sort=new" },
+    { label: "Fröbyte",         href: "/frobyte" },
   ],
   information: [
     { label: "Om Minodling",  href: "/om-oss" },

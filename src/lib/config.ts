@@ -19,10 +19,11 @@ export const siteConfig = {
   ],
   /** Sekundära nav-länkar – i "Mer"-dropdown */
   navMore: [
-    { label: "Växtdiagnos",  href: "/vaxtdiagnos" },
-    { label: "Ordlista",     href: "/ordlista" },
-    { label: "Kunskapsbank", href: "/kunskapsbank" },
-    { label: "Utmaningar",   href: "/utmaningar" },
+    { label: "Frågor & svar", href: "/fragor" },
+    { label: "Växtdiagnos",   href: "/vaxtdiagnos" },
+    { label: "Ordlista",      href: "/ordlista" },
+    { label: "Kunskapsbank",  href: "/kunskapsbank" },
+    { label: "Utmaningar",    href: "/utmaningar" },
   ],
   /** Behålls för bakåtkompatibilitet */
   get nav() {
