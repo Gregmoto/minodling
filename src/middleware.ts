@@ -2,7 +2,9 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Kräver inloggning
-const protectedRoutes = ["/dashboard", "/min-odling", "/profil", "/installningar", "/dagbok", "/paminnelser"];
+// OBS: /profil är INTE med – /profil/[username] är publika sidor.
+// Skydd för /profil/[username]/redigera sker i page.tsx-filen direkt.
+const protectedRoutes = ["/dashboard", "/min-odling", "/installningar", "/dagbok", "/paminnelser"];
 // Kräver inloggning – rollkoll sker i layout
 const adminRoutes     = ["/admin"];
 const moderatorRoutes = ["/moderator"];
