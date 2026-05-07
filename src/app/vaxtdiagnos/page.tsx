@@ -117,7 +117,7 @@ export default async function VaxtdiagnosPage({
 
         {/* ── AI-wizard ── */}
         <div className="max-w-3xl mx-auto px-4 py-8">
-          <DiagnosisWizard plants={plants} isMock={isMock} />
+          <DiagnosisWizard plants={plants} isMock={isMock} isLoggedIn={!!user} />
         </div>
 
         {/* ── Community-diagnoser ── */}

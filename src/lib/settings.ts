@@ -16,6 +16,14 @@ export const SETTINGS = {
   SEO_ROBOTS:           "seo_robots",
   SEO_SITEMAP:          "seo_sitemap_enabled",
   SEO_CANONICAL:        "seo_canonical_url",
+  // AI / Plant analysis
+  AI_PROVIDER:              "plant_ai_provider",
+  AI_PLANT_ID_KEY:          "plant_id_api_key",
+  AI_PLANTNET_KEY:          "plantnet_api_key",
+  AI_IDENTIFICATION_ON:     "plant_identification_enabled",
+  AI_DIAGNOSIS_ON:          "plant_diagnosis_enabled",
+  AI_FREE_CHECKS_PER_MONTH: "free_ai_checks_per_month",
+  AI_DISCLAIMER:            "plant_ai_disclaimer_text",
   // Site
   SITE_NAME:            "site_name",
   SITE_FOOTER:          "site_footer_text",

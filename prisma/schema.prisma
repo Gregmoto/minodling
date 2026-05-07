@@ -60,6 +60,7 @@ model Profile {
   loyaltyBalance          ShopLoyaltyBalance?
   plantIdentifications    PlantIdentification[]
   plantHealthChecks       PlantHealthCheck[]
+  aiUsage                 AiUsage[]
 
   @@map("profiles")
 }
@@ -1149,6 +1150,23 @@ model PlantHealthCheckFollowUp {
 
   @@index([healthCheckId])
   @@map("plant_health_check_followups")
+}
+
+model AiUsage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid @map("user_id")
+  featureType String   @map("feature_type") // "identification" | "diagnosis"
+  count       Int      @default(0)
+  month       Int      // 1–12
+  year        Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, featureType, month, year])
+  @@index([userId, featureType])
+  @@map("ai_usage")
 }
 
 model ContactTicket {

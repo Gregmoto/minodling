@@ -7,7 +7,7 @@ import {
   HelpCircle, Leaf, CalendarDays, BookOpen, Library, BookText,
   Megaphone, Star, Flag, Search, Settings, ChevronRight, Menu,
   ShoppingBag, Package, FolderOpen, Receipt, UserCheck, Tag, Mail, Images, ThumbsUp,
-  Inbox, Zap,
+  Inbox, Zap, Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -79,8 +79,9 @@ const groups = [
       { label: "Banners",            href: "/admin/annonser",      icon: Megaphone },
       { label: "Poängsystem",        href: "/admin/poang",         icon: Star },
       { label: "Rapporter",          href: "/admin/rapporter",     icon: Flag },
-      { label: "SEO",                href: "/admin/seo",           icon: Search },
-      { label: "Inställningar",      href: "/admin/installningar", icon: Settings },
+      { label: "SEO",                href: "/admin/seo",                  icon: Search },
+      { label: "Inställningar",      href: "/admin/installningar",        icon: Settings },
+      { label: "AI-växtanalys",      href: "/admin/installningar/ai",     icon: Bot },
     ],
   },
 ];

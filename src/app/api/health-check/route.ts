@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { HEALTH_SYMPTOMS } from "@/lib/plant-health";
+import { getAiSettings } from "@/lib/ai-settings";
+import { checkAiUsage, incrementAiUsage, logAiFailure } from "@/lib/ai-usage";
 
 export const maxDuration = 30;
 
@@ -380,15 +382,25 @@ async function fetchRelatedContent(
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const image    = formData.get("image") as File | null;
-    const symptomsRaw = formData.get("symptoms") as string | null;
-    const plantIdParam = formData.get("plantId") as string | null;
+    const formData     = await req.formData();
+    const image        = formData.get("image") as File | null;
+    const symptomsRaw  = formData.get("symptoms") as string | null;
+    const plantIdParam = formData.get("plantId")  as string | null;
 
     const symptoms: string[] = symptomsRaw ? JSON.parse(symptomsRaw) : [];
 
     if (symptoms.length === 0) {
       return NextResponse.json({ error: "Välj minst ett symptom." }, { status: 400 });
+    }
+
+    // ── AI-inställningar ──────────────────────────────────────────
+    const aiSettings = await getAiSettings();
+
+    if (!aiSettings.diagnosisEnabled) {
+      return NextResponse.json(
+        { error: "Växtdiagnos är för tillfället inaktiverad." },
+        { status: 503 }
+      );
     }
 
     // ── Auth ──────────────────────────────────────────────────────
@@ -404,10 +416,22 @@ export async function POST(req: NextRequest) {
       profileId = profile?.id ?? null;
     }
 
+    // ── Kontrollera gratisgräns (inloggade användare) ─────────────
+    if (profileId && aiSettings.freeChecksPerMonth > 0) {
+      const usage = await checkAiUsage(profileId, "diagnosis", aiSettings.freeChecksPerMonth);
+      if (!usage.allowed) {
+        return NextResponse.json({
+          error:   "limit_reached",
+          message: `Du har nått din gräns på ${usage.limit} diagnoser den här månaden. Uppgradera till premium för fler analyser.`,
+          used:    usage.used,
+          limit:   usage.limit,
+        }, { status: 429 });
+      }
+    }
+
     // ── Bild-upload ───────────────────────────────────────────────
-    let imageUrl  = "";
-    let base64    = "";
-    let provider  = "mock";
+    let imageUrl = "";
+    let base64   = "";
 
     if (image && image.size > 0 && image.size <= 10 * 1024 * 1024) {
       const ext      = image.type === "image/png" ? "png" : "jpg";
@@ -426,18 +450,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── API-nyckel ────────────────────────────────────────────────
-    const plantIdSetting = await prisma.adminSetting.findUnique({
-      where: { key: "plant_id_api_key" }, select: { value: true },
-    }).catch(() => null);
-    const plantIdKey = plantIdSetting?.value?.trim() || null;
-
     // ── Diagnos ───────────────────────────────────────────────────
     let rawResults: Omit<HealthCheckResult, "guides" | "products">[];
+    let provider = "mock";
 
-    if (plantIdKey && base64) {
-      rawResults = await callPlantIdHealth(base64, plantIdKey);
-      provider   = "plant.id";
+    if (aiSettings.provider === "plant.id" && aiSettings.plantIdKey && base64) {
+      try {
+        rawResults = await callPlantIdHealth(base64, aiSettings.plantIdKey);
+        provider   = "plant.id";
+      } catch (err) {
+        await logAiFailure({
+          feature:   "diagnosis",
+          provider:  "plant.id",
+          error:     err instanceof Error ? err.message : String(err),
+          profileId,
+        });
+        // Graceful fallback till mock
+        rawResults = computeMockDiagnosis(symptoms);
+      }
+    } else if (aiSettings.provider === "plantnet" && aiSettings.plantNetKey && base64) {
+      // PlantNet stöder inte Health Assessment – fall back till mock för diagnos
+      rawResults = computeMockDiagnosis(symptoms);
     } else {
       rawResults = computeMockDiagnosis(symptoms);
     }
@@ -445,23 +478,34 @@ export async function POST(req: NextRequest) {
     // ── Relaterat innehåll ────────────────────────────────────────
     const results = await fetchRelatedContent(rawResults, plantIdParam, symptoms);
 
-    // ── Spara ─────────────────────────────────────────────────────
+    // ── Spara i DB + öka räknare ──────────────────────────────────
     if (profileId) {
-      await prisma.plantHealthCheck.create({
-        data: {
-          userId:      profileId,
-          plantId:     plantIdParam ?? undefined,
-          imageUrl:    imageUrl || undefined,
-          symptoms,
-          resultsJson: results as object,
-          apiProvider: provider,
-        },
-      }).catch(() => null);
+      await Promise.all([
+        prisma.plantHealthCheck.create({
+          data: {
+            userId:      profileId,
+            plantId:     plantIdParam ?? undefined,
+            imageUrl:    imageUrl || undefined,
+            symptoms,
+            resultsJson: results as object,
+            apiProvider: provider,
+          },
+        }).catch(() => null),
+        // Öka användningsräknaren om riktig analys gjordes
+        aiSettings.freeChecksPerMonth > 0
+          ? incrementAiUsage(profileId, "diagnosis")
+          : Promise.resolve(),
+      ]);
     }
 
-    return NextResponse.json({ results, provider, isMock: provider === "mock" });
+    return NextResponse.json({
+      results,
+      provider,
+      isMock:      provider === "mock",
+      disclaimer:  aiSettings.disclaimerText,
+    });
   } catch (err) {
-    console.error("health-check error:", err);
+    console.error("[health-check] unexpected error:", err);
     return NextResponse.json({ error: "Något gick fel. Försök igen." }, { status: 500 });
   }
 }
