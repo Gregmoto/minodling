@@ -311,22 +311,22 @@ export default async function HomePage() {
               </div>
 
               {/* ── Illustration-kolumn ── */}
-              <div className="hidden lg:flex shrink-0 w-[420px] items-center justify-center select-none">
-                <svg viewBox="0 0 420 460" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto drop-shadow-sm" aria-hidden="true">
+              <div className="hidden lg:flex shrink-0 w-[400px] items-center justify-center select-none">
+                <svg viewBox="0 0 400 480" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" aria-hidden="true">
                   <defs>
                     <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="4" stdDeviation="7" floodColor="#000" floodOpacity="0.09"/>
+                      <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#000" floodOpacity="0.10"/>
                     </filter>
                     <filter id="ps" x="-15%" y="-10%" width="130%" height="130%">
-                      <feDropShadow dx="0" dy="10" stdDeviation="14" floodColor="#c2410c" floodOpacity="0.22"/>
+                      <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#c2410c" floodOpacity="0.20"/>
                     </filter>
-                    <radialGradient id="bg" cx="50%" cy="48%" r="48%">
+                    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
                       <stop offset="0%" stopColor="#f0fdf4"/>
                       <stop offset="100%" stopColor="#f0fdf4" stopOpacity="0"/>
                     </radialGradient>
                     <linearGradient id="pot" x1="0.2" y1="0" x2="0.8" y2="1">
                       <stop offset="0%" stopColor="#fdba74"/>
-                      <stop offset="40%" stopColor="#f97316"/>
+                      <stop offset="50%" stopColor="#f97316"/>
                       <stop offset="100%" stopColor="#c2410c"/>
                     </linearGradient>
                     <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
@@ -337,199 +337,215 @@ export default async function HomePage() {
                       <stop offset="0%" stopColor="#92400e"/>
                       <stop offset="100%" stopColor="#78350f"/>
                     </linearGradient>
-                    <linearGradient id="ll" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#86efac"/>
-                      <stop offset="100%" stopColor="#15803d"/>
+                    <linearGradient id="leaf" x1="0" y1="1" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#15803d"/>
+                      <stop offset="100%" stopColor="#4ade80"/>
                     </linearGradient>
-                    <linearGradient id="ld" x1="0.2" y1="0" x2="0.8" y2="1">
-                      <stop offset="0%" stopColor="#4ade80"/>
-                      <stop offset="100%" stopColor="#166534"/>
+                    <linearGradient id="leaf2" x1="1" y1="1" x2="0" y2="0">
+                      <stop offset="0%" stopColor="#166534"/>
+                      <stop offset="100%" stopColor="#86efac"/>
                     </linearGradient>
-                    <radialGradient id="tom" cx="32%" cy="28%" r="62%">
+                    <radialGradient id="tom" cx="30%" cy="28%" r="60%">
                       <stop offset="0%" stopColor="#fca5a5"/>
-                      <stop offset="55%" stopColor="#ef4444"/>
+                      <stop offset="50%" stopColor="#ef4444"/>
                       <stop offset="100%" stopColor="#991b1b"/>
                     </radialGradient>
-                    <radialGradient id="tom2" cx="32%" cy="28%" r="62%">
+                    <radialGradient id="tom2" cx="30%" cy="28%" r="60%">
                       <stop offset="0%" stopColor="#fecaca"/>
-                      <stop offset="55%" stopColor="#f87171"/>
+                      <stop offset="50%" stopColor="#f87171"/>
                       <stop offset="100%" stopColor="#b91c1c"/>
                     </radialGradient>
                     <linearGradient id="stk" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#a16207"/>
+                      <stop offset="0%" stopColor="#92400e"/>
                       <stop offset="100%" stopColor="#d97706"/>
                     </linearGradient>
-                    <linearGradient id="wcan" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#7dd3fc"/>
-                      <stop offset="100%" stopColor="#0284c7"/>
+                    <linearGradient id="stem" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#15803d"/>
+                      <stop offset="100%" stopColor="#22c55e"/>
                     </linearGradient>
                   </defs>
 
                   {/* Bakgrundsglow */}
-                  <circle cx="210" cy="230" r="200" fill="url(#bg)"/>
+                  <circle cx="200" cy="240" r="210" fill="url(#bg)"/>
 
-                  {/* ── Bambu-stöd ── */}
-                  <rect x="217" y="168" width="7" height="222" rx="3.5" fill="url(#stk)" opacity="0.65"/>
-                  <rect x="216" y="210" width="9" height="3" rx="1.5" fill="#92400e" opacity="0.45"/>
-                  <rect x="216" y="255" width="9" height="3" rx="1.5" fill="#92400e" opacity="0.45"/>
-                  <rect x="216" y="300" width="9" height="3" rx="1.5" fill="#92400e" opacity="0.45"/>
+                  {/* ══════════════════════════════════════════
+                      KRUKA
+                  ══════════════════════════════════════════ */}
+                  <ellipse cx="200" cy="462" rx="80" ry="10" fill="#000" opacity="0.07"/>
+                  <path d="M140 412 L156 454 H244 L260 412 Z" fill="url(#pot)" filter="url(#ps)"/>
+                  <rect x="128" y="400" width="144" height="18" rx="9" fill="url(#rim)"/>
+                  <path d="M138 406 Q158 402 180 404" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.35"/>
+                  <ellipse cx="200" cy="402" rx="62" ry="9" fill="url(#soil)"/>
+                  <ellipse cx="188" cy="401" rx="16" ry="4" fill="#78350f" opacity="0.3"/>
 
-                  {/* ── Huvudstam ── */}
-                  <path d="M221 385 C219 345 216 295 220 250 C224 205 218 182 221 168" stroke="#15803d" strokeWidth="7.5" strokeLinecap="round"/>
+                  {/* ══════════════════════════════════════════
+                      BAMBU-STÖD (vertikal, mitten)
+                  ══════════════════════════════════════════ */}
+                  <rect x="196" y="60" width="8" height="342" rx="4" fill="url(#stk)" opacity="0.6"/>
+                  {/* Noder på bambu */}
+                  <rect x="195" y="130" width="10" height="4" rx="2" fill="#92400e" opacity="0.5"/>
+                  <rect x="195" y="200" width="10" height="4" rx="2" fill="#92400e" opacity="0.5"/>
+                  <rect x="195" y="270" width="10" height="4" rx="2" fill="#92400e" opacity="0.5"/>
+                  <rect x="195" y="340" width="10" height="4" rx="2" fill="#92400e" opacity="0.5"/>
 
-                  {/* ═══ GRENAR + BLAD ═══ */}
+                  {/* ══════════════════════════════════════════
+                      HUVUD-STAM (växer uppåt från krukan)
+                  ══════════════════════════════════════════ */}
+                  <path d="M200 400 C198 370 200 330 200 290 C200 250 198 210 200 170 C202 130 200 95 200 70"
+                    stroke="url(#stem)" strokeWidth="8" strokeLinecap="round"/>
 
-                  {/* Vänster gren (övre) */}
-                  <path d="M221 205 C204 200 178 191 154 178" stroke="#16a34a" strokeWidth="5" strokeLinecap="round"/>
-                  {/* Bladgrupp vänster övre */}
-                  <path d="M154 178 C143 165 142 148 156 145 C170 142 176 161 167 172 C162 178 154 178 154 178Z" fill="url(#ll)"/>
-                  <path d="M154 178 C148 165 153 153 160 149" stroke="#15803d" strokeWidth="0.8" opacity="0.4"/>
-                  <path d="M170 183 C159 170 159 153 173 150 C187 147 192 166 183 177 C178 183 170 183 170Z" fill="url(#ld)"/>
+                  {/* ══════════════════════════════════════════
+                      TILLVÄXT-SPETS (topp)
+                  ══════════════════════════════════════════ */}
+                  {/* Ung knopp */}
+                  <path d="M200 70 C198 55 195 45 200 38 C205 45 202 55 200 70Z" fill="#4ade80" opacity="0.9"/>
+                  {/* Unga blad vid spets */}
+                  <path d="M200 62 C192 54 182 50 178 56 C176 62 184 68 192 66Z" fill="#86efac"/>
+                  <path d="M200 62 C208 54 218 50 222 56 C224 62 216 68 208 66Z" fill="#86efac"/>
 
-                  {/* Höger gren (övre) */}
-                  <path d="M221 228 C238 221 262 212 283 202" stroke="#16a34a" strokeWidth="4.5" strokeLinecap="round"/>
-                  <path d="M283 202 C292 190 294 173 281 169 C268 165 261 183 270 194 C275 200 283 202 283Z" fill="url(#ld)"/>
-                  <path d="M268 205 C277 193 278 176 265 172 C252 168 245 186 254 197 C259 203 268 205 268Z" fill="url(#ll)"/>
+                  {/* ══════════════════════════════════════════
+                      NIVÅ 1 — TOPP (y≈110)
+                  ══════════════════════════════════════════ */}
+                  {/* Vänster gren */}
+                  <path d="M200 115 C185 112 168 108 148 102" stroke="#16a34a" strokeWidth="5" strokeLinecap="round"/>
+                  {/* Blad vänster */}
+                  <path d="M148 102 C134 92 130 76 144 72 C158 68 166 84 158 96 C154 102 148 102 148 102Z" fill="url(#leaf)"/>
+                  <path d="M148 102 C142 90 145 78 152 74" stroke="#15803d" strokeWidth="1" opacity="0.4"/>
+                  <path d="M163 106 C149 96 146 80 160 76 C174 72 180 88 173 100 C169 106 163 106 163Z" fill="url(#leaf2)"/>
+                  {/* Höger gren */}
+                  <path d="M200 115 C215 112 232 108 252 102" stroke="#16a34a" strokeWidth="5" strokeLinecap="round"/>
+                  <path d="M252 102 C266 92 270 76 256 72 C242 68 234 84 242 96 C246 102 252 102 252Z" fill="url(#leaf2)"/>
+                  <path d="M237 106 C251 96 254 80 240 76 C226 72 220 88 227 100 C231 106 237 106 237Z" fill="url(#leaf)"/>
+                  {/* Tomater nivå 1 — hänger under grenarna */}
+                  <line x1="152" y1="102" x2="148" y2="116" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="148" cy="128" r="13" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M141 123 C143 118 146 117 148 120 C150 117 153 118 155 123" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="143" cy="123" r="3.5" fill="white" opacity="0.2"/>
+                  <line x1="248" y1="102" x2="252" y2="116" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="252" cy="128" r="12" fill="url(#tom2)" filter="url(#sh)"/>
+                  <path d="M246 123 C248 119 250 118 252 121 C254 118 256 119 258 123" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="247" cy="123" r="3" fill="white" opacity="0.2"/>
+                  {/* Liten grön tomat */}
+                  <line x1="163" y1="106" x2="166" y2="118" stroke="#15803d" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="166" cy="126" r="8" fill="#4ade80"/>
+                  <path d="M162 122 C164 119 166 118 166 121 C168 118 170 119 170 122" stroke="#15803d" strokeWidth="1" fill="none" strokeLinecap="round"/>
 
-                  {/* Vänster gren (mitten) */}
-                  <path d="M221 263 C205 256 184 247 166 240" stroke="#16a34a" strokeWidth="4" strokeLinecap="round"/>
-                  <path d="M166 240 C155 228 155 211 168 208 C181 205 187 223 178 234 C173 240 166 240 166Z" fill="url(#ll)"/>
-                  <path d="M181 243 C170 231 170 214 183 211 C196 208 201 226 192 237 C187 243 181 243 181Z" fill="url(#ld)"/>
+                  {/* ══════════════════════════════════════════
+                      NIVÅ 2 — ÖVRE MITTEN (y≈185)
+                  ══════════════════════════════════════════ */}
+                  <path d="M200 188 C183 184 164 178 142 170" stroke="#16a34a" strokeWidth="4.5" strokeLinecap="round"/>
+                  <path d="M142 170 C128 160 124 144 138 140 C152 136 160 152 152 164 C148 170 142 170 142 170Z" fill="url(#leaf)"/>
+                  <path d="M158 174 C144 164 141 148 155 144 C169 140 175 156 168 168 C164 174 158 174 158Z" fill="url(#leaf2)"/>
+                  <path d="M200 188 C217 184 236 178 258 170" stroke="#16a34a" strokeWidth="4.5" strokeLinecap="round"/>
+                  <path d="M258 170 C272 160 276 144 262 140 C248 136 240 152 248 164 C252 170 258 170 258Z" fill="url(#leaf2)"/>
+                  <path d="M242 174 C256 164 259 148 245 144 C231 140 225 156 232 168 C236 174 242 174 242Z" fill="url(#leaf)"/>
+                  {/* Tomater nivå 2 */}
+                  <line x1="148" y1="170" x2="144" y2="185" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="138" cy="196" r="14" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M131 191 C133 186 136 185 138 188 C140 185 143 186 145 191" stroke="#15803d" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  <circle cx="132" cy="191" r="4" fill="white" opacity="0.2"/>
+                  <line x1="138" y1="170" x2="130" y2="185" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="126" cy="195" r="10" fill="url(#tom2)"/>
+                  <path d="M121 191 C123 188 125 187 126 190 C128 187 130 188 131 191" stroke="#15803d" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                  <line x1="252" y1="170" x2="256" y2="185" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="262" cy="196" r="13" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M256 191 C258 186 260 185 262 188 C264 185 266 186 268 191" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="257" cy="191" r="3.5" fill="white" opacity="0.2"/>
+                  {/* Liten grön */}
+                  <line x1="258" y1="170" x2="272" y2="183" stroke="#15803d" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="276" cy="191" r="8" fill="#86efac" opacity="0.9"/>
 
-                  {/* Höger gren (mitten) */}
-                  <path d="M221 282 C240 275 262 269 280 263" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round"/>
-                  <path d="M280 263 C290 252 291 236 278 233 C265 230 258 247 268 258 C273 264 280 263 280Z" fill="url(#ld)"/>
+                  {/* ══════════════════════════════════════════
+                      NIVÅ 3 — NEDRE MITTEN (y≈258)
+                  ══════════════════════════════════════════ */}
+                  <path d="M200 260 C182 255 162 248 140 240" stroke="#16a34a" strokeWidth="4" strokeLinecap="round"/>
+                  <path d="M140 240 C126 230 122 214 136 210 C150 206 158 222 150 234 C146 240 140 240 140Z" fill="url(#leaf2)"/>
+                  <path d="M156 244 C142 234 139 218 153 214 C167 210 173 226 166 238 C162 244 156 244 156Z" fill="url(#leaf)"/>
+                  <path d="M200 260 C218 255 238 248 260 240" stroke="#16a34a" strokeWidth="4" strokeLinecap="round"/>
+                  <path d="M260 240 C274 230 278 214 264 210 C250 206 242 222 250 234 C254 240 260 240 260Z" fill="url(#leaf)"/>
+                  <path d="M244 244 C258 234 261 218 247 214 C233 210 227 226 234 238 C238 244 244 244 244Z" fill="url(#leaf2)"/>
+                  {/* Tomater nivå 3 */}
+                  <line x1="146" y1="240" x2="140" y2="256" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="136" cy="268" r="12" fill="url(#tom2)" filter="url(#sh)"/>
+                  <path d="M130 263 C132 259 134 258 136 261 C138 258 140 259 142 263" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="131" cy="263" r="3" fill="white" opacity="0.2"/>
+                  <line x1="254" y1="240" x2="260" y2="256" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="264" cy="268" r="12" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M258 263 C260 259 262 258 264 261 C266 258 268 259 270 263" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="259" cy="263" r="3" fill="white" opacity="0.2"/>
+                  {/* Extra klase vänster */}
+                  <line x1="136" y1="240" x2="124" y2="255" stroke="#15803d" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="120" cy="264" r="9" fill="url(#tom2)"/>
+                  <path d="M115 260 C117 257 119 256 120 259 C122 256 124 257 125 260" stroke="#15803d" strokeWidth="1" fill="none" strokeLinecap="round"/>
 
-                  {/* Vänster gren (nedre) */}
-                  <path d="M221 320 C207 313 190 306 174 300" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round"/>
-                  <path d="M174 300 C163 288 163 271 176 268 C189 265 195 283 185 294 C180 300 174 300 174Z" fill="url(#ll)"/>
+                  {/* ══════════════════════════════════════════
+                      NIVÅ 4 — NEDRE (y≈330)
+                  ══════════════════════════════════════════ */}
+                  <path d="M200 332 C185 327 168 320 150 314" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round"/>
+                  <path d="M150 314 C138 304 135 290 148 286 C161 282 168 297 161 308 C157 314 150 314 150Z" fill="url(#leaf)"/>
+                  <path d="M165 317 C153 307 151 293 164 289 C177 285 183 300 176 311 C172 317 165 317 165Z" fill="url(#leaf2)"/>
+                  <path d="M200 332 C215 327 232 320 250 314" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round"/>
+                  <path d="M250 314 C262 304 265 290 252 286 C239 282 232 297 239 308 C243 314 250 314 250Z" fill="url(#leaf2)"/>
+                  <path d="M235 317 C247 307 249 293 236 289 C223 285 217 300 224 311 C228 317 235 317 235Z" fill="url(#leaf)"/>
+                  {/* Tomater nivå 4 — lite större för tyngd i nedre */}
+                  <line x1="156" y1="314" x2="150" y2="330" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="146" cy="342" r="13" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M139 337 C141 332 144 331 146 334 C148 331 151 332 153 337" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="141" cy="337" r="3.5" fill="white" opacity="0.2"/>
+                  <line x1="244" y1="314" x2="250" y2="330" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="254" cy="342" r="12" fill="url(#tom2)" filter="url(#sh)"/>
+                  <path d="M248 337 C250 333 252 332 254 335 C256 332 258 333 260 337" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="249" cy="337" r="3" fill="white" opacity="0.2"/>
+                  {/* Gröna ejmogna */}
+                  <line x1="146" y1="314" x2="134" y2="328" stroke="#15803d" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="130" cy="336" r="9" fill="#4ade80" opacity="0.85"/>
+                  <path d="M126 332 C128 329 130 328 130 331 C132 328 134 329 134 332" stroke="#15803d" strokeWidth="1" fill="none" strokeLinecap="round"/>
+                  <line x1="254" y1="314" x2="266" y2="328" stroke="#15803d" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="270" cy="336" r="8" fill="#86efac" opacity="0.85"/>
 
-                  {/* Höger gren (nedre) */}
-                  <path d="M221 334 C238 327 256 322 272 316" stroke="#16a34a" strokeWidth="3" strokeLinecap="round"/>
-                  <path d="M272 316 C282 305 283 289 270 286 C257 283 250 300 260 311 C265 317 272 316 272Z" fill="url(#ld)"/>
+                  {/* ══════════════════════════════════════════
+                      FLOATING CARDS
+                  ══════════════════════════════════════════ */}
+                  {/* AI-identifiering card */}
+                  <rect x="276" y="68" width="118" height="66" rx="16" fill="white" filter="url(#sh)"/>
+                  <rect x="276" y="68" width="118" height="66" rx="16" stroke="#f0fdf4" strokeWidth="1.5"/>
+                  <circle cx="298" cy="90" r="14" fill="#dcfce7"/>
+                  <text x="292" y="96" fontSize="13" fontFamily="system-ui">🌿</text>
+                  <text x="318" y="86" fontSize="9.5" fontWeight="700" fill="#111827" fontFamily="system-ui, sans-serif">AI-identifiering</text>
+                  <text x="318" y="99" fontSize="8" fill="#6b7280" fontFamily="system-ui, sans-serif">Foto → Växtnamn</text>
+                  <rect x="281" y="111" width="62" height="14" rx="7" fill="#dcfce7"/>
+                  <text x="288" y="121" fontSize="7.5" fontWeight="600" fill="#16a34a" fontFamily="system-ui, sans-serif">Plant.id · AI ✓</text>
 
-                  {/* ═══ TOMATER ═══ */}
+                  {/* Växtdiagnos card */}
+                  <rect x="6" y="160" width="116" height="62" rx="16" fill="white" filter="url(#sh)"/>
+                  <rect x="6" y="160" width="116" height="62" rx="16" stroke="#fff7ed" strokeWidth="1.5"/>
+                  <circle cx="28" cy="181" r="13" fill="#fff7ed"/>
+                  <text x="22" y="187" fontSize="13" fontFamily="system-ui">🔍</text>
+                  <text x="48" y="177" fontSize="9.5" fontWeight="700" fill="#111827" fontFamily="system-ui, sans-serif">Växtdiagnos</text>
+                  <text x="48" y="190" fontSize="8" fill="#6b7280" fontFamily="system-ui, sans-serif">Symptom → Åtgärd</text>
+                  <rect x="12" y="204" width="52" height="12" rx="6" fill="#fff7ed"/>
+                  <text x="17" y="213" fontSize="7.5" fontWeight="600" fill="#ea580c" fontFamily="system-ui, sans-serif">Gratis · Snabbt</text>
 
-                  {/* Tomat-klase 1 — vänster övre (2 röda + 1 grön) */}
-                  <path d="M165 172 C167 160 165 155 163 151" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
-                  <path d="M157 168 C155 156 153 152 151 148" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
-                  {/* Stor röd */}
-                  <circle cx="163" cy="144" r="14" fill="url(#tom)" filter="url(#sh)"/>
-                  <path d="M156 138 C158 133 161 131 163 135 C165 131 168 133 170 138" stroke="#15803d" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                  <circle cx="157" cy="139" r="4" fill="white" opacity="0.18"/>
-                  {/* Mellanstor röd */}
-                  <circle cx="149" cy="155" r="11" fill="url(#tom2)" filter="url(#sh)"/>
-                  <path d="M143 150 C145 147 147 145 149 148 C151 145 153 147 155 150" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                  <circle cx="144" cy="150" r="2.8" fill="white" opacity="0.18"/>
-                  {/* Liten grön (omogen) */}
-                  <circle cx="175" cy="163" r="8.5" fill="#4ade80"/>
-                  <path d="M171 159 C173 156 175 155 175 158 C177 155 179 156 179 159" stroke="#15803d" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                  {/* Tomat-badge */}
+                  <rect x="278" y="310" width="112" height="38" rx="19" fill="white" filter="url(#sh)"/>
+                  <circle cx="300" cy="329" r="12" fill="#dcfce7"/>
+                  <text x="294" y="334" fontSize="11" fontFamily="system-ui">✓</text>
+                  <text x="318" y="333" fontSize="9" fontWeight="600" fill="#15803d" fontFamily="system-ui, sans-serif">Tomat · 94%</text>
 
-                  {/* Tomat-klase 2 — höger övre */}
-                  <path d="M275 196 C277 184 275 179 273 174" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
-                  <circle cx="273" cy="167" r="13" fill="url(#tom)" filter="url(#sh)"/>
-                  <path d="M267 162 C269 157 271 156 273 159 C275 156 277 157 279 162" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                  <circle cx="268" cy="162" r="3.2" fill="white" opacity="0.18"/>
-                  {/* Liten bredvid */}
-                  <circle cx="286" cy="182" r="9" fill="url(#tom2)"/>
-                  <path d="M282 178 C284 175 286 174 286 177 C288 174 290 175 290 178" stroke="#15803d" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-
-                  {/* Tomat-klase 3 — vänster mitten */}
-                  <path d="M178 235 C180 224 178 219 176 215" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
-                  <circle cx="176" cy="208" r="12" fill="url(#tom2)" filter="url(#sh)"/>
-                  <path d="M170 203 C172 199 174 198 176 201 C178 198 180 199 182 203" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                  <circle cx="171" cy="203" r="3" fill="white" opacity="0.18"/>
-
-                  {/* Tomat-klase 4 — höger mitten */}
-                  <path d="M272 258 C274 248 272 244 270 240" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
-                  <circle cx="270" cy="233" r="11" fill="url(#tom)" filter="url(#sh)"/>
-                  <path d="M265 228 C267 225 269 224 270 227 C272 224 274 225 275 228" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                  <circle cx="265" cy="228" r="2.8" fill="white" opacity="0.18"/>
-                  {/* Omogen grön vid sidan */}
-                  <circle cx="258" cy="272" r="7.5" fill="#86efac" opacity="0.9"/>
-
-                  {/* Tomat-klase 5 — vänster nedre */}
-                  <path d="M184 295 C182 286 180 282 178 278" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
-                  <circle cx="178" cy="271" r="10" fill="url(#tom2)" filter="url(#sh)"/>
-                  <path d="M173 267 C175 264 177 263 178 266 C180 263 182 264 183 267" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                  <circle cx="174" cy="267" r="2.5" fill="white" opacity="0.18"/>
-
-                  {/* ── Kruka ── */}
-                  <ellipse cx="221" cy="412" rx="88" ry="12" fill="#000" opacity="0.07"/>
-                  <path d="M155 370 L172 406 H270 L287 370 Z" fill="url(#pot)" filter="url(#ps)"/>
-                  {/* Textur-linjer */}
-                  <path d="M160 378 L170 400" stroke="#c2410c" strokeWidth="1" opacity="0.25" strokeLinecap="round"/>
-                  <path d="M167 375 L178 400" stroke="#c2410c" strokeWidth="1" opacity="0.15" strokeLinecap="round"/>
-                  {/* Kant */}
-                  <rect x="142" y="356" width="158" height="20" rx="10" fill="url(#rim)"/>
-                  <path d="M152 362 Q172 357 195 359" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.38"/>
-                  {/* Jord */}
-                  <ellipse cx="221" cy="358" rx="70" ry="10" fill="url(#soil)"/>
-                  <ellipse cx="206" cy="357" rx="18" ry="5" fill="#78350f" opacity="0.35"/>
-                  <ellipse cx="238" cy="359" rx="12" ry="3.5" fill="#92400e" opacity="0.25"/>
-
-                  {/* ── Vattenkanna (höger nedre) ── */}
-                  <ellipse cx="348" cy="396" rx="26" ry="5" fill="#000" opacity="0.06"/>
-                  {/* Kanna-kropp */}
-                  <rect x="322" y="355" width="52" height="38" rx="10" fill="url(#wcan)"/>
-                  <rect x="322" y="355" width="52" height="38" rx="10" stroke="#0369a1" strokeWidth="1" opacity="0.4"/>
-                  {/* Handtag */}
-                  <path d="M374 362 C390 362 390 386 374 386" stroke="#0369a1" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                  {/* Pip */}
-                  <path d="M322 365 C310 360 300 355 292 348" stroke="#0284c7" strokeWidth="5" strokeLinecap="round"/>
-                  <ellipse cx="291" cy="347" rx="5" ry="3" fill="#7dd3fc" transform="rotate(-20 291 347)"/>
-                  {/* Glans */}
-                  <path d="M328 360 Q338 357 348 359" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
-                  {/* Vattendroppar */}
-                  <circle cx="280" cy="345" r="2.5" fill="#7dd3fc" opacity="0.8"/>
-                  <circle cx="274" cy="352" r="2" fill="#7dd3fc" opacity="0.6"/>
-                  <circle cx="270" cy="342" r="1.5" fill="#7dd3fc" opacity="0.5"/>
-
-                  {/* ── Floating card: AI-identifiering ── */}
-                  <rect x="274" y="96" width="136" height="72" rx="18" fill="white" filter="url(#sh)"/>
-                  <rect x="274" y="96" width="136" height="72" rx="18" stroke="#f0fdf4" strokeWidth="1.5"/>
-                  <circle cx="298" cy="119" r="15" fill="#dcfce7"/>
-                  <text x="291" y="125" fontSize="14" fontFamily="system-ui">🌿</text>
-                  <text x="320" y="115" fontSize="10.5" fontWeight="700" fill="#111827" fontFamily="system-ui, sans-serif">AI-identifiering</text>
-                  <text x="320" y="129" fontSize="8.5" fill="#6b7280" fontFamily="system-ui, sans-serif">Foto → Växtnamn</text>
-                  <rect x="282" y="145" width="68" height="15" rx="7.5" fill="#dcfce7"/>
-                  <text x="289" y="156" fontSize="8" fontWeight="600" fill="#16a34a" fontFamily="system-ui, sans-serif">Plant.id · AI ✓</text>
-
-                  {/* ── Floating card: Växtdiagnos ── */}
-                  <rect x="6" y="176" width="128" height="68" rx="18" fill="white" filter="url(#sh)"/>
-                  <rect x="6" y="176" width="128" height="68" rx="18" stroke="#fff7ed" strokeWidth="1.5"/>
-                  <circle cx="30" cy="198" r="15" fill="#fff7ed"/>
-                  <text x="23" y="204" fontSize="14" fontFamily="system-ui">🔍</text>
-                  <text x="52" y="194" fontSize="10.5" fontWeight="700" fill="#111827" fontFamily="system-ui, sans-serif">Växtdiagnos</text>
-                  <text x="52" y="208" fontSize="8.5" fill="#6b7280" fontFamily="system-ui, sans-serif">Symptom → Åtgärd</text>
-                  <rect x="13" y="224" width="58" height="13" rx="6.5" fill="#fff7ed"/>
-                  <text x="19" y="234" fontSize="8" fontWeight="600" fill="#ea580c" fontFamily="system-ui, sans-serif">Gratis · Snabbt</text>
-
-                  {/* ── Badge: Identifierad med % ── */}
-                  <rect x="18" y="308" width="124" height="42" rx="21" fill="white" filter="url(#sh)"/>
-                  <circle cx="44" cy="329" r="13" fill="#dcfce7"/>
-                  <text x="37" y="334" fontSize="13" fontFamily="system-ui">✓</text>
-                  <text x="63" y="333" fontSize="10" fontWeight="600" fill="#15803d" fontFamily="system-ui, sans-serif">Tomat · 94%</text>
-
-                  {/* ── Dekorativa prickar ── */}
-                  <circle cx="374" cy="178" r="6.5" fill="#fde68a" opacity="0.75"/>
-                  <circle cx="388" cy="204" r="4" fill="#bbf7d0" opacity="0.8"/>
-                  <circle cx="360" cy="210" r="4.5" fill="#fca5a5" opacity="0.6"/>
-                  <circle cx="30" cy="130" r="5" fill="#bbf7d0" opacity="0.7"/>
-                  <circle cx="12" cy="155" r="3.5" fill="#fde68a" opacity="0.65"/>
-                  <circle cx="50" cy="148" r="4" fill="#c7d2fe" opacity="0.65"/>
-                  <circle cx="210" cy="46" r="5.5" fill="#bbf7d0" opacity="0.5"/>
-                  <circle cx="232" cy="33" r="3.5" fill="#fde68a" opacity="0.55"/>
-                  <circle cx="188" cy="38" r="4" fill="#fca5a5" opacity="0.45"/>
-                  <circle cx="380" cy="280" r="3.5" fill="#c7d2fe" opacity="0.55"/>
-                  <circle cx="20" cy="390" r="3" fill="#fde68a" opacity="0.4"/>
-
-                  {/* ── Bi (dekorativ) ── */}
-                  <ellipse cx="310" cy="260" rx="9" ry="5.5" fill="#fbbf24" opacity="0.9"/>
-                  <line x1="307" y1="256" x2="307" y2="264" stroke="#92400e" strokeWidth="1.5" opacity="0.45"/>
-                  <line x1="312" y1="256" x2="312" y2="264" stroke="#92400e" strokeWidth="1.5" opacity="0.45"/>
-                  <ellipse cx="305" cy="254" rx="5.5" ry="3" fill="white" opacity="0.55" transform="rotate(-25 305 254)"/>
-                  <ellipse cx="316" cy="254" rx="5.5" ry="3" fill="white" opacity="0.55" transform="rotate(25 316 254)"/>
+                  {/* ══════════════════════════════════════════
+                      DEKORATIVA PRICKAR
+                  ══════════════════════════════════════════ */}
+                  <circle cx="370" cy="150" r="6" fill="#fde68a" opacity="0.7"/>
+                  <circle cx="383" cy="174" r="3.5" fill="#bbf7d0" opacity="0.8"/>
+                  <circle cx="358" cy="180" r="4" fill="#fca5a5" opacity="0.6"/>
+                  <circle cx="26" cy="110" r="5" fill="#bbf7d0" opacity="0.7"/>
+                  <circle cx="10" cy="132" r="3" fill="#fde68a" opacity="0.65"/>
+                  <circle cx="46" cy="128" r="3.5" fill="#c7d2fe" opacity="0.6"/>
+                  <circle cx="200" cy="22" r="5" fill="#bbf7d0" opacity="0.5"/>
+                  <circle cx="220" cy="10" r="3" fill="#fde68a" opacity="0.5"/>
+                  <circle cx="180" cy="16" r="3.5" fill="#fca5a5" opacity="0.45"/>
+                  <circle cx="375" cy="260" r="3.5" fill="#c7d2fe" opacity="0.5"/>
+                  <circle cx="22" cy="380" r="3" fill="#fde68a" opacity="0.4"/>
                 </svg>
               </div>
 

@@ -94,10 +94,7 @@ export default async function VaxtdiagnosPage({
         <div className="bg-white border-b border-gray-100">
           <div className="max-w-3xl mx-auto px-4 py-10 sm:py-14">
             <Breadcrumbs
-              items={[
-                { name: "Hem", href: "/" },
-                { name: "Växtdiagnos", href: "/vaxtdiagnos" },
-              ]}
+              items={[{ name: "Växtdiagnos", href: "/vaxtdiagnos" }]}
             />
             <div className="mt-6 flex items-center gap-4">
               <div className="h-14 w-14 rounded-2xl bg-green-100 flex items-center justify-center shrink-0">
