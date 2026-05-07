@@ -439,6 +439,9 @@ export async function POST(req: NextRequest) {
       const filename = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const buffer   = Buffer.from(await image.arrayBuffer());
 
+      // base64 sätts alltid – behövs för AI-anropet oavsett om uppladdningen lyckas
+      base64 = `data:${image.type};base64,${buffer.toString("base64")}`;
+
       const { error: uploadError } = await supabase.storage
         .from("plant-health-checks")
         .upload(filename, buffer, { contentType: image.type, upsert: false });
@@ -446,7 +449,6 @@ export async function POST(req: NextRequest) {
       if (!uploadError) {
         const { data } = supabase.storage.from("plant-health-checks").getPublicUrl(filename);
         imageUrl = data.publicUrl;
-        base64   = `data:${image.type};base64,${buffer.toString("base64")}`;
       }
     }
 
