@@ -5,6 +5,8 @@ import { Leaf, History, ExternalLink, Sprout } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getNavUser } from "@/lib/nav-user";
+import { getAiSettings } from "@/lib/ai-settings";
+import { checkAiUsage } from "@/lib/ai-usage";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -49,8 +51,8 @@ async function getRecentIdentifications(profileId: string) {
 export default async function VaxtidentifieringPage() {
   const user = await getCurrentUser();
 
-  // Hämta profil + isMock + navUser parallellt
-  const [profile, isMock, navUser] = await Promise.all([
+  // Hämta profil + isMock + navUser + AI-inställningar parallellt
+  const [profile, isMock, navUser, aiSettings] = await Promise.all([
     user
       ? prisma.profile.findUnique({
           where:  { userId: user.id },
@@ -59,7 +61,13 @@ export default async function VaxtidentifieringPage() {
       : null,
     getIsMock(),
     getNavUser(user?.id),
+    getAiSettings(),
   ]);
+
+  // Nuvarande användning den här månaden
+  const usageInfo = profile
+    ? await checkAiUsage(profile.id, "identification", aiSettings.freeChecksPerMonth)
+    : null;
 
   // Historik bara om inloggad
   const history = profile ? await getRecentIdentifications(profile.id) : [];
@@ -98,7 +106,12 @@ export default async function VaxtidentifieringPage() {
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-10">
 
           {/* Identifieringsverktyget */}
-          <PlantIdentifier isMock={isMock} />
+          <PlantIdentifier
+            isMock={isMock}
+            isLoggedIn={!!profile}
+            usedThisMonth={usageInfo?.used ?? 0}
+            limit={aiSettings.freeChecksPerMonth}
+          />
 
           {/* ── Tips ── */}
           <div className="rounded-3xl border border-sage-100 bg-sage-50/50 p-6">
@@ -177,20 +190,6 @@ export default async function VaxtidentifieringPage() {
             </section>
           )}
 
-          {/* Uppmana till inloggning om ej inloggad */}
-          {!user && (
-            <div className="rounded-3xl border border-green-100 bg-green-50/50 p-6 text-center space-y-2">
-              <p className="text-sm text-gray-600 font-medium">
-                Logga in för att spara din identifieringshistorik
-              </p>
-              <Link
-                href="/auth/login?redirect=/vaxtidentifiering"
-                className="inline-block mt-1 px-5 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
-              >
-                Logga in
-              </Link>
-            </div>
-          )}
         </div>
       </main>
 

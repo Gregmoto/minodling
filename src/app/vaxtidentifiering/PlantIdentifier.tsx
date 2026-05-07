@@ -7,12 +7,15 @@ import {
   Upload, Camera, Leaf, Loader2, AlertCircle,
   CheckCircle2, ExternalLink, RefreshCw, X, Sprout,
   Droplets, Sun, Shovel, Calendar, BookOpen,
-  ShoppingBag, ArrowRight, MessageCircle,
+  ShoppingBag, ArrowRight, MessageCircle, LogIn, Lock,
 } from "lucide-react";
 import type { IdentificationResult } from "@/app/api/identify-plant/route";
 
 interface Props {
-  isMock: boolean;
+  isMock:        boolean;
+  isLoggedIn:    boolean;
+  usedThisMonth: number;
+  limit:         number;
 }
 
 // ── Hjälpfunktion: formatera odlingsperiod ────────────────────────
@@ -286,7 +289,7 @@ function ResultCard({ result, rank }: { result: IdentificationResult; rank: numb
 
 // ── Huvud-komponent ───────────────────────────────────────────────
 
-export function PlantIdentifier({ isMock }: Props) {
+export function PlantIdentifier({ isMock, isLoggedIn, usedThisMonth, limit }: Props) {
   const [file,     setFile]     = useState<File | null>(null);
   const [preview,  setPreview]  = useState<string | null>(null);
   const [loading,  setLoading]  = useState(false);
@@ -294,7 +297,11 @@ export function PlantIdentifier({ isMock }: Props) {
   const [error,    setError]    = useState<string | null>(null);
   const [provider, setProvider] = useState<string>("");
   const [dragOver, setDragOver] = useState(false);
+  const [used,     setUsed]     = useState(usedThisMonth);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const remaining = Math.max(0, limit - used);
+  const limitReached = isLoggedIn && limit > 0 && remaining === 0;
 
   const handleFile = useCallback((f: File) => {
     if (!f.type.startsWith("image/")) { setError("Välj en bildfil (JPG, PNG, WEBP)."); return; }
@@ -330,14 +337,79 @@ export function PlantIdentifier({ isMock }: Props) {
       fd.append("image", file);
       const res  = await fetch("/api/identify-plant", { method: "POST", body: fd });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Något gick fel. Försök igen."); return; }
+      if (!res.ok) {
+        setError(data.error ?? "Något gick fel. Försök igen.");
+        if (data.used !== undefined) setUsed(data.used);
+        return;
+      }
       setResults(data.results);
       setProvider(data.provider);
+      if (data.used !== undefined) setUsed(data.used);
     } catch {
       setError("Nätverksfel. Kontrollera din anslutning.");
     } finally {
       setLoading(false);
     }
+  }
+
+  // ── Ej inloggad: visa spärr direkt ──────────────────────────────
+  if (!isLoggedIn) {
+    return (
+      <div className="rounded-3xl border-2 border-dashed border-green-200 bg-green-50/40 p-10 text-center space-y-5">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mx-auto">
+          <Lock className="h-7 w-7 text-green-600" />
+        </div>
+        <div>
+          <p className="text-lg font-bold text-gray-900">Logga in för att identifiera din växt</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Du behöver ett konto för att använda AI-identifiering. Det är gratis!
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/auth/login?redirect=/vaxtidentifiering"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors shadow-sm"
+          >
+            <LogIn className="h-4 w-4" />
+            Logga in
+          </Link>
+          <Link
+            href="/auth/register?redirect=/vaxtidentifiering"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-green-300 text-green-700 font-semibold hover:bg-green-50 transition-colors"
+          >
+            Skapa konto gratis
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Limit nådd ───────────────────────────────────────────────────
+  if (limitReached) {
+    return (
+      <div className="rounded-3xl border border-amber-200 bg-amber-50/50 p-10 text-center space-y-5">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 mx-auto">
+          <Sprout className="h-7 w-7 text-amber-600" />
+        </div>
+        <div>
+          <p className="text-lg font-bold text-gray-900">Du har använt dina {limit} gratis sökningar</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Gränsen återställs nästa månad. Uppgradera till premium för obegränsade sökningar.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/premium"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors shadow-sm"
+          >
+            Se premium
+          </Link>
+        </div>
+        <p className="text-xs text-gray-400">
+          Använt {used} av {limit} sökningar denna månad
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -351,6 +423,20 @@ export function PlantIdentifier({ isMock }: Props) {
             <strong>Demoläge</strong> — inga riktiga API-nycklar konfigurerade.
             Resultaten är simulerade. Konfigurera Plant.id eller PlantNet i{" "}
             <Link href="/admin/installningar" className="underline font-medium">Admin → Inställningar</Link>.
+          </span>
+        </div>
+      )}
+
+      {/* Räknare */}
+      {limit > 0 && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200">
+          <span className="text-sm text-gray-600">
+            Gratis sökningar denna månad
+          </span>
+          <span className={`text-sm font-bold tabular-nums ${
+            remaining <= 1 ? "text-amber-600" : "text-green-700"
+          }`}>
+            {remaining} / {limit} kvar
           </span>
         </div>
       )}
@@ -410,10 +496,12 @@ export function PlantIdentifier({ isMock }: Props) {
       )}
 
       {/* Felmeddelande */}
-      {error && (
+      {error && error !== "limit_reached" && (
         <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          {error}
+          {error === "login_required"
+            ? "Du måste vara inloggad för att använda AI-identifiering."
+            : error}
         </div>
       )}
 

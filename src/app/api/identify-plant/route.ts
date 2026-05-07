@@ -264,15 +264,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Växtidentifiering är inte aktiverad." }, { status: 503 });
     }
 
+    // ── Kräv inloggning ───────────────────────────────────────────
+    if (!profileId) {
+      return NextResponse.json(
+        { error: "login_required" },
+        { status: 401 },
+      );
+    }
+
     // ── Användningsgräns ──────────────────────────────────────────
-    if (profileId) {
-      const usage = await checkAiUsage(profileId, "identification", aiSettings.freeChecksPerMonth);
-      if (!usage.allowed) {
-        return NextResponse.json(
-          { error: "limit_reached", used: usage.used, limit: usage.limit },
-          { status: 429 },
-        );
-      }
+    const usage = await checkAiUsage(profileId, "identification", aiSettings.freeChecksPerMonth);
+    if (!usage.allowed) {
+      return NextResponse.json(
+        { error: "limit_reached", used: usage.used, limit: usage.limit },
+        { status: 429 },
+      );
     }
 
     // ── Identifiera ───────────────────────────────────────────────
@@ -317,7 +323,17 @@ export async function POST(req: NextRequest) {
       }).catch(() => null);
     }
 
-    return NextResponse.json({ results, imageUrl, provider, disclaimer: aiSettings.disclaimerText });
+    // Hämta uppdaterad räknare efter analys
+    const usageAfter = await checkAiUsage(profileId, "identification", aiSettings.freeChecksPerMonth);
+
+    return NextResponse.json({
+      results,
+      imageUrl,
+      provider,
+      disclaimer: aiSettings.disclaimerText,
+      used:  usageAfter.used,
+      limit: usageAfter.limit,
+    });
   } catch (err) {
     console.error("identify-plant error:", err);
     return NextResponse.json({ error: "Något gick fel. Försök igen." }, { status: 500 });
