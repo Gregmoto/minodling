@@ -316,7 +316,7 @@ export default async function HomePage() {
                 {/* Foto med rounded corners + shadow */}
                 <div className="relative w-full h-[500px] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5">
                   <Image
-                    src="/hero-plant.jpg"
+                    src="/hero-plant-2.jpg"
                     alt="Tomatplantor som växer i trädgården"
                     fill
                     className="object-cover object-center"
