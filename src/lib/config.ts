@@ -11,12 +11,13 @@ export const siteConfig = {
   },
   /** Alla nav-länkar – visas direkt utan dropdown */
   navPrimary: [
-    { label: "Forum",         href: "/forum" },
-    { label: "Guider",        href: "/guider" },
-    { label: "Växtdatabas",   href: "/vaxtdatabas" },
-    { label: "Frågor & svar", href: "/fragor" },
-    { label: "Fröbyte",       href: "/frobyte" },
-    { label: "Butik",         href: "/butik" },
+    { label: "Forum",            href: "/forum" },
+    { label: "Guider",           href: "/guider" },
+    { label: "Växtdatabas",      href: "/vaxtdatabas" },
+    { label: "Identifiera växt", href: "/vaxtidentifiering" },
+    { label: "Frågor & svar",    href: "/fragor" },
+    { label: "Fröbyte",          href: "/frobyte" },
+    { label: "Butik",            href: "/butik" },
   ],
   /** Sekundärt – visas bara i mobil-menyn */
   navMore: [
