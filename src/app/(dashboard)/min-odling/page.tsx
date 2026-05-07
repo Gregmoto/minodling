@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, Sprout, BookOpen, Calendar, Stethoscope } from "lucide-react";
+import { Plus, Sprout, BookOpen, Calendar, Stethoscope, Scan } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
@@ -85,6 +85,18 @@ export default async function MinOdlingPage() {
           <div>
             <p className="text-sm font-semibold text-gray-800 group-hover:text-blue-700">Påminnelser</p>
             <p className="text-xs text-gray-400">Schemalagda</p>
+          </div>
+        </Link>
+        <Link
+          href="/min-odling/vaxtidentifiering"
+          className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 bg-white hover:border-green-200 hover:shadow-sm transition-all group"
+        >
+          <div className="h-9 w-9 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
+            <Scan className="h-4.5 w-4.5 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800 group-hover:text-purple-700">Identifieringar</p>
+            <p className="text-xs text-gray-400">AI-sökningar</p>
           </div>
         </Link>
       </div>
