@@ -959,6 +959,21 @@ model ShopNewsletterSubscriber {
   @@map("shop_newsletter_subscribers")
 }
 
+model NewsletterCampaign {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subject      String
+  previewText  String?   @map("preview_text")
+  htmlContent  String    @map("html_content")
+  sentAt       DateTime? @map("sent_at")
+  sentCount    Int       @default(0) @map("sent_count")
+  failedCount  Int       @default(0) @map("failed_count")
+  status       String    @default("draft")  // draft | sending | sent | failed
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("newsletter_campaigns")
+}
+
 model ShopSlide {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title      String

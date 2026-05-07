@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Sprout, Menu } from "lucide-react";
+import { Sprout } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminSearch } from "@/components/admin/AdminSearch";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireAdmin();
@@ -36,14 +37,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="lg:ml-60 flex-1 flex flex-col min-h-screen">
         {/* Topbar */}
         <header className="bg-white border-b border-gray-200 px-4 lg:px-6 py-3.5 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {/* Mobil: logo */}
-            <div className="lg:hidden flex items-center gap-2">
+            <div className="lg:hidden flex items-center gap-2 shrink-0">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-600 text-white">
                 <Sprout className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="hidden sm:block text-sm text-gray-500 shrink-0">
               Inloggad som{" "}
               <span className="font-semibold text-gray-900">@{profile.username}</span>
               <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
@@ -51,10 +52,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </span>
             </div>
           </div>
+
+          {/* Sökning */}
+          <AdminSearch />
+
           <Link
             href="/"
             target="_blank"
-            className="text-xs text-gray-400 hover:text-green-700 transition-colors"
+            className="text-xs text-gray-400 hover:text-green-700 transition-colors shrink-0"
           >
             Öppna sajten ↗
           </Link>

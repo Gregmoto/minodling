@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import type { RelatedGuide, RelatedProduct } from "@/lib/plant-health";
+import { getAiSettings } from "@/lib/ai-settings";
+import { checkAiUsage, incrementAiUsage, logAiFailure } from "@/lib/ai-usage";
 
 export const maxDuration = 30;
 
@@ -85,19 +87,52 @@ async function callPlantNet(
   const blob = new Blob([ab], { type: "image/jpeg" });
   const fd   = new FormData();
   fd.append("images", blob, "plant.jpg");
-  const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKey}&lang=sv&nb-results=3`;
-  const res = await fetch(url, { method: "POST", body: fd });
-  if (!res.ok) throw new Error(`PlantNet ${res.status}`);
-  const json = await res.json();
-  return (json.results ?? []).slice(0, 3).map((r: {
+
+  // Hämta på svenska + engelska för bästa chans till gemensamt namn
+  const urlSv = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKey}&lang=sv&nb-results=3`;
+  const urlEn = `https://my-api.plantnet.org/v2/identify/all?api-key=${apiKey}&lang=en&nb-results=3`;
+
+  const [resSv, resEn] = await Promise.all([
+    fetch(urlSv, { method: "POST", body: fd }).catch(() => null),
+    fetch(urlEn, { method: "POST", body: fd }).catch(() => null),
+  ]);
+
+  if (!resSv?.ok && !resEn?.ok) throw new Error("PlantNet: båda anropen misslyckades");
+
+  type PlantNetResult = {
     score: number;
-    species: { scientificNameWithoutAuthor: string; commonNames?: string[]; images?: { url: { o: string } }[] };
-  }) => ({
-    latinName:   r.species.scientificNameWithoutAuthor,
-    commonName:  r.species.commonNames?.[0] ?? null,
-    probability: Math.round(r.score * 100),
-    imageUrl:    r.species.images?.[0]?.url?.o ?? null,
-  }));
+    species: {
+      scientificNameWithoutAuthor: string;
+      commonNames?: string[];
+      images?: { url: { o?: string; m?: string; s?: string } }[];
+    };
+  };
+
+  const jsonSv: { results?: PlantNetResult[] } = resSv?.ok ? await resSv.json() : {};
+  const jsonEn: { results?: PlantNetResult[] } = resEn?.ok ? await resEn.json() : {};
+
+  const resultsSv = jsonSv.results ?? [];
+  const resultsEn = jsonEn.results ?? [];
+  const primary   = resultsSv.length > 0 ? resultsSv : resultsEn;
+
+  return primary.slice(0, 3).map((r, i) => {
+    const enResult = resultsEn[i];
+    // Föredra svenska namn, fallback till engelska
+    const svNames = r.species.commonNames?.filter(Boolean) ?? [];
+    const enNames = enResult?.species.commonNames?.filter(Boolean) ?? [];
+    const commonName = svNames[0] ?? enNames[0] ?? null;
+
+    // Bild: försök o (original), m (medium), s (small)
+    const img = r.species.images?.[0]?.url;
+    const imageUrl = img?.o ?? img?.m ?? img?.s ?? null;
+
+    return {
+      latinName:   r.species.scientificNameWithoutAuthor,
+      commonName,
+      probability: Math.round(r.score * 100),
+      imageUrl,
+    };
+  });
 }
 
 // ── Matcha mot DB + lägg till guider & produkter ─────────────────
@@ -222,28 +257,49 @@ export async function POST(req: NextRequest) {
       imageUrl = data.publicUrl;
     }
 
-    // ── API-nycklar ───────────────────────────────────────────────
-    const [plantIdSetting, plantNetSetting] = await Promise.all([
-      prisma.adminSetting.findUnique({ where: { key: "plant_id_api_key" } }).catch(() => null),
-      prisma.adminSetting.findUnique({ where: { key: "plantnet_api_key" } }).catch(() => null),
-    ]);
-    const plantIdKey  = plantIdSetting?.value?.trim()  || null;
-    const plantNetKey = plantNetSetting?.value?.trim() || null;
+    // ── AI-inställningar ──────────────────────────────────────────
+    const aiSettings = await getAiSettings();
+
+    if (!aiSettings.identificationEnabled) {
+      return NextResponse.json({ error: "Växtidentifiering är inte aktiverad." }, { status: 503 });
+    }
+
+    // ── Användningsgräns ──────────────────────────────────────────
+    if (profileId) {
+      const usage = await checkAiUsage(profileId, "identification", aiSettings.freeChecksPerMonth);
+      if (!usage.allowed) {
+        return NextResponse.json(
+          { error: "limit_reached", used: usage.used, limit: usage.limit },
+          { status: 429 },
+        );
+      }
+    }
 
     // ── Identifiera ───────────────────────────────────────────────
     let rawResults: Omit<IdentificationResult, "dbPlant" | "guides" | "products">[];
     let provider = "mock";
 
-    if (plantIdKey) {
-      const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
-      rawResults = await callPlantId(base64, plantIdKey);
-      provider   = "plant.id";
-    } else if (plantNetKey) {
-      const base64 = buffer.toString("base64");
-      rawResults = await callPlantNet(base64, plantNetKey);
-      provider   = "plantnet";
-    } else {
+    try {
+      if (aiSettings.provider === "plant.id" && aiSettings.plantIdKey) {
+        const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
+        rawResults = await callPlantId(base64, aiSettings.plantIdKey);
+        provider   = "plant.id";
+      } else if (aiSettings.provider === "plantnet" && aiSettings.plantNetKey) {
+        const base64 = buffer.toString("base64");
+        rawResults = await callPlantNet(base64, aiSettings.plantNetKey);
+        provider   = "plantnet";
+      } else {
+        rawResults = MOCK_RESULTS;
+      }
+
+      // ── Öka räknaren efter lyckat anrop ───────────────────────
+      if (profileId && provider !== "mock") {
+        await incrementAiUsage(profileId, "identification");
+      }
+    } catch (apiErr) {
+      await logAiFailure({ profileId, feature: "identification", error: String(apiErr), provider });
       rawResults = MOCK_RESULTS;
+      provider   = "mock";
     }
 
     // ── Berika med DB-info, guider & produkter ────────────────────
@@ -261,7 +317,7 @@ export async function POST(req: NextRequest) {
       }).catch(() => null);
     }
 
-    return NextResponse.json({ results, imageUrl, provider });
+    return NextResponse.json({ results, imageUrl, provider, disclaimer: aiSettings.disclaimerText });
   } catch (err) {
     console.error("identify-plant error:", err);
     return NextResponse.json({ error: "Något gick fel. Försök igen." }, { status: 500 });
