@@ -48,6 +48,7 @@ export function Navbar({ user }: NavbarProps) {
           <Link
             href="/"
             className="flex items-center gap-2 shrink-0 group mr-2"
+            aria-label="Minodling – till startsidan"
             onClick={() => setMobileOpen(false)}
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-green-600 text-white group-hover:bg-green-700 transition-colors">
