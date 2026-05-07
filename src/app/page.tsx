@@ -295,7 +295,7 @@ export default async function HomePage() {
 
                 {/* Social proof */}
                 {heroStatsVisible && (
-                  <div className="flex items-center gap-6 mt-8">
+                  <div className="hidden sm:flex items-center gap-6 mt-8">
                     {[
                       { value: plantCount,  label: "växter i databasen" },
                       { value: userCount,   label: "aktiva odlare" },
