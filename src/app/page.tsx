@@ -353,10 +353,10 @@ export default async function HomePage() {
                   </div>
                 </div>
 
-                {/* Badge: Tomat · 94% (nedre höger) */}
+                {/* Badge: Rödbeta · 94% (nedre höger) */}
                 <div className="absolute bottom-10 -right-4 bg-white rounded-full shadow-xl px-4 py-2.5 border border-gray-100/80 flex items-center gap-2.5">
                   <div className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-sm shrink-0">✓</div>
-                  <span className="text-sm font-semibold text-green-700 whitespace-nowrap">Tomat · 94%</span>
+                  <span className="text-sm font-semibold text-green-700 whitespace-nowrap">Rödbeta · 94%</span>
                 </div>
               </div>
 
