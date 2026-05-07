@@ -492,6 +492,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
   const [symptoms,     setSymptoms]     = useState<string[]>([]);
   const [results,      setResults]      = useState<HealthCheckResult[]>([]);
   const [provider,     setProvider]     = useState("");
+  const [reason,       setReason]       = useState("");
   const [disclaimer,   setDisclaimer]   = useState("");
   const [savedCheckId, setSavedCheckId] = useState<string | null>(null);
   const [loading,      setLoading]      = useState(false);
@@ -540,6 +541,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
 
       setResults(json.results ?? []);
       setProvider(json.provider ?? "mock");
+      setReason(json.reason ?? "");
       setDisclaimer(json.disclaimer ?? "");
       setSavedCheckId(json.savedCheckId ?? null);
       setStep(4);
@@ -559,6 +561,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
     setSymptoms([]);
     setResults([]);
     setProvider("");
+    setReason("");
     setDisclaimer("");
     setSavedCheckId(null);
     setError("");
@@ -571,9 +574,17 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
     <div>
       <StepBar step={1} />
       <h2 className="text-xl font-bold text-gray-900 mb-1">Lägg till ett foto</h2>
-      <p className="text-sm text-gray-500 mb-6">
-        Foto är valfritt men hjälper AI:n att ge en bättre diagnos.
+      <p className="text-sm text-gray-500 mb-2">
+        {isMock
+          ? "Foto är valfritt – demoläge är aktivt (ingen API-nyckel konfigurerad)."
+          : "Foto krävs för riktig AI-analys via Plant.id. Utan foto används symptombaserad diagnos."}
       </p>
+      {!isMock && (
+        <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-4">
+          <span>📸</span>
+          <span>Ladda upp ett foto för att aktivera AI · Plant.id</span>
+        </div>
+      )}
       <ImageUploader onFile={handleFile} />
       <button
         type="button"
@@ -772,6 +783,11 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
                   Demoläge
                 </span>
               )}
+              {reason === "api_error" && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                  API-fel
+                </span>
+              )}
             </div>
             {plant && !skipPlant && (
               <p className="text-sm text-gray-500">
@@ -788,6 +804,20 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
             <RefreshCw className="h-4 w-4 text-gray-500" />
           </button>
         </div>
+
+        {/* Hint: varför inte AI */}
+        {reason === "no_image" && !isMock && (
+          <div className="flex items-start gap-2 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 mb-4 text-sm text-blue-700">
+            <span className="text-base shrink-0">📸</span>
+            <span>Ladda upp ett <strong>foto</strong> för att använda riktig AI-analys (Plant.id). Utan foto används symptombaserad diagnos.</span>
+          </div>
+        )}
+        {reason === "api_error" && (
+          <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 mb-4 text-sm text-red-700">
+            <span className="text-base shrink-0">⚠️</span>
+            <span>Plant.id-anropet misslyckades – se serverloggar. Symptombaserad diagnos visas istället.</span>
+          </div>
+        )}
 
         {/* Symptom-chips */}
         {symptoms.length > 0 && (

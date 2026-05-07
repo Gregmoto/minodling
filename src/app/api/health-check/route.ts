@@ -455,31 +455,43 @@ export async function POST(req: NextRequest) {
     // ── Diagnos ───────────────────────────────────────────────────
     let rawResults: Omit<HealthCheckResult, "guides" | "products">[];
     let provider = "mock";
+    let reason   = "no_key"; // "no_key" | "no_image" | "api_error" | "success"
+
+    console.log("[health-check] diagPlantIdKey:", aiSettings.diagPlantIdKey ? "SET" : "MISSING");
+    console.log("[health-check] base64 length:", base64.length);
+    console.log("[health-check] image received:", !!image, "size:", image?.size ?? 0);
 
     if (aiSettings.diagPlantIdKey && base64) {
       // Nyckel finns + bild uppladdad → anropa Plant.id
       try {
+        console.log("[health-check] calling Plant.id health_assessment...");
         rawResults = await callPlantIdHealth(base64, aiSettings.diagPlantIdKey);
         provider   = "plant.id";
+        reason     = "success";
+        console.log("[health-check] Plant.id success, suggestions:", rawResults.length);
       } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error("[health-check] Plant.id API error:", errMsg);
         await logAiFailure({
           feature:   "diagnosis",
           provider:  "plant.id",
-          error:     err instanceof Error ? err.message : String(err),
+          error:     errMsg,
           profileId,
         });
-        // Nyckel finns men anrop misslyckades → symptombaserad (ej demoläge)
         rawResults = computeMockDiagnosis(symptoms);
         provider   = "symptom";
+        reason     = "api_error";
       }
     } else if (aiSettings.diagPlantIdKey) {
-      // Nyckel finns men inget foto uppladdades → symptombaserad analys (ej demoläge)
+      // Nyckel finns men inget foto upladdades
       rawResults = computeMockDiagnosis(symptoms);
       provider   = "symptom";
+      reason     = "no_image";
     } else {
       // Ingen nyckel konfigurerad → sant demoläge
       rawResults = computeMockDiagnosis(symptoms);
       provider   = "mock";
+      reason     = "no_key";
     }
 
     // ── Relaterat innehåll ────────────────────────────────────────
@@ -512,6 +524,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       results,
       provider,
+      reason,
       isMock:       provider === "mock",
       disclaimer:   aiSettings.disclaimerText,
       savedCheckId,          // länk till /min-odling/vaxtproblem/[id]
