@@ -757,9 +757,14 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <h2 className="text-xl font-bold text-gray-900">Din diagnos</h2>
-              {provider && provider !== "mock" && (
+              {provider === "plant.id" && (
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                  AI · {provider}
+                  AI · Plant.id
+                </span>
+              )}
+              {provider === "symptom" && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                  Symptombaserad
                 </span>
               )}
               {(!provider || provider === "mock") && (

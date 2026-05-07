@@ -457,6 +457,7 @@ export async function POST(req: NextRequest) {
     let provider = "mock";
 
     if (aiSettings.diagPlantIdKey && base64) {
+      // Nyckel finns + bild uppladdad → anropa Plant.id
       try {
         rawResults = await callPlantIdHealth(base64, aiSettings.diagPlantIdKey);
         provider   = "plant.id";
@@ -467,11 +468,18 @@ export async function POST(req: NextRequest) {
           error:     err instanceof Error ? err.message : String(err),
           profileId,
         });
-        // Graceful fallback till mock
+        // Nyckel finns men anrop misslyckades → symptombaserad (ej demoläge)
         rawResults = computeMockDiagnosis(symptoms);
+        provider   = "symptom";
       }
-    } else {
+    } else if (aiSettings.diagPlantIdKey) {
+      // Nyckel finns men inget foto uppladdades → symptombaserad analys (ej demoläge)
       rawResults = computeMockDiagnosis(symptoms);
+      provider   = "symptom";
+    } else {
+      // Ingen nyckel konfigurerad → sant demoläge
+      rawResults = computeMockDiagnosis(symptoms);
+      provider   = "mock";
     }
 
     // ── Relaterat innehåll ────────────────────────────────────────
