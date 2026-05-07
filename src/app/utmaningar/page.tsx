@@ -1,6 +1,7 @@
 export const revalidate = 60;
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Trophy } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -117,8 +118,7 @@ export default async function UtmaningarPage({
                     {/* Bild */}
                     <div className="relative h-44 bg-gradient-to-br from-amber-50 to-orange-100 overflow-hidden">
                       {c.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.imageUrl} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <Image src={c.imageUrl} alt={c.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-5xl">🏆</div>
                       )}

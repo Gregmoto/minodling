@@ -2,6 +2,7 @@ export const revalidate = 60;
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Trophy, Users, ImageIcon, CalendarDays, ArrowLeft } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
@@ -92,8 +93,7 @@ export default async function UtmaningDetailPage({
         {/* Hero */}
         <div className="relative h-64 bg-gradient-to-br from-amber-50 to-orange-100 overflow-hidden">
           {challenge.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={challenge.imageUrl} alt={challenge.title} className="w-full h-full object-cover" />
+            <Image src={challenge.imageUrl} alt={challenge.title} fill className="object-cover" sizes="100vw" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-8xl opacity-30">🏆</div>
           )}
@@ -224,8 +224,7 @@ export default async function UtmaningDetailPage({
                       <Link key={p.id} href={`/profil/${p.profile.username}`}
                         className="flex items-center gap-2.5 hover:bg-gray-50 rounded-xl p-1.5 -mx-1.5 transition-colors">
                         {p.profile.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.profile.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+                          <Image src={p.profile.avatarUrl} alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
                         ) : (
                           <div className="h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center text-xs font-medium text-amber-700">
                             {p.profile.username?.[0]?.toUpperCase() ?? "?"}

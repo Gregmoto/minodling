@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MessageSquare, Trash2, Loader2, Send } from "lucide-react";
 import { deleteEntry, commentEntry, deleteChallengeComment } from "@/app/utmaningar/actions";
 import { formatDate } from "@/lib/utils";
@@ -39,8 +40,7 @@ export function EntryCard({
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
       {/* Image */}
       <div className="relative aspect-square bg-gray-50 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={entry.imageUrl} alt={entry.caption ?? "Bidrag"} className="w-full h-full object-cover" />
+        <Image src={entry.imageUrl} alt={entry.caption ?? "Bidrag"} fill className="object-cover" sizes="(max-width: 640px) 100vw, 400px" />
         {canDelete && (
           <button onClick={handleDelete} disabled={isPending}
             className="absolute top-2 right-2 p-1.5 bg-white/90 border border-gray-200 rounded-lg shadow-sm hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-50">
@@ -53,8 +53,7 @@ export function EntryCard({
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div className="flex items-center gap-2">
           {entry.profile.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={entry.profile.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover flex-shrink-0" />
+            <Image src={entry.profile.avatarUrl} alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover flex-shrink-0" />
           ) : (
             <div className="h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center text-xs font-medium text-amber-700 flex-shrink-0">
               {entry.profile.username?.[0]?.toUpperCase() ?? "?"}
@@ -118,8 +117,7 @@ function CommentRow({
   return (
     <div className="flex gap-2 group">
       {comment.profile.avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={comment.profile.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover flex-shrink-0 mt-0.5" />
+        <Image src={comment.profile.avatarUrl} alt="" width={24} height={24} className="h-6 w-6 rounded-full object-cover flex-shrink-0 mt-0.5" />
       ) : (
         <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-500 flex-shrink-0 mt-0.5">
           {comment.profile.username?.[0]?.toUpperCase() ?? "?"}

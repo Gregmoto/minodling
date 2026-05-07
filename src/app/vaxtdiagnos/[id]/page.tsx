@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, CheckCircle2, Trash2, Shield } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
@@ -77,9 +78,8 @@ export default async function DiagnosDetailPage({ params }: { params: Promise<{ 
           {/* Diagnos-kort */}
           <Card className="mb-6 overflow-hidden p-0">
             {/* Bild */}
-            <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={diagnosis.imageUrl} alt="Växtproblem" className="w-full max-h-96 object-cover" />
+            <div className="relative h-96">
+              <Image src={diagnosis.imageUrl} alt="Växtproblem" fill className="object-cover" sizes="(max-width: 768px) 100vw, 800px" />
               <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-white/90 backdrop-blur-sm ${
                   diagnosis.status === "resolved" ? "text-green-700" :
@@ -130,8 +130,7 @@ export default async function DiagnosDetailPage({ params }: { params: Promise<{ 
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-xs text-gray-400">
                 <div className="flex items-center gap-2">
                   {diagnosis.profile.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={diagnosis.profile.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
+                    <Image src={diagnosis.profile.avatarUrl} alt="" width={24} height={24} className="h-6 w-6 rounded-full object-cover" />
                   ) : (
                     <div className="h-6 w-6 rounded-full bg-sage-100 flex items-center justify-center text-sage-700 text-xs font-bold">
                       {diagnosis.profile.username[0].toUpperCase()}
@@ -172,8 +171,7 @@ export default async function DiagnosDetailPage({ params }: { params: Promise<{ 
                 <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     {c.profile.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.profile.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover" />
+                      <Image src={c.profile.avatarUrl} alt="" width={20} height={20} className="h-5 w-5 rounded-full object-cover" />
                     ) : (
                       <div className="h-5 w-5 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 text-xs font-bold">
                         {c.profile.username[0].toUpperCase()}

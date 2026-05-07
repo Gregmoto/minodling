@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Crown, AlertCircle } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
@@ -78,8 +79,7 @@ export default async function AdminPremiumPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       {sub.profile.avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={sub.profile.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover flex-shrink-0" />
+                        <Image src={sub.profile.avatarUrl} alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover flex-shrink-0" />
                       ) : (
                         <div className="h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center text-xs font-medium text-amber-700 flex-shrink-0">
                           {sub.profile.username?.[0]?.toUpperCase() ?? "?"}

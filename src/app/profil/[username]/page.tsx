@@ -2,6 +2,7 @@ export const revalidate = 60;
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { Avatar } from "@/components/ui/Avatar";
@@ -348,7 +349,7 @@ export default async function ProfilPage({
               ) : diaries.map((diary) => (
                 <Card key={diary.id} className="flex items-start gap-4">
                   {diary.imageUrl ? (
-                    <img src={diary.imageUrl} alt={diary.title} className="h-14 w-14 rounded-xl object-cover shrink-0" />
+                    <Image src={diary.imageUrl} alt={diary.title} width={56} height={56} className="h-14 w-14 rounded-xl object-cover shrink-0" />
                   ) : (
                     <div className="h-14 w-14 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
                       <Sprout className="h-6 w-6 text-green-400" />

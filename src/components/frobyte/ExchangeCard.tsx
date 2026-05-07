@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Clock } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { EXCHANGE_TYPES, STATUS_CONFIG } from "@/app/frobyte/constants";
@@ -30,8 +31,7 @@ export function ExchangeCard({ exchange: e }: Props) {
         {/* Bild / Placeholder */}
         <div className="relative h-44 bg-gray-50 overflow-hidden">
           {e.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={e.imageUrl} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <Image src={e.imageUrl} alt={e.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-5xl">
               {e.category === "Frön" ? "🫘" : e.category === "Plantor" ? "🌱" : e.category === "Sticklingar" ? "✂️" : e.category === "Verktyg" ? "🔧" : "📦"}
@@ -74,8 +74,7 @@ export function ExchangeCard({ exchange: e }: Props) {
           <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-xs text-gray-400">
             <div className="flex items-center gap-1.5">
               {e.owner.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={e.owner.avatarUrl} alt="" className="h-4 w-4 rounded-full object-cover" />
+                <Image src={e.owner.avatarUrl} alt="" width={16} height={16} className="h-4 w-4 rounded-full object-cover" />
               ) : (
                 <div className="h-4 w-4 rounded-full bg-sage-100 flex items-center justify-center text-sage-700 text-xs font-bold">
                   {e.owner.username[0].toUpperCase()}

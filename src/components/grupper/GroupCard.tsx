@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Users, MapPin, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
@@ -24,9 +25,8 @@ export function GroupCard({ group: g, isMember }: Props) {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden h-full flex flex-col">
         {/* Bild eller färgad header */}
         {g.imageUrl ? (
-          <div className="h-36 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={g.imageUrl} alt={g.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <div className="relative h-36 overflow-hidden">
+            <Image src={g.imageUrl} alt={g.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
           </div>
         ) : (
           <div className={`h-36 flex items-center justify-center text-4xl ${

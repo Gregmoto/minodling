@@ -2,6 +2,7 @@ export const revalidate = 300;
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import prisma from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { glossaryMetadata, truncateDescription } from "@/lib/seo";
@@ -103,7 +104,7 @@ export default async function OrdlistaTermPage({
         {/* Hero */}
         {term.imageUrl ? (
           <div className="relative h-56 sm:h-72 overflow-hidden">
-            <img src={term.imageUrl} alt={term.term} className="w-full h-full object-cover" />
+            <Image src={term.imageUrl} alt={term.term} fill className="object-cover" sizes="(max-width: 768px) 100vw, 800px" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-0 container-main py-6">
               {term.category && (

@@ -2,6 +2,7 @@ export const revalidate = 60;
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Users, MapPin, Lock, Globe, Trash2 } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
@@ -69,8 +70,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ sl
         {/* Hero */}
         {group.imageUrl ? (
           <div className="relative h-52 sm:h-64 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={group.imageUrl} alt={group.name} className="w-full h-full object-cover" />
+            <Image src={group.imageUrl} alt={group.name} fill className="object-cover" sizes="100vw" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-0 container-main py-6">
               <h1 className="text-3xl font-bold text-white">{group.name}</h1>
@@ -185,8 +185,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ sl
                     <Link key={m.id} href={`/profil/${m.profile.username}`}
                       className="flex items-center gap-2.5 hover:bg-gray-50 rounded-lg p-1.5 -mx-1.5 transition-colors group">
                       {m.profile.avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={m.profile.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
+                        <Image src={m.profile.avatarUrl} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover shrink-0" />
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-sage-100 flex items-center justify-center text-sage-700 text-sm font-bold shrink-0">
                           {m.profile.username[0].toUpperCase()}

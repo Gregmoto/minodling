@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Sprout, BookOpen, Calendar, Stethoscope, Scan } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -125,8 +126,8 @@ export default async function MinOdlingPage() {
               <Link key={diary.id} href={`/dagbok/${diary.id}`}>
                 <Card hover className="h-full">
                   {diary.imageUrl ? (
-                    <div className="aspect-video rounded-xl overflow-hidden mb-4 bg-sage-100">
-                      <img src={diary.imageUrl} alt={diary.title} className="w-full h-full object-cover" />
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-sage-100">
+                      <Image src={diary.imageUrl} alt={diary.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                     </div>
                   ) : (
                     <div className="aspect-video rounded-xl bg-gradient-to-br from-green-50 to-sage-100 flex items-center justify-center mb-4">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MessageCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
@@ -66,8 +67,7 @@ export function DiagnosisCard({ diagnosis: d }: Props) {
           <div className="flex items-center justify-between text-xs text-gray-400 pt-1 border-t border-gray-50">
             <div className="flex items-center gap-1.5">
               {d.profile.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={d.profile.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover" />
+                <Image src={d.profile.avatarUrl} alt="" width={20} height={20} className="h-5 w-5 rounded-full object-cover" />
               ) : (
                 <div className="h-5 w-5 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 text-xs font-bold">
                   {d.profile.username[0].toUpperCase()}

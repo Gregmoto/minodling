@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
@@ -93,8 +94,7 @@ export default async function AdminVaxtdiagnosPage({
                 return (
                   <tr key={d.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={d.imageUrl} alt="" className="h-12 w-16 object-cover rounded-lg" />
+                      <Image src={d.imageUrl} alt="" width={64} height={48} className="h-12 w-16 object-cover rounded-lg" />
                     </td>
                     <td className="px-4 py-3 max-w-xs">
                       <Link href={`/vaxtdiagnos/${d.id}`} target="_blank" className="text-gray-700 hover:text-green-700 line-clamp-2">

@@ -2,6 +2,7 @@ export const revalidate = 60;
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, MapPin, Flag, Trash2 } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
@@ -71,9 +72,8 @@ export default async function ExchangeDetailPage({ params }: { params: Promise<{
             <article className="flex-1 min-w-0 space-y-6">
               {/* Bild */}
               {exchange.imageUrl && (
-                <div className="rounded-2xl overflow-hidden border border-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={exchange.imageUrl} alt={exchange.title} className="w-full max-h-80 object-cover" />
+                <div className="relative h-80 rounded-2xl overflow-hidden border border-gray-100">
+                  <Image src={exchange.imageUrl} alt={exchange.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 800px" />
                 </div>
               )}
 
@@ -127,8 +127,7 @@ export default async function ExchangeDetailPage({ params }: { params: Promise<{
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Annonsör</p>
                 <Link href={`/profil/${exchange.owner.username}`} className="flex items-center gap-3 group">
                   {exchange.owner.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={exchange.owner.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover shrink-0" />
+                    <Image src={exchange.owner.avatarUrl} alt="" width={48} height={48} className="h-12 w-12 rounded-full object-cover shrink-0" />
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-sage-100 flex items-center justify-center text-sage-700 text-lg font-bold shrink-0">
                       {exchange.owner.username[0].toUpperCase()}

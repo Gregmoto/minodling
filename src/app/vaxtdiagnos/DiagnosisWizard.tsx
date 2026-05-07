@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Upload, Camera, X, Loader2, AlertCircle, CheckCircle2,
   ChevronDown, ChevronUp, ArrowRight, ArrowLeft,
@@ -231,7 +232,7 @@ function ResultCard({
                     className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all group"
                   >
                     {g.imageUrl
-                      ? <img src={g.imageUrl} alt={g.title} className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                      ? <Image src={g.imageUrl} alt={g.title} width={40} height={40} className="h-10 w-10 rounded-lg object-cover shrink-0" />
                       : <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0"><Leaf className="h-4 w-4 text-green-500" /></div>
                     }
                     <span className="text-sm font-medium text-gray-700 group-hover:text-green-700 line-clamp-1 flex-1">
@@ -258,7 +259,7 @@ function ResultCard({
                     className="flex flex-col gap-2 p-3 rounded-xl border border-gray-100 hover:border-green-200 hover:shadow-sm transition-all group"
                   >
                     {p.imageUrl
-                      ? <img src={p.imageUrl} alt={p.name} className="w-full aspect-square rounded-lg object-cover" />
+                      ? <div className="relative w-full aspect-square rounded-lg overflow-hidden"><Image src={p.imageUrl} alt={p.name} fill className="object-cover rounded-lg" sizes="120px" /></div>
                       : <div className="w-full aspect-square rounded-lg bg-gray-50 flex items-center justify-center"><ShoppingBag className="h-6 w-6 text-gray-300" /></div>
                     }
                     <div>
