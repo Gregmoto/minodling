@@ -19,8 +19,7 @@ export interface HealthCheckResult {
   products:     { id: string; name: string; slug: string; imageUrl: string | null; price: number }[];
 }
 
-// ── Symptom-nyckelord (re-exporterade från shared lib) ────────────
-export const SYMPTOMS = HEALTH_SYMPTOMS;
+// SYMPTOMS används via HEALTH_SYMPTOMS från @/lib/plant-health
 
 // ── Problemdefinitioner ───────────────────────────────────────────
 
