@@ -221,8 +221,7 @@ async function callPlantIdHealth(
     method:  "POST",
     headers: { "Api-Key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
-      images:         [imageBase64],
-      similar_images: false,
+      images: [imageBase64],
     }),
   });
 
