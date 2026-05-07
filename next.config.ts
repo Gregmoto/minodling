@@ -29,11 +29,29 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Statiska filer i /public (bilder, fonter, favicon etc.)
-        source: "/:path((?!api/).*\\.(jpg|jpeg|png|webp|avif|gif|svg|ico|woff2|woff)$)",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
-        ],
+        // Statiska bildfiler i /public
+        source: "/:file*.jpg",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/:file*.jpeg",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/:file*.png",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/:file*.svg",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/:file*.ico",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/:file*.woff2",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
     ];
   },
