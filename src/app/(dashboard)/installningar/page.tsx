@@ -66,7 +66,7 @@ export default async function InstallningarPage() {
         <div className="flex items-center gap-4 mb-5">
           <Avatar
             src={profile.avatarUrl}
-            name={profile.fullName ?? profile.username}
+            fallback={profile.fullName ?? profile.username}
             size="lg"
           />
           <div>
