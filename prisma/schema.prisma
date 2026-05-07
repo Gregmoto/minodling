@@ -1123,17 +1123,32 @@ model PlantHealthCheck {
   resultsJson     Json     @default("[]") @map("results_json")
   selectedProblem String?  @map("selected_problem")
   notes           String?
+  // Status: open | treated | following_up | resolved
   status          String   @default("open") @map("status")
   apiProvider     String   @default("mock") @map("api_provider")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  user  Profile? @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plant Plant?   @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  user      Profile?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plant     Plant?                      @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  followUps PlantHealthCheckFollowUp[]
 
   @@index([userId])
   @@index([status])
   @@map("plant_health_checks")
+}
+
+model PlantHealthCheckFollowUp {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  healthCheckId  String   @db.Uuid @map("health_check_id")
+  imageUrl       String?  @map("image_url")
+  note           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  healthCheck PlantHealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade)
+
+  @@index([healthCheckId])
+  @@map("plant_health_check_followups")
 }
 
 model ContactTicket {

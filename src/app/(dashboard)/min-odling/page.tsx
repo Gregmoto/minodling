@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, Sprout, BookOpen, Calendar } from "lucide-react";
+import { Plus, Sprout, BookOpen, Calendar, Stethoscope } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
@@ -46,6 +46,46 @@ export default async function MinOdlingPage() {
             <Plus className="h-4 w-4" />
             Ny odlingspost
           </Button>
+        </Link>
+      </div>
+
+      {/* Genvägar */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <Link
+          href="/min-odling/vaxtproblem"
+          className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 bg-white hover:border-green-200 hover:shadow-sm transition-all group"
+        >
+          <div className="h-9 w-9 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+            <Stethoscope className="h-4.5 w-4.5 text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700">Växtproblem</p>
+            <p className="text-xs text-gray-400">Min diagnos-logg</p>
+          </div>
+        </Link>
+        <Link
+          href="/dagbok"
+          className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 bg-white hover:border-green-200 hover:shadow-sm transition-all group"
+        >
+          <div className="h-9 w-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <BookOpen className="h-4.5 w-4.5 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800 group-hover:text-amber-700">Dagbok</p>
+            <p className="text-xs text-gray-400">Odlingsjournal</p>
+          </div>
+        </Link>
+        <Link
+          href="/paminnelser"
+          className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 bg-white hover:border-green-200 hover:shadow-sm transition-all group"
+        >
+          <div className="h-9 w-9 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+            <Calendar className="h-4.5 w-4.5 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800 group-hover:text-blue-700">Påminnelser</p>
+            <p className="text-xs text-gray-400">Schemalagda</p>
+          </div>
         </Link>
       </div>
 
