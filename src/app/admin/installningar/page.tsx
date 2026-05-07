@@ -1,9 +1,10 @@
 import { Metadata } from "next";
 import { getSettings, SETTINGS } from "@/lib/settings";
 import { updateSettingsBulk } from "@/app/admin/actions";
+import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import {
-  BarChart3, Search, Globe, CheckCircle2,
+  BarChart3, Search, Globe, CheckCircle2, Bot,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -85,7 +86,11 @@ function SaveButton() {
 
 // ── Sida ─────────────────────────────────────────────────────────
 export default async function InstallningarPage() {
-  const s = await getSettings();
+  const [s, plantIdSetting, plantNetSetting] = await Promise.all([
+    getSettings(),
+    prisma.adminSetting.findUnique({ where: { key: "plant_id_api_key" },  select: { value: true } }).catch(() => null),
+    prisma.adminSetting.findUnique({ where: { key: "plantnet_api_key" },  select: { value: true } }).catch(() => null),
+  ]);
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -297,6 +302,51 @@ export default async function InstallningarPage() {
             placeholder="Vi använder cookies för att förbättra din upplevelse."
             textarea
           />
+          <SaveButton />
+        </form>
+      </Card>
+
+      {/* ── AI / Växt-API-nycklar ─────────────────────────────── */}
+      <Card>
+        <SectionHeader
+          icon={Bot}
+          title="AI-växtanalys"
+          description="API-nycklar för Identifiera växt och Växtdiagnos"
+        />
+        <form
+          action={async (fd: FormData) => {
+            "use server";
+            await updateSettingsBulk({
+              plant_id_api_key: fd.get("plant_id_api_key") as string,
+              plantnet_api_key: fd.get("plantnet_api_key") as string,
+            });
+          }}
+          className="space-y-4"
+        >
+          <Field
+            label="Plant.id API-nyckel"
+            name="plant_id_api_key"
+            defaultValue={plantIdSetting?.value ?? ""}
+            placeholder="Klistra in din Plant.id API-nyckel"
+            type="password"
+            hint="Används för att identifiera växter (plant.id/api) och hälsokontroll (Health Assessment). Plant.id har prioritet om båda är ifyllda."
+          />
+          <Field
+            label="PlantNet API-nyckel"
+            name="plantnet_api_key"
+            defaultValue={plantNetSetting?.value ?? ""}
+            placeholder="Klistra in din PlantNet API-nyckel"
+            type="password"
+            hint="Alternativ till Plant.id – används om Plant.id-nyckeln saknas. Stöder enbart växtidentifiering, inte hälsokontroll."
+          />
+          <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-xs text-blue-700 space-y-1">
+            <p className="font-semibold">Hur det fungerar</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              <li><strong>Plant.id</strong> — identifiering + diagnos (Health Assessment). Registrera på <a href="https://plant.id" target="_blank" rel="noopener" className="underline">plant.id</a></li>
+              <li><strong>PlantNet</strong> — enbart identifiering. Registrera på <a href="https://my.plantnet.org" target="_blank" rel="noopener" className="underline">my.plantnet.org</a></li>
+              <li>Utan nyckel körs <strong>demoläge</strong> med simulerade svar</li>
+            </ul>
+          </div>
           <SaveButton />
         </form>
       </Card>
