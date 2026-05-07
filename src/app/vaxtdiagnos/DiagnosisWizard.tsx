@@ -493,6 +493,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
   const [results,      setResults]      = useState<HealthCheckResult[]>([]);
   const [provider,     setProvider]     = useState("");
   const [reason,       setReason]       = useState("");
+  const [apiError,     setApiError]     = useState("");
   const [disclaimer,   setDisclaimer]   = useState("");
   const [savedCheckId, setSavedCheckId] = useState<string | null>(null);
   const [loading,      setLoading]      = useState(false);
@@ -542,6 +543,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
       setResults(json.results ?? []);
       setProvider(json.provider ?? "mock");
       setReason(json.reason ?? "");
+      setApiError(json.apiError ?? "");
       setDisclaimer(json.disclaimer ?? "");
       setSavedCheckId(json.savedCheckId ?? null);
       setStep(4);
@@ -562,6 +564,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
     setResults([]);
     setProvider("");
     setReason("");
+    setApiError("");
     setDisclaimer("");
     setSavedCheckId(null);
     setError("");
@@ -815,7 +818,10 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
         {reason === "api_error" && (
           <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 mb-4 text-sm text-red-700">
             <span className="text-base shrink-0">⚠️</span>
-            <span>Plant.id-anropet misslyckades – se serverloggar. Symptombaserad diagnos visas istället.</span>
+            <div>
+              <p className="font-semibold">Plant.id-anropet misslyckades – symptombaserad diagnos visas.</p>
+              {apiError && <p className="mt-1 font-mono text-xs break-all">{apiError}</p>}
+            </div>
           </div>
         )}
 

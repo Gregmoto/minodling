@@ -456,6 +456,7 @@ export async function POST(req: NextRequest) {
     let rawResults: Omit<HealthCheckResult, "guides" | "products">[];
     let provider = "mock";
     let reason   = "no_key"; // "no_key" | "no_image" | "api_error" | "success"
+    let apiError = "";
 
     console.log("[health-check] diagPlantIdKey:", aiSettings.diagPlantIdKey ? "SET" : "MISSING");
     console.log("[health-check] base64 length:", base64.length);
@@ -472,6 +473,7 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         console.error("[health-check] Plant.id API error:", errMsg);
+        apiError = errMsg;
         await logAiFailure({
           feature:   "diagnosis",
           provider:  "plant.id",
@@ -525,6 +527,7 @@ export async function POST(req: NextRequest) {
       results,
       provider,
       reason,
+      apiError: apiError || undefined,
       isMock:       provider === "mock",
       disclaimer:   aiSettings.disclaimerText,
       savedCheckId,          // länk till /min-odling/vaxtproblem/[id]
