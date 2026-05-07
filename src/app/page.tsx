@@ -2,7 +2,6 @@ export const revalidate = 120;
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import {
   Sprout, Users, MessageSquare, Leaf, BookOpen, ArrowRight,
   Heart, Calendar, Stethoscope, Camera, ShoppingBag, Scan,
@@ -315,13 +314,13 @@ export default async function HomePage() {
               <div className="hidden lg:flex shrink-0 w-[420px] items-center justify-center select-none relative">
                 {/* Foto med rounded corners + shadow */}
                 <div className="relative w-full h-[500px] rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src="/hero-plant-2.jpg"
-                    alt="Tomatplantor som växer i trädgården"
-                    fill
-                    className="object-cover object-center"
-                    priority
-                    sizes="420px"
+                    alt="Rödbetsplanta som växer i trädgården"
+                    className="w-full h-full object-cover object-center"
+                    loading="eager"
+                    fetchPriority="high"
                   />
                   {/* Gradient – tona in mot höger bakgrund */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#fafaf8]/50 pointer-events-none" />
