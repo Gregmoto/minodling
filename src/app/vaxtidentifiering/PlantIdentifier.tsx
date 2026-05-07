@@ -38,36 +38,91 @@ function ResultCard({ result, rank }: { result: IdentificationResult; rank: numb
     result.dbPlant?.plantingPeriod ||
     result.dbPlant?.harvestPeriod;
 
+  // Namnprioritet: 1) Svenskt namn från DB  2) API-namn  3) Latinsk name
+  const displayName    = result.dbPlant?.name ?? result.commonName ?? result.latinName;
+  // Visa latinsk namn alltid
+  // Visa API-engelskt namn som extra om det skiljer sig från DB-namn
+  const apiEnglish = result.commonName && result.commonName !== result.dbPlant?.name
+    ? result.commonName
+    : null;
+
+  // Bild: API-liknande bild ELLER DB-växtbild
+  const plantImage = result.imageUrl ?? result.dbPlant?.imageUrl ?? null;
+
   return (
     <div className={`rounded-2xl border overflow-hidden transition-shadow hover:shadow-md ${
       isTop ? "border-green-200 bg-green-50/30" : "border-gray-200 bg-white"
     }`}>
+      {/* Bild-banner för top-result */}
+      {isTop && plantImage && (
+        <div className="relative h-48 w-full overflow-hidden bg-sage-100">
+          <Image
+            src={plantImage}
+            alt={displayName}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 600px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          {result.probability >= 70 && (
+            <span className="absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-600 text-white shadow">
+              Bästa träff · {result.probability}%
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-4 p-4">
 
-        {/* Rang */}
-        <div className="shrink-0">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
-            isTop ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-          }`}>
-            {rank}
+        {/* Rang (ej top) */}
+        {!isTop && (
+          <div className="shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center text-sm font-bold">
+              {rank}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Bild thumbnail för icke-top */}
+        {!isTop && plantImage && (
+          <div className="shrink-0">
+            <div className="relative h-10 w-10 rounded-xl overflow-hidden border border-gray-100">
+              <Image
+                src={plantImage}
+                alt={displayName}
+                fill
+                className="object-cover"
+                sizes="40px"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <div>
-              <p className={`font-bold ${isTop ? "text-gray-900" : "text-gray-700"} text-base leading-tight`}>
-                {result.commonName ?? result.latinName}
+              {/* Primärt namn (svenska om DB-match, annars API, annars latin) */}
+              <p className={`font-bold ${isTop ? "text-gray-900 text-lg" : "text-gray-700 text-base"} leading-tight`}>
+                {displayName}
               </p>
+              {/* Latinsk namn */}
               <p className="text-xs text-gray-400 italic mt-0.5">{result.latinName}</p>
+              {/* API-engelskt namn som extra info */}
+              {apiEnglish && (
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Eng: {apiEnglish}
+                </p>
+              )}
             </div>
-            <span className={`text-sm font-bold shrink-0 ${
-              result.probability >= 70 ? "text-green-600" :
-              result.probability >= 40 ? "text-amber-600" : "text-gray-500"
-            }`}>
-              {result.probability}%
-            </span>
+            {!isTop && (
+              <span className={`text-sm font-bold shrink-0 ${
+                result.probability >= 70 ? "text-green-600" :
+                result.probability >= 40 ? "text-amber-600" : "text-gray-500"
+              }`}>
+                {result.probability}%
+              </span>
+            )}
           </div>
 
           {/* Sannolikhetsstapel */}
@@ -224,20 +279,6 @@ function ResultCard({ result, rank }: { result: IdentificationResult; rank: numb
           </div>
         </div>
 
-        {/* Växtbild */}
-        {(result.imageUrl || result.dbPlant?.imageUrl) && (
-          <div className="shrink-0 hidden sm:block">
-            <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-gray-100">
-              <Image
-                src={result.imageUrl ?? result.dbPlant!.imageUrl!}
-                alt={result.latinName}
-                fill
-                className="object-cover"
-                sizes="80px"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

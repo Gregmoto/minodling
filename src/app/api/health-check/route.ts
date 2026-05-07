@@ -479,8 +479,10 @@ export async function POST(req: NextRequest) {
     const results = await fetchRelatedContent(rawResults, plantIdParam, symptoms);
 
     // ── Spara i DB + öka räknare ──────────────────────────────────
+    let savedCheckId: string | null = null;
+
     if (profileId) {
-      await Promise.all([
+      const [saved] = await Promise.all([
         prisma.plantHealthCheck.create({
           data: {
             userId:      profileId,
@@ -490,19 +492,22 @@ export async function POST(req: NextRequest) {
             resultsJson: results as object,
             apiProvider: provider,
           },
+          select: { id: true },
         }).catch(() => null),
-        // Öka användningsräknaren om riktig analys gjordes
+        // Öka användningsräknaren
         aiSettings.freeChecksPerMonth > 0
           ? incrementAiUsage(profileId, "diagnosis")
           : Promise.resolve(),
       ]);
+      savedCheckId = saved?.id ?? null;
     }
 
     return NextResponse.json({
       results,
       provider,
-      isMock:      provider === "mock",
-      disclaimer:  aiSettings.disclaimerText,
+      isMock:       provider === "mock",
+      disclaimer:   aiSettings.disclaimerText,
+      savedCheckId,          // länk till /min-odling/vaxtproblem/[id]
     });
   } catch (err) {
     console.error("[health-check] unexpected error:", err);

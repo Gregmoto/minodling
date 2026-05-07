@@ -80,7 +80,7 @@ const groups = [
       { label: "Poängsystem",        href: "/admin/poang",         icon: Star },
       { label: "Rapporter",          href: "/admin/rapporter",     icon: Flag },
       { label: "SEO",                href: "/admin/seo",                  icon: Search },
-      { label: "Inställningar",      href: "/admin/installningar",        icon: Settings },
+      { label: "Inställningar",      href: "/admin/installningar",        icon: Settings, exact: true },
       { label: "AI-växtanalys",      href: "/admin/installningar/ai",     icon: Bot },
     ],
   },

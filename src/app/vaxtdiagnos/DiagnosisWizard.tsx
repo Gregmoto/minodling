@@ -131,15 +131,14 @@ function ProbabilityBar({ value, color }: { value: number; color: string }) {
 // ── Resultatkort ──────────────────────────────────────────────────
 
 function ResultCard({
-  result, rank, defaultOpen, onSave, isSaved, isLoggedIn, disclaimer,
+  result, rank, defaultOpen, savedCheckId, isLoggedIn, disclaimer,
 }: {
-  result:      HealthCheckResult;
-  rank:        number;
-  defaultOpen: boolean;
-  onSave:      () => void;
-  isSaved:     boolean;
-  isLoggedIn:  boolean;
-  disclaimer:  string;
+  result:        HealthCheckResult;
+  rank:          number;
+  defaultOpen:   boolean;
+  savedCheckId:  string | null;
+  isLoggedIn:    boolean;
+  disclaimer:    string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const isTop = rank === 1;
@@ -276,21 +275,19 @@ function ResultCard({
           {isTop && (
             <div className="flex flex-col sm:flex-row gap-2 pt-1">
               {isLoggedIn ? (
-                <button
-                  type="button"
-                  onClick={onSave}
-                  disabled={isSaved}
-                  className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    isSaved
-                      ? "bg-green-100 text-green-700 cursor-default"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
-                >
-                  {isSaved
-                    ? <><CheckCircle2 className="h-4 w-4" /> Sparad i loggen</>
-                    : <><Save className="h-4 w-4" /> Spara i min växtproblem-logg</>
-                  }
-                </button>
+                savedCheckId ? (
+                  <Link
+                    href={`/min-odling/vaxtproblem/${savedCheckId}`}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-green-100 text-green-800 text-sm font-semibold hover:bg-green-200 transition-all"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    Sparad – visa i min logg
+                  </Link>
+                ) : (
+                  <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-50 text-green-700 text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" /> Sparad i växtproblem-loggen
+                  </div>
+                )
               ) : (
                 <Link
                   href="/auth/login"
@@ -495,10 +492,10 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
   const [results,      setResults]      = useState<HealthCheckResult[]>([]);
   const [provider,     setProvider]     = useState("");
   const [disclaimer,   setDisclaimer]   = useState("");
+  const [savedCheckId, setSavedCheckId] = useState<string | null>(null);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
   const [limitError,   setLimitError]   = useState<{ used: number; limit: number } | null>(null);
-  const [saved,        setSaved]        = useState(false);
 
   const handleFile = (file: File) => {
     setImageFile(file);
@@ -543,6 +540,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
       setResults(json.results ?? []);
       setProvider(json.provider ?? "mock");
       setDisclaimer(json.disclaimer ?? "");
+      setSavedCheckId(json.savedCheckId ?? null);
       setStep(4);
     } catch {
       setError("Nätverksfel. Kontrollera din anslutning och försök igen.");
@@ -561,9 +559,9 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
     setResults([]);
     setProvider("");
     setDisclaimer("");
+    setSavedCheckId(null);
     setError("");
     setLimitError(null);
-    setSaved(false);
   };
 
   // ── Steg 1: Foto ──────────────────────────────────────────────
@@ -807,8 +805,7 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
               result={r}
               rank={i + 1}
               defaultOpen={i === 0}
-              onSave={() => setSaved(true)}
-              isSaved={saved}
+              savedCheckId={savedCheckId}
               isLoggedIn={isLoggedIn}
               disclaimer={disclaimer}
             />
