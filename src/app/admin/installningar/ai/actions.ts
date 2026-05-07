@@ -14,14 +14,25 @@ async function upsertSetting(key: string, value: string) {
   });
 }
 
-/** Sparar enbart API-nycklar + provider-val */
-export async function saveAiKeys(_: unknown, fd: FormData) {
+/** Sparar identifierings-API-nycklar + provider-val */
+export async function saveIdentKeys(_: unknown, fd: FormData) {
   const get = (k: string) => (fd.get(k) as string | null) ?? "";
   await Promise.all([
     upsertSetting(SETTINGS.AI_PROVIDER,     get(SETTINGS.AI_PROVIDER)),
     upsertSetting(SETTINGS.AI_PLANT_ID_KEY, get(SETTINGS.AI_PLANT_ID_KEY)),
     upsertSetting(SETTINGS.AI_PLANTNET_KEY, get(SETTINGS.AI_PLANTNET_KEY)),
   ]);
+  revalidateTag("settings");
+  return ok;
+}
+
+/** Alias för bakåtkompatibilitet */
+export const saveAiKeys = saveIdentKeys;
+
+/** Sparar diagnos-API-nyckel */
+export async function saveDiagKeys(_: unknown, fd: FormData) {
+  const get = (k: string) => (fd.get(k) as string | null) ?? "";
+  await upsertSetting(SETTINGS.DIAG_PLANT_ID_KEY, get(SETTINGS.DIAG_PLANT_ID_KEY));
   revalidateTag("settings");
   return ok;
 }

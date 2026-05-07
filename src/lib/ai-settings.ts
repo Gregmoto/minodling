@@ -9,6 +9,7 @@ export interface AiSettings {
   provider:              "plant.id" | "plantnet" | "mock";
   plantIdKey:            string | null;
   plantNetKey:           string | null;
+  diagPlantIdKey:        string | null;
   identificationEnabled: boolean;
   diagnosisEnabled:      boolean;
   freeChecksPerMonth:    number;
@@ -19,6 +20,7 @@ const DEFAULTS: AiSettings = {
   provider:              "mock",
   plantIdKey:            null,
   plantNetKey:           null,
+  diagPlantIdKey:        null,
   identificationEnabled: true,
   diagnosisEnabled:      true,
   freeChecksPerMonth:    3,
@@ -29,6 +31,7 @@ const AI_KEYS = [
   "plant_ai_provider",
   "plant_id_api_key",
   "plantnet_api_key",
+  "diag_plant_id_key",
   "plant_identification_enabled",
   "plant_diagnosis_enabled",
   "free_ai_checks_per_month",
@@ -47,6 +50,7 @@ export async function getAiSettings(): Promise<AiSettings> {
 
     const plantIdKey  = map["plant_id_api_key"]?.trim()  || null;
     const plantNetKey = map["plantnet_api_key"]?.trim()  || null;
+    const diagPlantIdKey = map["diag_plant_id_key"]?.trim() || map["plant_id_api_key"]?.trim() || null;
 
     // Välj provider: inställning → auto-detect utifrån vilka nycklar som finns
     let provider: AiSettings["provider"] = "mock";
@@ -60,6 +64,7 @@ export async function getAiSettings(): Promise<AiSettings> {
       provider,
       plantIdKey,
       plantNetKey,
+      diagPlantIdKey,
       identificationEnabled: map["plant_identification_enabled"] !== "false",
       diagnosisEnabled:      map["plant_diagnosis_enabled"]      !== "false",
       freeChecksPerMonth:    parseInt(map["free_ai_checks_per_month"] ?? "3", 10) || 3,

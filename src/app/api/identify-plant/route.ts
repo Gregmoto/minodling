@@ -299,7 +299,7 @@ export async function POST(req: NextRequest) {
       }
 
       // ── Öka räknaren efter lyckat anrop ───────────────────────
-      if (profileId && provider !== "mock") {
+      if (profileId) {
         await incrementAiUsage(profileId, "identification");
       }
     } catch (apiErr) {
@@ -312,11 +312,11 @@ export async function POST(req: NextRequest) {
     const results = await enrichResults(rawResults);
 
     // ── Spara ─────────────────────────────────────────────────────
-    if (profileId && imageUrl) {
+    if (profileId) {
       await prisma.plantIdentification.create({
         data: {
           userId:      profileId,
-          imageUrl,
+          imageUrl:    imageUrl || "",
           resultsJson: results as object,
           apiProvider: provider,
         },

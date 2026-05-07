@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 import { SETTINGS } from "@/lib/settings";
 import { Card } from "@/components/ui/Card";
 import { SettingsSection } from "../SettingsSection";
-import { saveAiKeys, saveAiToggles, saveAiFreeChecks, saveAiDisclaimer } from "./actions";
+import { saveIdentKeys, saveDiagKeys, saveAiToggles, saveAiFreeChecks, saveAiDisclaimer } from "./actions";
 import {
-  Bot, Key, Power, AlertTriangle, BarChart3, FlaskConical,
+  Bot, Key, Power, AlertTriangle, BarChart3, FlaskConical, Scan, Stethoscope,
 } from "lucide-react";
 
 export const dynamic   = "force-dynamic";
@@ -76,6 +76,7 @@ async function getAiAdminSettings() {
     SETTINGS.AI_PROVIDER,
     SETTINGS.AI_PLANT_ID_KEY,
     SETTINGS.AI_PLANTNET_KEY,
+    SETTINGS.DIAG_PLANT_ID_KEY,
     SETTINGS.AI_IDENTIFICATION_ON,
     SETTINGS.AI_DIAGNOSIS_ON,
     SETTINGS.AI_FREE_CHECKS_PER_MONTH,
@@ -93,6 +94,7 @@ async function getAiAdminSettings() {
     provider:         map[SETTINGS.AI_PROVIDER]              ?? "auto",
     plantIdKey:       map[SETTINGS.AI_PLANT_ID_KEY]          ?? "",
     plantNetKey:      map[SETTINGS.AI_PLANTNET_KEY]          ?? "",
+    diagPlantIdKey:   map[SETTINGS.DIAG_PLANT_ID_KEY]        ?? "",
     identEnabled:     map[SETTINGS.AI_IDENTIFICATION_ON]     !== "false",
     diagEnabled:      map[SETTINGS.AI_DIAGNOSIS_ON]          !== "false",
     freeChecks:       map[SETTINGS.AI_FREE_CHECKS_PER_MONTH] ?? "3",
@@ -188,10 +190,10 @@ export default async function AiSettingsPage() {
         </div>
       </div>
 
-      {/* ── API-nycklar & provider ────────────────────────────────── */}
+      {/* ── Identifiera växt — API ────────────────────────────────── */}
       <Card>
-        <SectionHeader icon={Key} title="API-nycklar" description="Anslutning till AI-tjänster för växtanalys" />
-        <SettingsSection action={saveAiKeys}>
+        <SectionHeader icon={Scan} title="Identifiera växt — API" description="API-nycklar och provider för växtidentifiering" />
+        <SettingsSection action={saveIdentKeys}>
           <div className="space-y-4">
             <Field
               label="Plant.id API-nyckel"
@@ -236,8 +238,26 @@ export default async function AiSettingsPage() {
               <li><strong>PlantNet</strong> — <a href="https://my.plantnet.org" target="_blank" rel="noopener" className="underline">my.plantnet.org</a> · Gratis för begränsad användning</li>
             </ul>
           </div>
+        </SettingsSection>
+      </Card>
 
-          {/* Dölj spara-knappen för Provider-sektionen, den är gemensam */}
+      {/* ── Växtdiagnos — API ─────────────────────────────────────── */}
+      <Card>
+        <SectionHeader icon={Stethoscope} title="Växtdiagnos — API" description="API-nyckel för växtdiagnos (Health Assessment)" />
+        <SettingsSection action={saveDiagKeys}>
+          <div className="space-y-4">
+            <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs text-amber-700">
+              PlantNet stöder inte växtdiagnos – Plant.id krävs.
+            </div>
+            <Field
+              label="Plant.id API-nyckel (diagnos)"
+              name={SETTINGS.DIAG_PLANT_ID_KEY}
+              defaultValue={s.diagPlantIdKey}
+              placeholder="Lämna tom för att återanvända identifierings-nyckeln"
+              type="password"
+              hint="Om tom används samma Plant.id-nyckel som för identifiering. Fyll i en separat nyckel om du vill separera kostnaderna."
+            />
+          </div>
         </SettingsSection>
       </Card>
 

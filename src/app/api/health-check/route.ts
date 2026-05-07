@@ -454,9 +454,9 @@ export async function POST(req: NextRequest) {
     let rawResults: Omit<HealthCheckResult, "guides" | "products">[];
     let provider = "mock";
 
-    if (aiSettings.provider === "plant.id" && aiSettings.plantIdKey && base64) {
+    if (aiSettings.diagPlantIdKey && base64) {
       try {
-        rawResults = await callPlantIdHealth(base64, aiSettings.plantIdKey);
+        rawResults = await callPlantIdHealth(base64, aiSettings.diagPlantIdKey);
         provider   = "plant.id";
       } catch (err) {
         await logAiFailure({
@@ -468,9 +468,6 @@ export async function POST(req: NextRequest) {
         // Graceful fallback till mock
         rawResults = computeMockDiagnosis(symptoms);
       }
-    } else if (aiSettings.provider === "plantnet" && aiSettings.plantNetKey && base64) {
-      // PlantNet stöder inte Health Assessment – fall back till mock för diagnos
-      rawResults = computeMockDiagnosis(symptoms);
     } else {
       rawResults = computeMockDiagnosis(symptoms);
     }

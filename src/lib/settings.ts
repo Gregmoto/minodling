@@ -20,6 +20,7 @@ export const SETTINGS = {
   AI_PROVIDER:              "plant_ai_provider",
   AI_PLANT_ID_KEY:          "plant_id_api_key",
   AI_PLANTNET_KEY:          "plantnet_api_key",
+  DIAG_PLANT_ID_KEY:        "diag_plant_id_key",
   AI_IDENTIFICATION_ON:     "plant_identification_enabled",
   AI_DIAGNOSIS_ON:          "plant_diagnosis_enabled",
   AI_FREE_CHECKS_PER_MONTH: "free_ai_checks_per_month",
