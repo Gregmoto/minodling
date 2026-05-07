@@ -43,8 +43,10 @@ const groups = [
   {
     label: "Växter & odling",
     items: [
-      { label: "Växtdatabas",        href: "/admin/vaxter",        icon: Leaf },
-      { label: "Odlingskalender",    href: "/admin/kalender",      icon: CalendarDays },
+      { label: "Växtdatabas",         href: "/admin/vaxter",             icon: Leaf },
+      { label: "Odlingskalender",     href: "/admin/kalender",           icon: CalendarDays },
+      { label: "Identifieringar",     href: "/admin/vaxtidentifiering",  icon: Search },
+      { label: "Diagnoser",           href: "/admin/vaxtdiagnos",        icon: Bot },
     ],
   },
   {
