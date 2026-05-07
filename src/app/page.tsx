@@ -311,71 +311,225 @@ export default async function HomePage() {
               </div>
 
               {/* ── Illustration-kolumn ── */}
-              <div className="hidden lg:flex shrink-0 w-[420px] items-center justify-center">
-                <svg viewBox="0 0 420 380" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto drop-shadow-sm" aria-hidden="true">
-                  {/* Bakgrund: rund cirkel */}
-                  <ellipse cx="210" cy="340" rx="160" ry="18" fill="#d1fae5" opacity="0.6"/>
-
-                  {/* Kruka */}
-                  <path d="M155 310 L175 380 H245 L265 310 Z" fill="#c084fc" opacity="0.85"/>
-                  <path d="M150 295 H270 Q275 295 275 305 Q275 315 270 315 H150 Q145 315 145 305 Q145 295 150 295 Z" fill="#a855f7" opacity="0.9"/>
-                  <path d="M175 295 Q185 280 210 278 Q235 280 245 295 Z" fill="#e9d5ff" opacity="0.5"/>
-
-                  {/* Jord */}
-                  <ellipse cx="210" cy="295" rx="55" ry="8" fill="#92400e" opacity="0.3"/>
-
-                  {/* Stam */}
-                  <path d="M210 290 Q208 240 210 200" stroke="#16a34a" strokeWidth="5" strokeLinecap="round"/>
-
-                  {/* Stora blad vänster */}
-                  <path d="M210 240 Q170 210 155 175 Q185 178 210 220" fill="#22c55e" opacity="0.9"/>
-                  <path d="M210 240 Q170 210 155 175" stroke="#16a34a" strokeWidth="1.5" opacity="0.4"/>
-
-                  {/* Stora blad höger */}
-                  <path d="M210 220 Q250 185 268 150 Q238 158 210 205" fill="#4ade80" opacity="0.85"/>
-                  <path d="M210 220 Q250 185 268 150" stroke="#16a34a" strokeWidth="1.5" opacity="0.4"/>
-
-                  {/* Mellanblad vänster */}
-                  <path d="M210 200 Q178 175 168 145 Q195 152 210 190" fill="#86efac" opacity="0.8"/>
-
-                  {/* Mellanblad höger */}
-                  <path d="M210 185 Q242 158 252 128 Q228 138 210 178" fill="#22c55e" opacity="0.75"/>
-
-                  {/* Blomma topp */}
-                  <circle cx="210" cy="118" r="14" fill="#fbbf24"/>
-                  <circle cx="210" cy="118" r="8"  fill="#f59e0b"/>
-                  {/* Kronblad */}
-                  {[0,45,90,135,180,225,270,315].map((deg, i) => {
-                    const rad = (deg * Math.PI) / 180;
-                    const x = 210 + Math.cos(rad) * 22;
-                    const y = 118 + Math.sin(rad) * 22;
-                    return <ellipse key={i} cx={x} cy={y} rx="7" ry="10" fill="#fde68a" transform={`rotate(${deg},${x},${y})`} opacity="0.9"/>;
-                  })}
-
-                  {/* Små extra blommor */}
-                  <circle cx="168" cy="155" r="8"  fill="#f9a8d4" opacity="0.8"/>
-                  <circle cx="168" cy="155" r="4"  fill="#ec4899" opacity="0.9"/>
-                  <circle cx="252" cy="138" r="7"  fill="#86efac" opacity="0.85"/>
-                  <circle cx="252" cy="138" r="3.5" fill="#22c55e" opacity="0.9"/>
-
-                  {/* Droppar / prickar dekor */}
-                  <circle cx="130" cy="200" r="5" fill="#bbf7d0" opacity="0.7"/>
-                  <circle cx="295" cy="185" r="4" fill="#fef08a" opacity="0.7"/>
-                  <circle cx="140" cy="270" r="3" fill="#e9d5ff" opacity="0.6"/>
-                  <circle cx="285" cy="260" r="4" fill="#bbf7d0" opacity="0.6"/>
-
-                  {/* AI-chip uppe till höger */}
-                  <rect x="290" y="100" width="110" height="36" rx="18" fill="white" opacity="0.9" filter="url(#shadow)"/>
+              <div className="hidden lg:flex shrink-0 w-[420px] items-center justify-center select-none">
+                <svg viewBox="0 0 420 460" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto drop-shadow-sm" aria-hidden="true">
                   <defs>
-                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.12"/>
+                    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="7" floodColor="#000" floodOpacity="0.09"/>
                     </filter>
+                    <filter id="ps" x="-15%" y="-10%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="10" stdDeviation="14" floodColor="#c2410c" floodOpacity="0.22"/>
+                    </filter>
+                    <radialGradient id="bg" cx="50%" cy="48%" r="48%">
+                      <stop offset="0%" stopColor="#f0fdf4"/>
+                      <stop offset="100%" stopColor="#f0fdf4" stopOpacity="0"/>
+                    </radialGradient>
+                    <linearGradient id="pot" x1="0.2" y1="0" x2="0.8" y2="1">
+                      <stop offset="0%" stopColor="#fdba74"/>
+                      <stop offset="40%" stopColor="#f97316"/>
+                      <stop offset="100%" stopColor="#c2410c"/>
+                    </linearGradient>
+                    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#fed7aa"/>
+                      <stop offset="100%" stopColor="#fb923c"/>
+                    </linearGradient>
+                    <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#92400e"/>
+                      <stop offset="100%" stopColor="#78350f"/>
+                    </linearGradient>
+                    <linearGradient id="ll" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#86efac"/>
+                      <stop offset="100%" stopColor="#15803d"/>
+                    </linearGradient>
+                    <linearGradient id="ld" x1="0.2" y1="0" x2="0.8" y2="1">
+                      <stop offset="0%" stopColor="#4ade80"/>
+                      <stop offset="100%" stopColor="#166534"/>
+                    </linearGradient>
+                    <radialGradient id="tom" cx="32%" cy="28%" r="62%">
+                      <stop offset="0%" stopColor="#fca5a5"/>
+                      <stop offset="55%" stopColor="#ef4444"/>
+                      <stop offset="100%" stopColor="#991b1b"/>
+                    </radialGradient>
+                    <radialGradient id="tom2" cx="32%" cy="28%" r="62%">
+                      <stop offset="0%" stopColor="#fecaca"/>
+                      <stop offset="55%" stopColor="#f87171"/>
+                      <stop offset="100%" stopColor="#b91c1c"/>
+                    </radialGradient>
+                    <linearGradient id="stk" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#a16207"/>
+                      <stop offset="100%" stopColor="#d97706"/>
+                    </linearGradient>
+                    <linearGradient id="wcan" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#7dd3fc"/>
+                      <stop offset="100%" stopColor="#0284c7"/>
+                    </linearGradient>
                   </defs>
-                  <text x="305" y="122" fontSize="11" fontWeight="600" fill="#16a34a" fontFamily="system-ui">🤖 AI-analys</text>
 
-                  {/* Chip nere till vänster */}
-                  <rect x="20" y="230" width="100" height="34" rx="17" fill="white" opacity="0.9" filter="url(#shadow)"/>
-                  <text x="35" y="251" fontSize="11" fontWeight="600" fill="#7c3aed" fontFamily="system-ui">📸 Identifiera</text>
+                  {/* Bakgrundsglow */}
+                  <circle cx="210" cy="230" r="200" fill="url(#bg)"/>
+
+                  {/* ── Bambu-stöd ── */}
+                  <rect x="217" y="168" width="7" height="222" rx="3.5" fill="url(#stk)" opacity="0.65"/>
+                  <rect x="216" y="210" width="9" height="3" rx="1.5" fill="#92400e" opacity="0.45"/>
+                  <rect x="216" y="255" width="9" height="3" rx="1.5" fill="#92400e" opacity="0.45"/>
+                  <rect x="216" y="300" width="9" height="3" rx="1.5" fill="#92400e" opacity="0.45"/>
+
+                  {/* ── Huvudstam ── */}
+                  <path d="M221 385 C219 345 216 295 220 250 C224 205 218 182 221 168" stroke="#15803d" strokeWidth="7.5" strokeLinecap="round"/>
+
+                  {/* ═══ GRENAR + BLAD ═══ */}
+
+                  {/* Vänster gren (övre) */}
+                  <path d="M221 205 C204 200 178 191 154 178" stroke="#16a34a" strokeWidth="5" strokeLinecap="round"/>
+                  {/* Bladgrupp vänster övre */}
+                  <path d="M154 178 C143 165 142 148 156 145 C170 142 176 161 167 172 C162 178 154 178 154 178Z" fill="url(#ll)"/>
+                  <path d="M154 178 C148 165 153 153 160 149" stroke="#15803d" strokeWidth="0.8" opacity="0.4"/>
+                  <path d="M170 183 C159 170 159 153 173 150 C187 147 192 166 183 177 C178 183 170 183 170Z" fill="url(#ld)"/>
+
+                  {/* Höger gren (övre) */}
+                  <path d="M221 228 C238 221 262 212 283 202" stroke="#16a34a" strokeWidth="4.5" strokeLinecap="round"/>
+                  <path d="M283 202 C292 190 294 173 281 169 C268 165 261 183 270 194 C275 200 283 202 283Z" fill="url(#ld)"/>
+                  <path d="M268 205 C277 193 278 176 265 172 C252 168 245 186 254 197 C259 203 268 205 268Z" fill="url(#ll)"/>
+
+                  {/* Vänster gren (mitten) */}
+                  <path d="M221 263 C205 256 184 247 166 240" stroke="#16a34a" strokeWidth="4" strokeLinecap="round"/>
+                  <path d="M166 240 C155 228 155 211 168 208 C181 205 187 223 178 234 C173 240 166 240 166Z" fill="url(#ll)"/>
+                  <path d="M181 243 C170 231 170 214 183 211 C196 208 201 226 192 237 C187 243 181 243 181Z" fill="url(#ld)"/>
+
+                  {/* Höger gren (mitten) */}
+                  <path d="M221 282 C240 275 262 269 280 263" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round"/>
+                  <path d="M280 263 C290 252 291 236 278 233 C265 230 258 247 268 258 C273 264 280 263 280Z" fill="url(#ld)"/>
+
+                  {/* Vänster gren (nedre) */}
+                  <path d="M221 320 C207 313 190 306 174 300" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round"/>
+                  <path d="M174 300 C163 288 163 271 176 268 C189 265 195 283 185 294 C180 300 174 300 174Z" fill="url(#ll)"/>
+
+                  {/* Höger gren (nedre) */}
+                  <path d="M221 334 C238 327 256 322 272 316" stroke="#16a34a" strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M272 316 C282 305 283 289 270 286 C257 283 250 300 260 311 C265 317 272 316 272Z" fill="url(#ld)"/>
+
+                  {/* ═══ TOMATER ═══ */}
+
+                  {/* Tomat-klase 1 — vänster övre (2 röda + 1 grön) */}
+                  <path d="M165 172 C167 160 165 155 163 151" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M157 168 C155 156 153 152 151 148" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  {/* Stor röd */}
+                  <circle cx="163" cy="144" r="14" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M156 138 C158 133 161 131 163 135 C165 131 168 133 170 138" stroke="#15803d" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  <circle cx="157" cy="139" r="4" fill="white" opacity="0.18"/>
+                  {/* Mellanstor röd */}
+                  <circle cx="149" cy="155" r="11" fill="url(#tom2)" filter="url(#sh)"/>
+                  <path d="M143 150 C145 147 147 145 149 148 C151 145 153 147 155 150" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="144" cy="150" r="2.8" fill="white" opacity="0.18"/>
+                  {/* Liten grön (omogen) */}
+                  <circle cx="175" cy="163" r="8.5" fill="#4ade80"/>
+                  <path d="M171 159 C173 156 175 155 175 158 C177 155 179 156 179 159" stroke="#15803d" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+
+                  {/* Tomat-klase 2 — höger övre */}
+                  <path d="M275 196 C277 184 275 179 273 174" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="273" cy="167" r="13" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M267 162 C269 157 271 156 273 159 C275 156 277 157 279 162" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="268" cy="162" r="3.2" fill="white" opacity="0.18"/>
+                  {/* Liten bredvid */}
+                  <circle cx="286" cy="182" r="9" fill="url(#tom2)"/>
+                  <path d="M282 178 C284 175 286 174 286 177 C288 174 290 175 290 178" stroke="#15803d" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+
+                  {/* Tomat-klase 3 — vänster mitten */}
+                  <path d="M178 235 C180 224 178 219 176 215" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="176" cy="208" r="12" fill="url(#tom2)" filter="url(#sh)"/>
+                  <path d="M170 203 C172 199 174 198 176 201 C178 198 180 199 182 203" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="171" cy="203" r="3" fill="white" opacity="0.18"/>
+
+                  {/* Tomat-klase 4 — höger mitten */}
+                  <path d="M272 258 C274 248 272 244 270 240" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="270" cy="233" r="11" fill="url(#tom)" filter="url(#sh)"/>
+                  <path d="M265 228 C267 225 269 224 270 227 C272 224 274 225 275 228" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="265" cy="228" r="2.8" fill="white" opacity="0.18"/>
+                  {/* Omogen grön vid sidan */}
+                  <circle cx="258" cy="272" r="7.5" fill="#86efac" opacity="0.9"/>
+
+                  {/* Tomat-klase 5 — vänster nedre */}
+                  <path d="M184 295 C182 286 180 282 178 278" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="178" cy="271" r="10" fill="url(#tom2)" filter="url(#sh)"/>
+                  <path d="M173 267 C175 264 177 263 178 266 C180 263 182 264 183 267" stroke="#15803d" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="174" cy="267" r="2.5" fill="white" opacity="0.18"/>
+
+                  {/* ── Kruka ── */}
+                  <ellipse cx="221" cy="412" rx="88" ry="12" fill="#000" opacity="0.07"/>
+                  <path d="M155 370 L172 406 H270 L287 370 Z" fill="url(#pot)" filter="url(#ps)"/>
+                  {/* Textur-linjer */}
+                  <path d="M160 378 L170 400" stroke="#c2410c" strokeWidth="1" opacity="0.25" strokeLinecap="round"/>
+                  <path d="M167 375 L178 400" stroke="#c2410c" strokeWidth="1" opacity="0.15" strokeLinecap="round"/>
+                  {/* Kant */}
+                  <rect x="142" y="356" width="158" height="20" rx="10" fill="url(#rim)"/>
+                  <path d="M152 362 Q172 357 195 359" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.38"/>
+                  {/* Jord */}
+                  <ellipse cx="221" cy="358" rx="70" ry="10" fill="url(#soil)"/>
+                  <ellipse cx="206" cy="357" rx="18" ry="5" fill="#78350f" opacity="0.35"/>
+                  <ellipse cx="238" cy="359" rx="12" ry="3.5" fill="#92400e" opacity="0.25"/>
+
+                  {/* ── Vattenkanna (höger nedre) ── */}
+                  <ellipse cx="348" cy="396" rx="26" ry="5" fill="#000" opacity="0.06"/>
+                  {/* Kanna-kropp */}
+                  <rect x="322" y="355" width="52" height="38" rx="10" fill="url(#wcan)"/>
+                  <rect x="322" y="355" width="52" height="38" rx="10" stroke="#0369a1" strokeWidth="1" opacity="0.4"/>
+                  {/* Handtag */}
+                  <path d="M374 362 C390 362 390 386 374 386" stroke="#0369a1" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                  {/* Pip */}
+                  <path d="M322 365 C310 360 300 355 292 348" stroke="#0284c7" strokeWidth="5" strokeLinecap="round"/>
+                  <ellipse cx="291" cy="347" rx="5" ry="3" fill="#7dd3fc" transform="rotate(-20 291 347)"/>
+                  {/* Glans */}
+                  <path d="M328 360 Q338 357 348 359" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
+                  {/* Vattendroppar */}
+                  <circle cx="280" cy="345" r="2.5" fill="#7dd3fc" opacity="0.8"/>
+                  <circle cx="274" cy="352" r="2" fill="#7dd3fc" opacity="0.6"/>
+                  <circle cx="270" cy="342" r="1.5" fill="#7dd3fc" opacity="0.5"/>
+
+                  {/* ── Floating card: AI-identifiering ── */}
+                  <rect x="274" y="96" width="136" height="72" rx="18" fill="white" filter="url(#sh)"/>
+                  <rect x="274" y="96" width="136" height="72" rx="18" stroke="#f0fdf4" strokeWidth="1.5"/>
+                  <circle cx="298" cy="119" r="15" fill="#dcfce7"/>
+                  <text x="291" y="125" fontSize="14" fontFamily="system-ui">🌿</text>
+                  <text x="320" y="115" fontSize="10.5" fontWeight="700" fill="#111827" fontFamily="system-ui, sans-serif">AI-identifiering</text>
+                  <text x="320" y="129" fontSize="8.5" fill="#6b7280" fontFamily="system-ui, sans-serif">Foto → Växtnamn</text>
+                  <rect x="282" y="145" width="68" height="15" rx="7.5" fill="#dcfce7"/>
+                  <text x="289" y="156" fontSize="8" fontWeight="600" fill="#16a34a" fontFamily="system-ui, sans-serif">Plant.id · AI ✓</text>
+
+                  {/* ── Floating card: Växtdiagnos ── */}
+                  <rect x="6" y="176" width="128" height="68" rx="18" fill="white" filter="url(#sh)"/>
+                  <rect x="6" y="176" width="128" height="68" rx="18" stroke="#fff7ed" strokeWidth="1.5"/>
+                  <circle cx="30" cy="198" r="15" fill="#fff7ed"/>
+                  <text x="23" y="204" fontSize="14" fontFamily="system-ui">🔍</text>
+                  <text x="52" y="194" fontSize="10.5" fontWeight="700" fill="#111827" fontFamily="system-ui, sans-serif">Växtdiagnos</text>
+                  <text x="52" y="208" fontSize="8.5" fill="#6b7280" fontFamily="system-ui, sans-serif">Symptom → Åtgärd</text>
+                  <rect x="13" y="224" width="58" height="13" rx="6.5" fill="#fff7ed"/>
+                  <text x="19" y="234" fontSize="8" fontWeight="600" fill="#ea580c" fontFamily="system-ui, sans-serif">Gratis · Snabbt</text>
+
+                  {/* ── Badge: Identifierad med % ── */}
+                  <rect x="18" y="308" width="124" height="42" rx="21" fill="white" filter="url(#sh)"/>
+                  <circle cx="44" cy="329" r="13" fill="#dcfce7"/>
+                  <text x="37" y="334" fontSize="13" fontFamily="system-ui">✓</text>
+                  <text x="63" y="333" fontSize="10" fontWeight="600" fill="#15803d" fontFamily="system-ui, sans-serif">Tomat · 94%</text>
+
+                  {/* ── Dekorativa prickar ── */}
+                  <circle cx="374" cy="178" r="6.5" fill="#fde68a" opacity="0.75"/>
+                  <circle cx="388" cy="204" r="4" fill="#bbf7d0" opacity="0.8"/>
+                  <circle cx="360" cy="210" r="4.5" fill="#fca5a5" opacity="0.6"/>
+                  <circle cx="30" cy="130" r="5" fill="#bbf7d0" opacity="0.7"/>
+                  <circle cx="12" cy="155" r="3.5" fill="#fde68a" opacity="0.65"/>
+                  <circle cx="50" cy="148" r="4" fill="#c7d2fe" opacity="0.65"/>
+                  <circle cx="210" cy="46" r="5.5" fill="#bbf7d0" opacity="0.5"/>
+                  <circle cx="232" cy="33" r="3.5" fill="#fde68a" opacity="0.55"/>
+                  <circle cx="188" cy="38" r="4" fill="#fca5a5" opacity="0.45"/>
+                  <circle cx="380" cy="280" r="3.5" fill="#c7d2fe" opacity="0.55"/>
+                  <circle cx="20" cy="390" r="3" fill="#fde68a" opacity="0.4"/>
+
+                  {/* ── Bi (dekorativ) ── */}
+                  <ellipse cx="310" cy="260" rx="9" ry="5.5" fill="#fbbf24" opacity="0.9"/>
+                  <line x1="307" y1="256" x2="307" y2="264" stroke="#92400e" strokeWidth="1.5" opacity="0.45"/>
+                  <line x1="312" y1="256" x2="312" y2="264" stroke="#92400e" strokeWidth="1.5" opacity="0.45"/>
+                  <ellipse cx="305" cy="254" rx="5.5" ry="3" fill="white" opacity="0.55" transform="rotate(-25 305 254)"/>
+                  <ellipse cx="316" cy="254" rx="5.5" ry="3" fill="white" opacity="0.55" transform="rotate(25 316 254)"/>
                 </svg>
               </div>
 
