@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { SETTINGS } from "@/lib/settings";
 import { Card } from "@/components/ui/Card";
 import { SettingsSection } from "../SettingsSection";
-import { saveAiSettings } from "./actions";
+import { saveAiKeys, saveAiToggles, saveAiFreeChecks, saveAiDisclaimer } from "./actions";
 import {
   Bot, Key, Power, AlertTriangle, BarChart3, FlaskConical,
 } from "lucide-react";
@@ -191,7 +191,7 @@ export default async function AiSettingsPage() {
       {/* ── API-nycklar & provider ────────────────────────────────── */}
       <Card>
         <SectionHeader icon={Key} title="API-nycklar" description="Anslutning till AI-tjänster för växtanalys" />
-        <SettingsSection action={saveAiSettings}>
+        <SettingsSection action={saveAiKeys}>
           <div className="space-y-4">
             <Field
               label="Plant.id API-nyckel"
@@ -244,7 +244,7 @@ export default async function AiSettingsPage() {
       {/* ── Aktivera/inaktivera funktioner ───────────────────────── */}
       <Card>
         <SectionHeader icon={Power} title="Funktioner" description="Slå på eller av växtanalys-funktioner för användarna" />
-        <SettingsSection action={saveAiSettings}>
+        <SettingsSection action={saveAiToggles}>
           <div className="space-y-4">
             <Toggle
               label="Aktivera växtidentifiering (/vaxtidentifiering)"
@@ -269,7 +269,7 @@ export default async function AiSettingsPage() {
           title="Gratisgräns & premium"
           description="Styr hur många gratis analyser inloggade användare får per månad"
         />
-        <SettingsSection action={saveAiSettings}>
+        <SettingsSection action={saveAiFreeChecks}>
           <Field
             label="Max gratis analyser per månad (per användare)"
             name={SETTINGS.AI_FREE_CHECKS_PER_MONTH}
@@ -296,7 +296,7 @@ export default async function AiSettingsPage() {
           title="Disclaimer"
           description="Text som visas under AI-analysresultaten"
         />
-        <SettingsSection action={saveAiSettings}>
+        <SettingsSection action={saveAiDisclaimer}>
           <Field
             label="Disclaimer-text"
             name={SETTINGS.AI_DISCLAIMER}
