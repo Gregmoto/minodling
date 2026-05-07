@@ -62,6 +62,7 @@ const getHomeData = unstable_cache(
       shopProducts,
       siteCounts,
       freeShippingRow,
+      heroStatsSetting,
     ] = await Promise.all([
       // Populära växter (featured + alphabet)
       prisma.plant.findMany({
@@ -123,6 +124,12 @@ const getHomeData = unstable_cache(
         where:  { key: "free_shipping_threshold" },
         select: { value: true },
       }).catch(() => null),
+
+      // Hero stats toggle
+      prisma.adminSetting.findUnique({
+        where:  { key: "hero_stats_visible" },
+        select: { value: true },
+      }).catch(() => null),
     ]);
 
     return {
@@ -137,7 +144,8 @@ const getHomeData = unstable_cache(
       guideCount:  siteCounts[2],
       freeShippingThreshold: freeShippingRow?.value
         ? parseInt(freeShippingRow.value, 10)
-        : 49900, // default 499 kr
+        : 49900,
+      heroStatsVisible: heroStatsSetting?.value !== "false",
     };
   },
   ["home-all"],
@@ -216,6 +224,7 @@ export default async function HomePage() {
   const {
     plants, calendarTips, popularPosts, memberImages, guides,
     shopProducts, plantCount, userCount, guideCount, freeShippingThreshold,
+    heroStatsVisible,
   } = data;
 
   return (
@@ -239,61 +248,137 @@ export default async function HomePage() {
           </div>
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-28">
-            <div className="max-w-2xl">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full bg-green-100 border border-green-200 px-4 py-1.5 text-sm font-medium text-green-800 mb-6">
-                <Sprout className="h-4 w-4" />
-                Sveriges odlingscommunity
-              </div>
+            <div className="flex items-center gap-12 lg:gap-20">
 
-              {/* Rubrik */}
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
-                Odla smartare –<br />
-                <span className="text-green-600">från frö till skörd</span>
-              </h1>
+              {/* ── Text-kolumn ── */}
+              <div className="flex-1 min-w-0">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 rounded-full bg-green-100 border border-green-200 px-4 py-1.5 text-sm font-medium text-green-800 mb-6">
+                  <Sprout className="h-4 w-4" />
+                  Sveriges odlingscommunity
+                </div>
 
-              <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-xl">
-                Planera din odling med AI-hjälp, identifiera växter, diagnos­tisera problem och hitta inspiration i vår community.
-              </p>
+                {/* Rubrik */}
+                <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
+                  Odla smartare –<br />
+                  <span className="text-green-600">från frö till skörd</span>
+                </h1>
 
-              {/* CTA */}
-              <div className="flex flex-wrap gap-3">
-                {navUser ? (
+                <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-xl">
+                  Planera din odling med AI-hjälp, identifiera växter, diagnos­tisera problem och hitta inspiration i vår community.
+                </p>
+
+                {/* CTA */}
+                <div className="flex flex-wrap gap-3">
+                  {navUser ? (
+                    <Link
+                      href="/min-odling"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors shadow-sm"
+                    >
+                      <Sprout className="h-4 w-4" /> Min odling
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/auth/register"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors shadow-sm"
+                    >
+                      Kom igång – gratis <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
                   <Link
-                    href="/min-odling"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors shadow-sm"
+                    href="/vaxtidentifiering"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 bg-white hover:border-green-300 hover:bg-green-50 text-gray-700 font-semibold text-sm transition-all"
                   >
-                    <Sprout className="h-4 w-4" /> Min odling
+                    <Camera className="h-4 w-4 text-green-600" /> Identifiera växt
                   </Link>
-                ) : (
-                  <Link
-                    href="/auth/register"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors shadow-sm"
-                  >
-                    Kom igång – gratis <ArrowRight className="h-4 w-4" />
-                  </Link>
-                )}
-                <Link
-                  href="/vaxtidentifiering"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 bg-white hover:border-green-300 hover:bg-green-50 text-gray-700 font-semibold text-sm transition-all"
-                >
-                  <Camera className="h-4 w-4 text-green-600" /> Identifiera växt
-                </Link>
-              </div>
+                </div>
 
-              {/* Social proof */}
-              <div className="flex items-center gap-6 mt-8">
-                {[
-                  { value: plantCount,  label: "växter i databasen" },
-                  { value: userCount,   label: "aktiva odlare" },
-                  { value: guideCount,  label: "guider" },
-                ].map((s) => s.value > 0 ? (
-                  <div key={s.label}>
-                    <p className="text-xl font-bold text-gray-900">{s.value.toLocaleString("sv-SE")}+</p>
-                    <p className="text-xs text-gray-500">{s.label}</p>
+                {/* Social proof */}
+                {heroStatsVisible && (
+                  <div className="flex items-center gap-6 mt-8">
+                    {[
+                      { value: plantCount,  label: "växter i databasen" },
+                      { value: userCount,   label: "aktiva odlare" },
+                      { value: guideCount,  label: "guider" },
+                    ].map((s) => s.value > 0 ? (
+                      <div key={s.label}>
+                        <p className="text-xl font-bold text-gray-900">{s.value.toLocaleString("sv-SE")}+</p>
+                        <p className="text-xs text-gray-500">{s.label}</p>
+                      </div>
+                    ) : null)}
                   </div>
-                ) : null)}
+                )}
               </div>
+
+              {/* ── Illustration-kolumn ── */}
+              <div className="hidden lg:flex shrink-0 w-[420px] items-center justify-center">
+                <svg viewBox="0 0 420 380" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto drop-shadow-sm" aria-hidden="true">
+                  {/* Bakgrund: rund cirkel */}
+                  <ellipse cx="210" cy="340" rx="160" ry="18" fill="#d1fae5" opacity="0.6"/>
+
+                  {/* Kruka */}
+                  <path d="M155 310 L175 380 H245 L265 310 Z" fill="#c084fc" opacity="0.85"/>
+                  <path d="M150 295 H270 Q275 295 275 305 Q275 315 270 315 H150 Q145 315 145 305 Q145 295 150 295 Z" fill="#a855f7" opacity="0.9"/>
+                  <path d="M175 295 Q185 280 210 278 Q235 280 245 295 Z" fill="#e9d5ff" opacity="0.5"/>
+
+                  {/* Jord */}
+                  <ellipse cx="210" cy="295" rx="55" ry="8" fill="#92400e" opacity="0.3"/>
+
+                  {/* Stam */}
+                  <path d="M210 290 Q208 240 210 200" stroke="#16a34a" strokeWidth="5" strokeLinecap="round"/>
+
+                  {/* Stora blad vänster */}
+                  <path d="M210 240 Q170 210 155 175 Q185 178 210 220" fill="#22c55e" opacity="0.9"/>
+                  <path d="M210 240 Q170 210 155 175" stroke="#16a34a" strokeWidth="1.5" opacity="0.4"/>
+
+                  {/* Stora blad höger */}
+                  <path d="M210 220 Q250 185 268 150 Q238 158 210 205" fill="#4ade80" opacity="0.85"/>
+                  <path d="M210 220 Q250 185 268 150" stroke="#16a34a" strokeWidth="1.5" opacity="0.4"/>
+
+                  {/* Mellanblad vänster */}
+                  <path d="M210 200 Q178 175 168 145 Q195 152 210 190" fill="#86efac" opacity="0.8"/>
+
+                  {/* Mellanblad höger */}
+                  <path d="M210 185 Q242 158 252 128 Q228 138 210 178" fill="#22c55e" opacity="0.75"/>
+
+                  {/* Blomma topp */}
+                  <circle cx="210" cy="118" r="14" fill="#fbbf24"/>
+                  <circle cx="210" cy="118" r="8"  fill="#f59e0b"/>
+                  {/* Kronblad */}
+                  {[0,45,90,135,180,225,270,315].map((deg, i) => {
+                    const rad = (deg * Math.PI) / 180;
+                    const x = 210 + Math.cos(rad) * 22;
+                    const y = 118 + Math.sin(rad) * 22;
+                    return <ellipse key={i} cx={x} cy={y} rx="7" ry="10" fill="#fde68a" transform={`rotate(${deg},${x},${y})`} opacity="0.9"/>;
+                  })}
+
+                  {/* Små extra blommor */}
+                  <circle cx="168" cy="155" r="8"  fill="#f9a8d4" opacity="0.8"/>
+                  <circle cx="168" cy="155" r="4"  fill="#ec4899" opacity="0.9"/>
+                  <circle cx="252" cy="138" r="7"  fill="#86efac" opacity="0.85"/>
+                  <circle cx="252" cy="138" r="3.5" fill="#22c55e" opacity="0.9"/>
+
+                  {/* Droppar / prickar dekor */}
+                  <circle cx="130" cy="200" r="5" fill="#bbf7d0" opacity="0.7"/>
+                  <circle cx="295" cy="185" r="4" fill="#fef08a" opacity="0.7"/>
+                  <circle cx="140" cy="270" r="3" fill="#e9d5ff" opacity="0.6"/>
+                  <circle cx="285" cy="260" r="4" fill="#bbf7d0" opacity="0.6"/>
+
+                  {/* AI-chip uppe till höger */}
+                  <rect x="290" y="100" width="110" height="36" rx="18" fill="white" opacity="0.9" filter="url(#shadow)"/>
+                  <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.12"/>
+                    </filter>
+                  </defs>
+                  <text x="305" y="122" fontSize="11" fontWeight="600" fill="#16a34a" fontFamily="system-ui">🤖 AI-analys</text>
+
+                  {/* Chip nere till vänster */}
+                  <rect x="20" y="230" width="100" height="34" rx="17" fill="white" opacity="0.9" filter="url(#shadow)"/>
+                  <text x="35" y="251" fontSize="11" fontWeight="600" fill="#7c3aed" fontFamily="system-ui">📸 Identifiera</text>
+                </svg>
+              </div>
+
             </div>
           </div>
 

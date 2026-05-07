@@ -2,9 +2,9 @@ import { Metadata } from "next";
 import { getSettings, SETTINGS } from "@/lib/settings";
 import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
-import { BarChart3, Search, Globe, CheckCircle2, Bot } from "lucide-react";
+import { BarChart3, Search, Globe, CheckCircle2, Bot, LayoutDashboard } from "lucide-react";
 import { SettingsSection } from "./SettingsSection";
-import { saveAnalytics, saveSeo, saveSite, saveAiKeys } from "./actions";
+import { saveAnalytics, saveSeo, saveSite, saveAiKeys, saveHomepage } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Inställningar | Admin" };
@@ -52,11 +52,13 @@ function SectionHeader({ icon: Icon, title, description }: {
 // ── Sida ──────────────────────────────────────────────────────────
 
 export default async function InstallningarPage() {
-  const [s, plantIdSetting, plantNetSetting] = await Promise.all([
+  const [s, plantIdSetting, plantNetSetting, heroStatsSetting] = await Promise.all([
     getSettings(),
     prisma.adminSetting.findUnique({ where: { key: "plant_id_api_key" }, select: { value: true } }).catch(() => null),
     prisma.adminSetting.findUnique({ where: { key: "plantnet_api_key" }, select: { value: true } }).catch(() => null),
+    prisma.adminSetting.findUnique({ where: { key: SETTINGS.HERO_STATS_VISIBLE }, select: { value: true } }).catch(() => null),
   ]);
+  const heroStatsVisible = heroStatsSetting?.value !== "false";
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -134,6 +136,30 @@ export default async function InstallningarPage() {
               <li><strong>PlantNet</strong> — enbart identifiering. Registrera på <a href="https://my.plantnet.org" target="_blank" rel="noopener" className="underline">my.plantnet.org</a></li>
               <li>Utan nyckel körs <strong>demoläge</strong> med simulerade svar</li>
             </ul>
+          </div>
+        </SettingsSection>
+      </Card>
+
+      {/* ── Startsida ─────────────────────────────────────────── */}
+      <Card>
+        <SectionHeader icon={LayoutDashboard} title="Startsida" description="Styr vad som visas på startsidan" />
+        <SettingsSection action={saveHomepage}>
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id={SETTINGS.HERO_STATS_VISIBLE}
+              name={SETTINGS.HERO_STATS_VISIBLE}
+              defaultChecked={heroStatsVisible}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+            />
+            <div>
+              <label htmlFor={SETTINGS.HERO_STATS_VISIBLE} className="text-sm font-medium text-gray-700 cursor-pointer">
+                Visa statistik i hero
+              </label>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Visar antal växter, aktiva odlare och guider under hero-texten på startsidan.
+              </p>
+            </div>
           </div>
         </SettingsSection>
       </Card>

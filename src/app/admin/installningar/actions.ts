@@ -40,6 +40,13 @@ export async function saveSite(_: unknown, fd: FormData) {
   return ok;
 }
 
+export async function saveHomepage(_: unknown, fd: FormData) {
+  await updateSettingsBulk({
+    [SETTINGS.HERO_STATS_VISIBLE]: fd.has(SETTINGS.HERO_STATS_VISIBLE) ? "true" : "false",
+  });
+  return ok;
+}
+
 export async function saveAiKeys(_: unknown, fd: FormData) {
   await updateSettingsBulk({
     plant_id_api_key: fd.get("plant_id_api_key") as string,

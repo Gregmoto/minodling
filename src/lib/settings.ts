@@ -32,6 +32,8 @@ export const SETTINGS = {
   SITE_FACEBOOK:        "site_facebook",
   SITE_TWITTER:         "site_twitter",
   SITE_COOKIE_TEXT:     "site_cookie_text",
+  // Startsida
+  HERO_STATS_VISIBLE:   "hero_stats_visible",
 } as const;
 
 // ── Typer ────────────────────────────────────────────────────────
