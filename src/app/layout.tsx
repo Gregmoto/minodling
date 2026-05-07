@@ -54,7 +54,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: s.seoDescription,
       images:      [ogImage],
     },
-    robots:      s.seoRobots,
+    robots:      s.seoRobots || "index, follow",
     metadataBase: new URL(s.seoCanonical),
     icons: {
       icon:     [{ url: "/icon.svg", type: "image/svg+xml" }],

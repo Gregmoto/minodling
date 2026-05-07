@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Skapa odlargrupp" };
 export default async function NyGruppPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/logga-in");
+  if (!user) redirect("/auth/login");
 
   const navProfile = await prisma.profile.findUnique({
     where: { userId: user.id },

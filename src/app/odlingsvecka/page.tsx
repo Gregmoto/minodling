@@ -22,13 +22,13 @@ const SWEDISH_MONTHS = ["", "januari", "februari", "mars", "april", "maj", "juni
 export default async function OdlingsveckaPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/logga-in");
+  if (!user) redirect("/auth/login");
 
   const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
     select: { id: true, username: true, fullName: true, avatarUrl: true, role: true, growingType: true },
   });
-  if (!profile) redirect("/logga-in");
+  if (!profile) redirect("/auth/login");
 
   const navUser = {
     id: profile.id, username: profile.username,

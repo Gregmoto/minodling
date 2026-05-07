@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Skicka växtproblem – Växtdiagnos
 export default async function NyDiagnosPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/logga-in");
+  if (!user) redirect("/auth/login");
 
   const navProfile = await prisma.profile.findUnique({
     where: { userId: user.id },
