@@ -474,7 +474,7 @@ export function PlantIdentifier({ isMock, isLoggedIn, usedThisMonth, limit }: Pr
             </span>
           </div>
           <input
-            ref={fileRef} type="file" accept="image/*" capture="environment"
+            ref={fileRef} type="file" accept="image/*"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
             className="hidden"
           />

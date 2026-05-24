@@ -278,7 +278,6 @@ function FollowUpSection({ checkId, followUps }: { checkId: string; followUps: F
             type="file"
             name="image"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
           />
