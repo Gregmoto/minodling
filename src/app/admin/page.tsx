@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Users, FileText, MessageSquare, Leaf, BookOpen, Megaphone, HelpCircle, UserPlus, Flag, ArrowRight } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
@@ -13,9 +14,80 @@ async function safeCount(fn: () => Promise<number>): Promise<number> {
   try { return await fn(); } catch { return 0; }
 }
 
+// ── Senaste registreringar (streamas via Suspense) ──────────────────────
+async function RecentUsers() {
+  const recentUsers = await prisma.profile.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 6,
+    select: { id: true, username: true, fullName: true, createdAt: true, role: true },
+  }).catch(() => []);
+
+  const roleColors: Record<string, "danger" | "warning" | "default"> = {
+    admin: "danger", moderator: "warning", user: "default",
+  };
+
+  return recentUsers.length === 0 ? (
+    <div className="py-8 text-center text-sm text-gray-400">Inga användare ännu</div>
+  ) : (
+    <div className="divide-y divide-gray-100">
+      {recentUsers.map((u) => (
+        <div key={u.id} className="flex items-center justify-between px-5 py-3">
+          <div>
+            <div className="text-sm font-medium text-gray-900">{u.fullName ?? u.username}</div>
+            <div className="text-xs text-gray-400">@{u.username}</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={roleColors[u.role] ?? "default"} size="sm">{u.role}</Badge>
+            <span className="text-xs text-gray-400">{formatDate(u.createdAt)}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Väntande rapporter (streamas via Suspense) ──────────────────────────
+async function RecentReports({ pendingCount }: { pendingCount: number }) {
+  const recentReports = await prisma.report.findMany({
+    where: { status: "pending" },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    include: { reporter: { select: { username: true } } },
+  }).catch(() => []);
+
+  return recentReports.length === 0 ? (
+    <div className="py-10 text-center text-sm text-gray-400">Inga väntande rapporter 🎉</div>
+  ) : (
+    <div className="divide-y divide-gray-100">
+      {recentReports.map((r) => (
+        <div key={r.id} className="px-5 py-3 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-gray-900 line-clamp-1">{r.reason}</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {r.targetType} · @{r.reporter.username} · {formatDate(r.createdAt)}
+            </p>
+          </div>
+          <Badge variant="danger" size="sm">Väntar</Badge>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ListSkeleton() {
+  return (
+    <div className="p-4 space-y-3">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="h-10 rounded-xl bg-gray-100 animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
 export default async function AdminDashboardPage() {
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
+  // Alla räkningar parallellt – inga sekventiella väntetider
   const [
     totalUsers, totalPosts, totalQuestions, totalComments,
     totalPlants, totalGuides, activeBanners,
@@ -33,34 +105,16 @@ export default async function AdminDashboardPage() {
     safeCount(() => prisma.report.count({ where: { status: "pending" } })),
   ]);
 
-  const [recentUsers, recentReports] = await Promise.all([
-    prisma.profile.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      select: { id: true, username: true, fullName: true, createdAt: true, role: true },
-    }).catch(() => []),
-    prisma.report.findMany({
-      where: { status: "pending" },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: { reporter: { select: { username: true } } },
-    }).catch(() => []),
-  ]);
-
   const stats = [
-    { label: "Användare",     value: totalUsers,     sub: `+${newUsersWeek} denna vecka`, icon: Users,        color: "text-blue-600 bg-blue-50",   href: "/admin/anvandare" },
-    { label: "Inlägg",        value: totalPosts,     sub: `+${newPostsWeek} denna vecka`, icon: FileText,     color: "text-green-600 bg-green-50",  href: "/admin/inlagg" },
-    { label: "Frågor",        value: totalQuestions, sub: null,                           icon: HelpCircle,   color: "text-indigo-600 bg-indigo-50", href: "/admin/fragor" },
-    { label: "Kommentarer",   value: totalComments,  sub: null,                           icon: MessageSquare,color: "text-purple-600 bg-purple-50", href: "/admin/kommentarer" },
-    { label: "Växter",        value: totalPlants,    sub: null,                           icon: Leaf,         color: "text-emerald-600 bg-emerald-50",href: "/admin/vaxter" },
-    { label: "Guider",        value: totalGuides,    sub: "publicerade",                  icon: BookOpen,     color: "text-amber-600 bg-amber-50",  href: "/admin/guider" },
-    { label: "Aktiva banners",value: activeBanners,  sub: null,                           icon: Megaphone,    color: "text-pink-600 bg-pink-50",    href: "/admin/annonser" },
-    { label: "Rapporter",     value: pendingReports, sub: "väntar",                       icon: Flag,         color: "text-red-600 bg-red-50",      href: "/admin/rapporter" },
+    { label: "Användare",      value: totalUsers,     sub: `+${newUsersWeek} denna vecka`, icon: Users,         color: "text-blue-600 bg-blue-50",    href: "/admin/anvandare" },
+    { label: "Inlägg",         value: totalPosts,     sub: `+${newPostsWeek} denna vecka`, icon: FileText,      color: "text-green-600 bg-green-50",   href: "/admin/inlagg" },
+    { label: "Frågor",         value: totalQuestions, sub: null,                           icon: HelpCircle,    color: "text-indigo-600 bg-indigo-50",  href: "/admin/fragor" },
+    { label: "Kommentarer",    value: totalComments,  sub: null,                           icon: MessageSquare, color: "text-purple-600 bg-purple-50",  href: "/admin/kommentarer" },
+    { label: "Växter",         value: totalPlants,    sub: null,                           icon: Leaf,          color: "text-emerald-600 bg-emerald-50",href: "/admin/vaxter" },
+    { label: "Guider",         value: totalGuides,    sub: "publicerade",                  icon: BookOpen,      color: "text-amber-600 bg-amber-50",   href: "/admin/guider" },
+    { label: "Aktiva banners", value: activeBanners,  sub: null,                           icon: Megaphone,     color: "text-pink-600 bg-pink-50",     href: "/admin/annonser" },
+    { label: "Rapporter",      value: pendingReports, sub: "väntar",                       icon: Flag,          color: "text-red-600 bg-red-50",       href: "/admin/rapporter" },
   ];
-
-  const roleColors: Record<string, "danger" | "warning" | "default"> = {
-    admin: "danger", moderator: "warning", user: "default",
-  };
 
   return (
     <div className="space-y-8">
@@ -69,7 +123,7 @@ export default async function AdminDashboardPage() {
         <p className="text-gray-500 text-sm mt-1">Välkommen till Minodlings adminpanel</p>
       </div>
 
-      {/* Stats */}
+      {/* Stats – visas direkt */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map((s) => {
           const Icon = s.icon;
@@ -88,6 +142,7 @@ export default async function AdminDashboardPage() {
         })}
       </div>
 
+      {/* Listor – streamas via Suspense */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Senaste användare */}
         <Card padding="none">
@@ -100,27 +155,12 @@ export default async function AdminDashboardPage() {
               Se alla <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          {recentUsers.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-400">Inga användare ännu</div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {recentUsers.map((u) => (
-                <div key={u.id} className="flex items-center justify-between px-5 py-3">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{u.fullName ?? u.username}</div>
-                    <div className="text-xs text-gray-400">@{u.username}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={roleColors[u.role] ?? "default"} size="sm">{u.role}</Badge>
-                    <span className="text-xs text-gray-400">{formatDate(u.createdAt)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <Suspense fallback={<ListSkeleton />}>
+            <RecentUsers />
+          </Suspense>
         </Card>
 
-        {/* Senaste rapporter */}
+        {/* Väntande rapporter */}
         <Card padding="none">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
@@ -138,23 +178,9 @@ export default async function AdminDashboardPage() {
               Se alla <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          {recentReports.length === 0 ? (
-            <div className="py-10 text-center text-sm text-gray-400">Inga väntande rapporter 🎉</div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {recentReports.map((r) => (
-                <div key={r.id} className="px-5 py-3 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 line-clamp-1">{r.reason}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {r.targetType} · @{r.reporter.username} · {formatDate(r.createdAt)}
-                    </p>
-                  </div>
-                  <Badge variant="danger" size="sm">Väntar</Badge>
-                </div>
-              ))}
-            </div>
-          )}
+          <Suspense fallback={<ListSkeleton />}>
+            <RecentReports pendingCount={pendingReports} />
+          </Suspense>
         </Card>
       </div>
     </div>
