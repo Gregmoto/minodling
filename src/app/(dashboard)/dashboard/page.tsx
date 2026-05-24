@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Sprout, MessageSquare, Heart, Star, TrendingUp, Plus, ArrowRight, Bell, AlertTriangle, CalendarDays } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -9,10 +10,47 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import { CompleteButton } from "@/components/reminders/CompleteButton";
-import { formatRelativeDate, formatDate } from "@/lib/utils";
+import { formatRelativeDate } from "@/lib/utils";
 import { REMINDER_TYPES } from "@/app/paminnelser/constants";
 import { WeeklyTaskWidget } from "@/components/odlingsvecka/WeeklyTaskWidget";
 import { getOrGenerateWeeklyTasks, getISOWeek } from "@/lib/weeklyTasks";
+
+// ── Asynkront vecko-block (laddas via Suspense) ───────────────────────
+async function WeeklySection({ profileId }: { profileId: string }) {
+  const { weekNumber } = getISOWeek(new Date());
+  const weeklyTasks = await getOrGenerateWeeklyTasks(profileId);
+  return (
+    <Card padding="none">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-green-600" />
+          <span className="text-sm font-semibold text-gray-800">Din odlingsvecka</span>
+          <span className="text-xs text-gray-400">v.{weekNumber}</span>
+        </div>
+        <Link href="/odlingsvecka" className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 transition-colors">
+          Visa allt <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <WeeklyTaskWidget tasks={weeklyTasks.slice(0, 4)} weekNumber={weekNumber} />
+    </Card>
+  );
+}
+
+function WeeklySkeletonFallback() {
+  return (
+    <Card padding="none">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+        <CalendarDays className="h-4 w-4 text-green-600" />
+        <span className="text-sm font-semibold text-gray-800">Din odlingsvecka</span>
+      </div>
+      <div className="p-4 space-y-3">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="h-10 rounded-xl bg-gray-100 animate-pulse" />
+        ))}
+      </div>
+    </Card>
+  );
+}
 
 export const metadata: Metadata = { title: "Min dashboard" };
 
@@ -42,10 +80,7 @@ export default async function DashboardPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const { weekNumber } = getISOWeek(new Date());
-
-  const [weeklyTasks, upcomingReminders, overdueReminders] = await Promise.all([
-    getOrGenerateWeeklyTasks(profile.id),
+  const [upcomingReminders, overdueReminders] = await Promise.all([
     prisma.reminder.findMany({
       where:   { userId: profile.id, isCompleted: false, dueDate: { gte: today, lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) } },
       orderBy: { dueDate: "asc" },
@@ -190,20 +225,10 @@ export default async function DashboardPage() {
             )}
           </Card>
 
-          {/* Din odlingsvecka – kompakt under inlägg */}
-          <Card padding="none">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-semibold text-gray-800">Din odlingsvecka</span>
-                <span className="text-xs text-gray-400">v.{weekNumber}</span>
-              </div>
-              <Link href="/odlingsvecka" className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 transition-colors">
-                Visa allt <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-            <WeeklyTaskWidget tasks={weeklyTasks.slice(0, 4)} weekNumber={weekNumber} />
-          </Card>
+          {/* Din odlingsvecka – laddas asynkront via Suspense */}
+          <Suspense fallback={<WeeklySkeletonFallback />}>
+            <WeeklySection profileId={profile.id} />
+          </Suspense>
         </div>
 
         {/* Sidebar */}

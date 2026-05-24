@@ -68,16 +68,30 @@ export async function generateWeeklyTasks(profileId: string): Promise<void> {
 
   let order = 0;
 
-  // ── 1. Påminnelser denna vecka ──────────────────────────────────────
-  const reminders = await prisma.reminder.findMany({
-    where: {
-      userId:      profileId,
-      isCompleted: false,
-      dueDate:     { gte: weekStart, lte: weekEnd },
-    },
-    orderBy: { dueDate: "asc" },
-    take: 2,
-  });
+  // ── 1–3. Hämta allt parallellt ─────────────────────────────────────
+  const [reminders, diaries, calendarItems] = await Promise.all([
+    prisma.reminder.findMany({
+      where: {
+        userId:      profileId,
+        isCompleted: false,
+        dueDate:     { gte: weekStart, lte: weekEnd },
+      },
+      orderBy: { dueDate: "asc" },
+      take: 2,
+    }),
+    prisma.gardenDiary.findMany({
+      where:   { userId: profileId, status: "growing" },
+      orderBy: { updatedAt: "desc" },
+      take:    3,
+      select:  { id: true, title: true, customPlantName: true, plant: { select: { name: true } } },
+    }),
+    prisma.gardenCalendar.findMany({
+      where:   { month, status: "published" },
+      orderBy: { createdAt: "asc" },
+      take:    5,
+      select:  { id: true, title: true, description: true },
+    }),
+  ]);
 
   for (const r of reminders) {
     tasks.push({
@@ -91,13 +105,6 @@ export async function generateWeeklyTasks(profileId: string): Promise<void> {
   }
 
   // ── 2. Aktiva växter i dagboken ─────────────────────────────────────
-  const diaries = await prisma.gardenDiary.findMany({
-    where:   { userId: profileId, status: "growing" },
-    orderBy: { updatedAt: "desc" },
-    take:    3,
-    select:  { id: true, title: true, customPlantName: true, plant: { select: { name: true } } },
-  });
-
   const diaryTasks = [
     { verb: "Vattna",            suffix: "",                icon: "💧" },
     { verb: "Kontrollera blad på", suffix: " – kolla efter ohyra och sjukdomar", icon: "🔍" },
@@ -116,14 +123,6 @@ export async function generateWeeklyTasks(profileId: string): Promise<void> {
       sortOrder:   order++,
     });
   }
-
-  // ── 3. Odlingskalender denna månad ─────────────────────────────────
-  const calendarItems = await prisma.gardenCalendar.findMany({
-    where:   { month, status: "published" },
-    orderBy: { createdAt: "asc" },
-    take:    5,
-    select:  { id: true, title: true, description: true },
-  });
 
   if (calendarItems.length > 0) {
     const picked = shuffle(calendarItems)[0];
@@ -163,18 +162,11 @@ export async function generateWeeklyTasks(profileId: string): Promise<void> {
     existingTitles.add(tpl.title.toLowerCase());
   }
 
-  // ── 5. Skriv till DB (skippa dubletter) ─────────────────────────────
-  for (const task of tasks) {
-    await prisma.weeklyTask.upsert({
-      where: {
-        profileId_weekYear_weekNumber_title: {
-          profileId, weekYear, weekNumber, title: task.title,
-        },
-      },
-      create: { profileId, weekYear, weekNumber, ...task },
-      update: {}, // rör inte uppgiften om den redan finns (preservar done-status)
-    });
-  }
+  // ── 5. Skriv till DB – en batch-insert, skippa dubletter ────────────
+  await prisma.weeklyTask.createMany({
+    data: tasks.map((task) => ({ profileId, weekYear, weekNumber, ...task })),
+    skipDuplicates: true,
+  });
 }
 
 /** Hämtar veckans uppgifter. Genererar om inga finns ännu. */
