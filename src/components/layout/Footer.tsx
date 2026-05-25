@@ -115,7 +115,15 @@ export function Footer() {
             © {new Date().getFullYear()} Minodling. Alla rättigheter förbehållna.
           </p>
           <p className="text-xs text-gray-400">
-            Byggt med kärlek för svenska odlare 🌱
+            Byggt av{" "}
+            <a
+              href="https://vibedev.se?utm_source=minodling&utm_medium=footer&utm_campaign=client-credit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-green-600 font-medium transition-colors"
+            >
+              VibeDev
+            </a>
           </p>
         </div>
       </div>
