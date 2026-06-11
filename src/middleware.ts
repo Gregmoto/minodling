@@ -48,8 +48,12 @@ export async function middleware(request: NextRequest) {
       }
     );
 
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
+    // getSession() läser JWT:n från cookien utan nätverksanrop till Supabase
+    // (getUser() kostar en roundtrip per request). Middleware behöver bara
+    // veta OM en session finns för redirect-logiken – riktig validering av
+    // token + roll sker i layouts/pages via getCurrentUser()/requireAdmin().
+    const { data } = await supabase.auth.getSession();
+    user = data.session?.user ?? null;
   } catch {
     // Om Supabase-anropet misslyckas — behandla som utloggad
     user = null;

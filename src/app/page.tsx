@@ -207,19 +207,9 @@ export default async function HomePage() {
     getHomeData(currentMonth),
   ]);
 
-  let profileId: string | null = null;
-  let userHomeData: Awaited<ReturnType<typeof getUserHomeData>> | null = null;
-
-  if (authUser) {
-    const profile = await prisma.profile.findUnique({
-      where:  { userId: authUser.id },
-      select: { id: true },
-    }).catch(() => null);
-    profileId = profile?.id ?? null;
-    if (profileId) {
-      userHomeData = await getUserHomeData(profileId);
-    }
-  }
+  // navUser.id ÄR profil-id:t (från getNavUser) – ingen extra DB-fråga behövs
+  const profileId = navUser?.id ?? null;
+  const userHomeData = profileId ? await getUserHomeData(profileId) : null;
 
   const {
     plants, calendarTips, popularPosts, memberImages, guides,
