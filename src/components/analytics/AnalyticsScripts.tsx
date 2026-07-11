@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Script from "next/script";
-import { readConsent, type CookieConsent } from "@/lib/cookieConsent";
+import { readConsent, clearAnalyticsCookies, type CookieConsent } from "@/lib/cookieConsent";
 
 interface AnalyticsScriptsProps {
   gaId?:      string | null;
@@ -32,6 +32,11 @@ export function AnalyticsScripts({ gaId, gaScript, bingId }: AnalyticsScriptsPro
     window.addEventListener("cookie-consent-updated", onUpdate);
     return () => window.removeEventListener("cookie-consent-updated", onUpdate);
   }, []);
+
+  // Städa bort GA-cookies när statistik-samtycke saknas eller återkallas.
+  useEffect(() => {
+    if (consent && !consent.analytics) clearAnalyticsCookies();
+  }, [consent]);
 
   // Inget samtycke = ingen tracking
   if (!consent) return null;

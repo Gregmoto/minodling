@@ -62,6 +62,7 @@ export function NewsletterForm({ variant = "light" }: Props) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="din@epost.se"
+            aria-label="E-postadress"
             required
             className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-transparent focus:outline-none ${
               isDark

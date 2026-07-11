@@ -39,25 +39,31 @@ export default async function BekraftelsePage({ searchParams }: PageProps) {
       try {
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (session.payment_status === "paid") {
-          order = await prisma.shopOrder.update({
-            where: { id: orderId },
+          // Atomisk övergång så att webhooken och denna sida inte båda minskar lagret.
+          const { count } = await prisma.shopOrder.updateMany({
+            where: { id: orderId, status: { not: "paid" } },
             data: {
               status: "paid",
               stripeCheckoutSessionId: sessionId,
               stripePaymentIntentId: typeof session.payment_intent === "string"
                 ? session.payment_intent : null,
             },
-            include: { items: true },
           });
-          // Minska lager
-          for (const item of order.items) {
-            if (item.productId) {
-              await prisma.shopProduct.update({
-                where: { id: item.productId },
-                data: { stockQuantity: { decrement: item.quantity } },
-              }).catch(() => {});
+          if (count === 1) {
+            // Minska lager – bara den som vann övergången
+            for (const item of order.items) {
+              if (item.productId) {
+                await prisma.shopProduct.update({
+                  where: { id: item.productId },
+                  data: { stockQuantity: { decrement: item.quantity } },
+                }).catch(() => {});
+              }
             }
           }
+          order = await prisma.shopOrder.findUnique({
+            where: { id: orderId },
+            include: { items: true },
+          });
         }
       } catch (err) {
         console.error("Could not verify Stripe session:", err);

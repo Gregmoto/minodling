@@ -6,6 +6,15 @@ import { requireAdmin } from "@/lib/auth";
 
 // ── Skapa ticket från kontaktformulär ─────────────────────────────
 
+/** Escapa användarstyrd text innan den bäddas in i e-post-HTML. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 interface ContactResult {
   success: boolean;
   error?: string;
@@ -46,7 +55,7 @@ export async function sendContactForm(formData: FormData): Promise<ContactResult
       const toEmail     = contactRow?.value?.trim() || "hej@minodling.se";
 
       if (apiKey) {
-        const safeMessage = message.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+        const safeMessage = esc(message);
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -61,8 +70,8 @@ export async function sendContactForm(formData: FormData): Promise<ContactResult
               </div>
               <div style="background:#f9fafb;padding:20px;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 10px 10px">
                 <p style="margin:0 0 4px;color:#6b7280;font-size:13px">Från</p>
-                <p style="margin:0 0 12px;font-weight:600">${name} &lt;${email}&gt;</p>
-                ${subject ? `<p style="margin:0 0 4px;color:#6b7280;font-size:13px">Ämne</p><p style="margin:0 0 12px">${subject}</p>` : ""}
+                <p style="margin:0 0 12px;font-weight:600">${esc(name)} &lt;${esc(email)}&gt;</p>
+                ${subject ? `<p style="margin:0 0 4px;color:#6b7280;font-size:13px">Ämne</p><p style="margin:0 0 12px">${esc(subject)}</p>` : ""}
                 <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0">
                 <p style="white-space:pre-wrap;font-size:14px;color:#374151;line-height:1.6">${safeMessage}</p>
                 <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0">
@@ -125,7 +134,7 @@ export async function replyToTicket(id: string, formData: FormData) {
     const senderEmail = senderRow?.value?.trim() || "noreply@minodling.se";
 
     if (apiKey) {
-      const safeReply = reply.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+      const safeReply = esc(reply);
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -138,11 +147,11 @@ export async function replyToTicket(id: string, formData: FormData) {
               <h2 style="color:white;margin:0;font-size:18px">Svar från Minodling</h2>
             </div>
             <div style="background:#f9fafb;padding:20px;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 10px 10px">
-              <p style="color:#374151">Hej ${ticket.name},</p>
+              <p style="color:#374151">Hej ${esc(ticket.name)},</p>
               <p style="white-space:pre-wrap;color:#374151;line-height:1.6">${safeReply}</p>
               <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
               <p style="color:#9ca3af;font-size:12px">Ditt ursprungliga meddelande:</p>
-              <blockquote style="border-left:3px solid #d1fae5;margin:0;padding-left:12px;color:#6b7280;font-size:13px;white-space:pre-wrap">${ticket.message.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</blockquote>
+              <blockquote style="border-left:3px solid #d1fae5;margin:0;padding-left:12px;color:#6b7280;font-size:13px;white-space:pre-wrap">${esc(ticket.message)}</blockquote>
               <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
               <p style="color:#9ca3af;font-size:12px">Med vänliga hälsningar,<br>Minodling-teamet</p>
             </div>

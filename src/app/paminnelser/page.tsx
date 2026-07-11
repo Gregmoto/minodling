@@ -160,8 +160,10 @@ export default async function PaminnelserPage({ searchParams }: Props) {
 
   const navUser = { id: profile.id, username: profile.username, displayName: profile.fullName, avatarUrl: profile.avatarUrl, role: profile.role };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Påminnelsedatum sparas som UTC-midnatt (new Date("YYYY-MM-DD")). Jämför därför
+  // mot UTC-midnatt av dagens svenska kalenderdag, oberoende av serverns tidszon.
+  const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Stockholm" }).format(new Date());
+  const today = new Date(`${todayStr}T00:00:00.000Z`);
 
   const baseWhere = {
     userId:        profile.id,

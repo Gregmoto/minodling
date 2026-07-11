@@ -31,7 +31,9 @@ export async function joinChallenge(challengeId: string) {
     update: {},
   });
 
+  const challenge = await prisma.challenge.findUnique({ where: { id: challengeId }, select: { slug: true } });
   revalidatePath("/utmaningar");
+  if (challenge) revalidatePath(`/utmaningar/${challenge.slug}`);
 }
 
 // ── Lämna utmaning ────────────────────────────────────────────────
@@ -43,7 +45,9 @@ export async function leaveChallenge(challengeId: string) {
     where: { challengeId, userId: profile.id },
   });
 
+  const challenge = await prisma.challenge.findUnique({ where: { id: challengeId }, select: { slug: true } });
   revalidatePath("/utmaningar");
+  if (challenge) revalidatePath(`/utmaningar/${challenge.slug}`);
 }
 
 // ── Skicka in bidrag ──────────────────────────────────────────────

@@ -12,6 +12,13 @@ export async function awardOrderPoints(
   const points = calcPoints(totalAmountOre);
   if (points <= 0) return;
   try {
+    // Idempotens: dela aldrig ut poäng två gånger för samma order.
+    const existing = await prisma.shopLoyaltyTransaction.findFirst({
+      where: { orderId, type: "earn" },
+      select: { id: true },
+    });
+    if (existing) return;
+
     await prisma.$transaction([
       prisma.shopLoyaltyTransaction.create({
         data: {

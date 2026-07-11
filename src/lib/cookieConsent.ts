@@ -61,6 +61,30 @@ export function clearConsent() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+/**
+ * Tar bort Google Analytics-cookies (_ga, _gid, _gat, _ga_*) när användaren
+ * återkallar sitt statistik-samtycke. Redan laddad gtag slutar då spåra
+ * mellan sidladdningar.
+ */
+export function clearAnalyticsCookies() {
+  if (typeof document === "undefined") return;
+  const host = window.location.hostname;
+  // Domänvarianter så att cookies satta på .exempel.se också träffas
+  const domains = ["", host, `.${host}`, `.${host.split(".").slice(-2).join(".")}`];
+  const paths = ["/"];
+  for (const cookie of document.cookie.split(";")) {
+    const name = cookie.split("=")[0]?.trim();
+    if (!name) continue;
+    if (name === "_ga" || name === "_gid" || name === "_gat" || name.startsWith("_ga_") || name.startsWith("_gat_")) {
+      for (const domain of domains) {
+        for (const path of paths) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}${domain ? `; domain=${domain}` : ""}`;
+        }
+      }
+    }
+  }
+}
+
 // ── Kategoribeskrivningar ─────────────────────────────────────────
 
 export const CONSENT_CATEGORIES = [

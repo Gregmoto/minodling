@@ -33,8 +33,11 @@ export async function POST(req: NextRequest) {
 
     if (orderId) {
       try {
-        await prisma.shopOrder.update({
-          where: { id: orderId },
+        // Atomisk, idempotent övergång: bara den första leveransen av eventet
+        // (status ännu inte "paid") får minska lager, mejla och dela ut poäng.
+        // Stripe gör retries och bekräftelsesidan kan köra parallellt.
+        const { count } = await prisma.shopOrder.updateMany({
+          where: { id: orderId, status: { not: "paid" } },
           data: {
             status: "paid",
             stripePaymentIntentId: typeof session.payment_intent === "string"
@@ -44,15 +47,16 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Minska lager (om inte redan gjort)
-        const order = await prisma.shopOrder.findUnique({
-          where: { id: orderId },
-          include: {
-            items: true,
-            profile: { select: { id: true } },
-          },
-        });
-        if (order?.status === "paid") {
+        const order = count === 1
+          ? await prisma.shopOrder.findUnique({
+              where: { id: orderId },
+              include: {
+                items: true,
+                profile: { select: { id: true } },
+              },
+            })
+          : null;
+        if (order) {
           for (const item of order.items) {
             if (item.productId) {
               await prisma.shopProduct.update({
@@ -78,6 +82,15 @@ export async function POST(req: NextRequest) {
           // Tilldela lojalitetspoäng
           if (order.profile?.id) {
             await awardOrderPoints(order.profile.id, order.id, order.totalAmount).catch(() => {});
+          }
+
+          // Räkna upp rabattkodens användning så att maxUses kan upprätthållas
+          const usedCode = session.metadata?.discountCode?.trim();
+          if (usedCode) {
+            await prisma.shopDiscountCode.updateMany({
+              where: { code: usedCode.toUpperCase() },
+              data: { usedCount: { increment: 1 } },
+            }).catch(() => {});
           }
         }
       } catch (err) {

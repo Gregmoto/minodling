@@ -76,11 +76,17 @@ export async function completeReminder(reminderId: string) {
 
   if (!reminder || reminder.userId !== profile.id) throw new Error("Inte behörig");
 
-  // Mark current as complete
-  await prisma.reminder.update({
-    where: { id: reminderId },
+  // Markera som klar atomiskt – bara första övergången (redan-klar → hoppa över)
+  // får skapa nästa förekomst, annars skapar dubbelklick dubbletter.
+  const { count } = await prisma.reminder.updateMany({
+    where: { id: reminderId, isCompleted: false },
     data:  { isCompleted: true },
   });
+  if (count === 0) {
+    revalidatePath("/paminnelser");
+    revalidatePath("/dashboard");
+    return;
+  }
 
   // Auto-create next occurrence if repeat is set
   if (reminder.repeatInterval && reminder.repeatInterval !== "none") {

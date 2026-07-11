@@ -52,23 +52,24 @@ export function ContactForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label className={lc}>Namn *</label>
-          <input name="name" required placeholder="Ditt namn" className={ic} />
+          <label htmlFor="contact-name" className={lc}>Namn *</label>
+          <input id="contact-name" name="name" required placeholder="Ditt namn" className={ic} />
         </div>
         <div>
-          <label className={lc}>E-post *</label>
-          <input name="email" type="email" required placeholder="din@epost.se" className={ic} />
+          <label htmlFor="contact-email" className={lc}>E-post *</label>
+          <input id="contact-email" name="email" type="email" required placeholder="din@epost.se" className={ic} />
         </div>
       </div>
 
       <div>
-        <label className={lc}>Ämne</label>
-        <input name="subject" placeholder="Vad gäller ditt ärende?" className={ic} />
+        <label htmlFor="contact-subject" className={lc}>Ämne</label>
+        <input id="contact-subject" name="subject" placeholder="Vad gäller ditt ärende?" className={ic} />
       </div>
 
       <div>
-        <label className={lc}>Meddelande *</label>
+        <label htmlFor="contact-message" className={lc}>Meddelande *</label>
         <textarea
+          id="contact-message"
           name="message"
           required
           rows={6}

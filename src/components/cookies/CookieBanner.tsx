@@ -99,6 +99,7 @@ export function CookieBanner() {
                 </div>
                 <button
                   onClick={() => setExpanded(false)}
+                  aria-label="Stäng cookie-inställningar"
                   className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
                   <X className="h-4 w-4" />
                 </button>

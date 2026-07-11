@@ -66,7 +66,7 @@ export const SETTING_DEFAULTS: SiteSettings = {
   bingVerification:   null,
   seoTitle:           "Minodling – Sveriges odlingscommunity",
   seoDescription:     "Dela din trädgårdspassion, få tips och inspiration från svenska odlare.",
-  seoOgImage:         "/og-image.jpg",
+  seoOgImage:         "/hero-plant-2.jpg",
   seoRobots:          "index, follow",
   seoSitemapEnabled:  true,
   seoCanonical:       "https://minodling.se",

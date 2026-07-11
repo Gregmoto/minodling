@@ -865,7 +865,7 @@ export default async function HomePage() {
                   return (
                     <Link
                       key={p.id}
-                      href={`/butik/produkter/${p.slug}`}
+                      href={`/butik/produkt/${p.slug}`}
                       className="group flex flex-col rounded-2xl border border-gray-100 bg-white hover:border-green-200 hover:shadow-md transition-all overflow-hidden"
                     >
                       <div className="aspect-square bg-gray-50 overflow-hidden relative">

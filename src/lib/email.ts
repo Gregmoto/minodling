@@ -34,10 +34,19 @@ function formatSEK(ore: number): string {
   return `${(ore / 100).toFixed(2).replace(".", ",")} kr`;
 }
 
+/** Escapa text innan den bäddas in i e-post-HTML. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function buildOrderConfirmationHtml(data: OrderConfirmationData): string {
   const itemRows = data.items.map(i =>
     `<tr>
-      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px">${i.productName}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px">${esc(i.productName)}</td>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:center;font-size:14px">${i.quantity}</td>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right;font-size:14px">${formatSEK(i.totalPrice)}</td>
     </tr>`
@@ -49,7 +58,7 @@ function buildOrderConfirmationHtml(data: OrderConfirmationData): string {
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#111827;max-width:600px;margin:0 auto;padding:0;background:#f9fafb">
   <div style="background:#16a34a;padding:32px 24px;text-align:center">
     <h1 style="color:#fff;font-size:22px;margin:0">Tack för din beställning!</h1>
-    <p style="color:#bbf7d0;margin:8px 0 0">Hej ${data.fullName}</p>
+    <p style="color:#bbf7d0;margin:8px 0 0">Hej ${esc(data.fullName)}</p>
   </div>
   <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px">
     <p style="color:#6b7280;font-size:14px;margin:0 0 20px">
@@ -164,7 +173,7 @@ export async function sendAdminOrderNotification(
         html: `
           <p><strong>Ny order mottagen!</strong></p>
           <ul>
-            <li>Kund: ${fullName} (${email})</li>
+            <li>Kund: ${esc(fullName)} (${esc(email)})</li>
             <li>Belopp: ${fmtSEK(totalAmount)}</li>
             <li>Order: #${orderId.slice(0, 8).toUpperCase()}</li>
           </ul>

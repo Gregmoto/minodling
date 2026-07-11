@@ -80,89 +80,6 @@ interface CartItemData {
   stock: number;
 }
 
-export async function createOrder(
-  formData: FormData
-): Promise<{ success: boolean; orderId?: string; error?: string }> {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Du måste vara inloggad för att beställa." };
-
-    const profile = await prisma.profile.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    });
-    if (!profile) return { success: false, error: "Profil hittades inte." };
-
-    const cartItemsJson = formData.get("cartItems") as string;
-    const cartItems: CartItemData[] = JSON.parse(cartItemsJson);
-    if (!cartItems || cartItems.length === 0) {
-      return { success: false, error: "Varukorgen är tom." };
-    }
-
-    const fullName = (formData.get("fullName") as string).trim();
-    const email = (formData.get("email") as string).trim();
-    const phone = (formData.get("phone") as string | null)?.trim() ?? null;
-    const address = (formData.get("address") as string).trim();
-    const city = (formData.get("city") as string).trim();
-    const postalCode = (formData.get("postalCode") as string).trim();
-    const shippingAmount = Number(formData.get("shippingAmount") ?? 0);
-
-    const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-    const totalAmount = subtotal + shippingAmount;
-
-    // Verify stock and build items
-    for (const item of cartItems) {
-      const product = await prisma.shopProduct.findUnique({
-        where: { id: item.productId },
-        select: { stockQuantity: true, isActive: true },
-      });
-      if (!product || !product.isActive) {
-        return { success: false, error: `Produkten "${item.name}" är inte tillgänglig.` };
-      }
-      if (product.stockQuantity < item.quantity) {
-        return { success: false, error: `Otillräckligt lager för "${item.name}".` };
-      }
-    }
-
-    const order = await prisma.shopOrder.create({
-      data: {
-        userId: profile.id,
-        email,
-        fullName,
-        phone,
-        shippingAddress: { address, city, postalCode, country: "SE" },
-        subtotal,
-        shippingAmount,
-        totalAmount,
-        items: {
-          create: cartItems.map((item) => ({
-            productId: item.productId,
-            productName: item.name,
-            unitPrice: item.price,
-            quantity: item.quantity,
-            totalPrice: item.price * item.quantity,
-          })),
-        },
-      },
-    });
-
-    // Decrement stock
-    for (const item of cartItems) {
-      await prisma.shopProduct.update({
-        where: { id: item.productId },
-        data: { stockQuantity: { decrement: item.quantity } },
-      });
-    }
-
-    revalidatePath("/admin/butik/ordrar");
-    return { success: true, orderId: order.id };
-  } catch (err) {
-    console.error("createOrder error:", err);
-    return { success: false, error: "Något gick fel vid beställningen." };
-  }
-}
-
 // ── Stripe checkout session ────────────────────────────────────────
 
 export async function createCheckoutSession(
@@ -183,27 +100,46 @@ export async function createCheckoutSession(
     const city        = (formData.get("city") as string).trim();
     const postalCode  = (formData.get("postalCode") as string).trim();
     const discountCode   = (formData.get("discountCode") as string | null)?.trim() || null;
-    const discountAmount = parseInt(String(formData.get("discountAmount") ?? "0"), 10) || 0;
 
-    const subtotal      = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-    const shipping      = subtotal >= 49900 ? 0 : 4900;
-    const totalAmount   = Math.max(0, subtotal + shipping - discountAmount);
+    // Hämta auktoritativa priser/namn från DB – lita aldrig på klientens värden.
+    const products = await prisma.shopProduct.findMany({
+      where: { id: { in: cartItems.map((i) => i.productId) } },
+      select: { id: true, name: true, price: true, stockQuantity: true, isActive: true },
+    });
+    const productMap = new Map(products.map((p) => [p.id, p]));
+
+    // Verifiera lager och bygg rader från DB-data
+    const lineItems: Array<{ productId: string; name: string; price: number; quantity: number }> = [];
+    for (const item of cartItems) {
+      const product = productMap.get(item.productId);
+      const quantity = Math.max(1, Math.floor(Number(item.quantity) || 0));
+      if (!product?.isActive) return { success: false, error: `"${item.name}" är inte tillgänglig.` };
+      if (product.stockQuantity < quantity) return { success: false, error: `Otillräckligt lager för "${product.name}".` };
+      lineItems.push({ productId: product.id, name: product.name, price: product.price, quantity });
+    }
+
+    const subtotal = lineItems.reduce((s, i) => s + i.price * i.quantity, 0);
+    const shipping = subtotal >= 49900 ? 0 : 4900;
+
+    // Validera rabattkoden server-side – aldrig lita på klientens belopp.
+    let discountAmount = 0;
+    if (discountCode) {
+      const result = await validateDiscount(
+        discountCode,
+        subtotal,
+        lineItems.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity })),
+      );
+      if (!result.success) return { success: false, error: result.error };
+      discountAmount = result.discountAmount ?? 0;
+    }
+
+    const totalAmount = Math.max(0, subtotal + shipping - discountAmount);
 
     // Koppla till profil om inloggad, eller sök via e-post
     let profileId: string | null = null;
     if (user) {
       const prof = await prisma.profile.findUnique({ where: { userId: user.id }, select: { id: true } });
       profileId = prof?.id ?? null;
-    }
-
-    // Verifiera lager
-    for (const item of cartItems) {
-      const product = await prisma.shopProduct.findUnique({
-        where: { id: item.productId },
-        select: { stockQuantity: true, isActive: true },
-      });
-      if (!product?.isActive) return { success: false, error: `"${item.name}" är inte tillgänglig.` };
-      if (product.stockQuantity < item.quantity) return { success: false, error: `Otillräckligt lager för "${item.name}".` };
     }
 
     // Skapa order (pending_payment)
@@ -215,7 +151,7 @@ export async function createCheckoutSession(
         subtotal, shippingAmount: shipping, discountAmount, totalAmount,
         status: "pending_payment",
         items: {
-          create: cartItems.map((item) => ({
+          create: lineItems.map((item) => ({
             productId: item.productId,
             productName: item.name,
             unitPrice:   item.price,
@@ -229,7 +165,7 @@ export async function createCheckoutSession(
     // Om Stripe inte är konfigurerat → direkt-order utan betalning
     if (!stripe) {
       await prisma.shopOrder.update({ where: { id: order.id }, data: { status: "pending" } });
-      for (const item of cartItems) {
+      for (const item of lineItems) {
         await prisma.shopProduct.update({
           where: { id: item.productId },
           data: { stockQuantity: { decrement: item.quantity } },
@@ -245,10 +181,22 @@ export async function createCheckoutSession(
     const proto = host.includes("localhost") ? "http" : "https";
     const baseUrl = `${proto}://${host}`;
 
+    // Rabatt som Stripe-kupong så att kunden faktiskt debiteras rätt belopp.
+    let discounts: Array<{ coupon: string }> | undefined;
+    if (discountAmount > 0) {
+      const coupon = await stripe.coupons.create({
+        amount_off: discountAmount,
+        currency: "sek",
+        duration: "once",
+        name: discountCode ?? "Rabatt",
+      });
+      discounts = [{ coupon: coupon.id }];
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: email,
-      line_items: cartItems.map((item) => ({
+      line_items: lineItems.map((item) => ({
         price_data: {
           currency: "sek",
           unit_amount: item.price, // öre
@@ -256,6 +204,7 @@ export async function createCheckoutSession(
         },
         quantity: item.quantity,
       })),
+      ...(discounts ? { discounts } : {}),
       // Frakt som extra rad om det finns
       ...(shipping > 0 ? {
         shipping_options: [{
@@ -270,7 +219,7 @@ export async function createCheckoutSession(
           },
         }],
       } : {}),
-      metadata: { orderId: order.id },
+      metadata: { orderId: order.id, discountCode: discountCode ?? "" },
       success_url: `${baseUrl}/butik/kassa/bekraftelse?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
       cancel_url: `${baseUrl}/butik/varukorg`,
     });

@@ -444,10 +444,14 @@ export function PlantIdentifier({ isMock, isLoggedIn, usedThisMonth, limit }: Pr
       {/* Upload-zon */}
       {!preview ? (
         <div
+          role="button"
+          tabIndex={0}
+          aria-label="Ladda upp en bild av din växt"
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onClick={() => fileRef.current?.click()}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current?.click(); } }}
           className={`
             relative flex flex-col items-center justify-center gap-4
             min-h-64 rounded-3xl border-2 border-dashed cursor-pointer
@@ -487,6 +491,7 @@ export function PlantIdentifier({ isMock, isLoggedIn, usedThisMonth, limit }: Pr
           </div>
           <button
             onClick={reset}
+            aria-label="Ta bort bild"
             className="absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
           >
             <X className="h-4 w-4" />

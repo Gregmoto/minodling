@@ -79,8 +79,12 @@ export default async function UtmaningDetailPage({
 
   if (!challenge) notFound();
 
+  // Fråga direkt – deltagarlistan ovan är trunkerad (take: 20) och skulle annars
+  // visa "gå med" för deltagare utanför de 20 senaste.
   const isParticipant = navProfile
-    ? challenge.participants.some((p) => p.userId === navProfile.id)
+    ? (await prisma.challengeParticipant.count({
+        where: { challengeId: challenge.id, userId: navProfile.id },
+      })) > 0
     : false;
 
   const canJoin = challenge.status === "active";

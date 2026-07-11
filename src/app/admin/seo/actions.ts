@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 export async function upsertSeoSetting(formData: FormData) {
+  await requireAdmin();
   const id          = formData.get("id") as string | null;
   const pageType    = (formData.get("pageType") as string)?.trim();
   const metaTitle   = (formData.get("metaTitle") as string)?.trim() || null;
@@ -32,6 +34,7 @@ export async function upsertSeoSetting(formData: FormData) {
 }
 
 export async function deleteSeoSetting(id: string) {
+  await requireAdmin();
   await prisma.seoSetting.delete({ where: { id } });
   revalidatePath("/admin/seo");
 }

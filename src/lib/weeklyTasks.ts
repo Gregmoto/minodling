@@ -138,7 +138,6 @@ export async function generateWeeklyTasks(profileId: string): Promise<void> {
 
   // ── 4. Säsongstemplates (fyll upp till 5 totalt) ────────────────────
   const seasonal = SEASONAL_TASKS[month] ?? [];
-  const needed   = Math.max(0, 5 - tasks.length);
 
   // Sortera: priority 1 först, sedan blanda inom varje grupp
   const p1 = shuffle(seasonal.filter((t) => t.priority === 1));
@@ -149,7 +148,7 @@ export async function generateWeeklyTasks(profileId: string): Promise<void> {
   // Hoppa över titlar som redan finns (från påminnelser/dagbok)
   const existingTitles = new Set(tasks.map((t) => t.title.toLowerCase()));
   for (const tpl of pool) {
-    if (tasks.length - (reminders.length + diaries.slice(0, 2).length) >= needed) break;
+    if (tasks.length >= 5) break;
     if (existingTitles.has(tpl.title.toLowerCase())) continue;
     tasks.push({
       title:       tpl.title,

@@ -44,9 +44,16 @@ export async function getUserRole(): Promise<UserRole | null> {
 }
 
 // ── Kräv inloggning – redirectar annars ───────────────────────
-export async function requireAuth(redirectTo = "/auth/login") {
+// `returnTo` är sidan användaren ska tillbaka till efter inloggning.
+export async function requireAuth(returnTo?: string) {
   const user = await getCurrentUser();
-  if (!user) redirect(`${redirectTo}?redirect=${encodeURIComponent(redirectTo)}`);
+  if (!user) {
+    redirect(
+      returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+        ? `/auth/login?redirect=${encodeURIComponent(returnTo)}`
+        : "/auth/login",
+    );
+  }
   return user;
 }
 

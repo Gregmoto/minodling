@@ -43,7 +43,7 @@ export async function regenerateWeeklyTasks() {
 
   // Ta bort befintliga system-uppgifter (behåll manuellt tillagda)
   await prisma.weeklyTask.deleteMany({
-    where: { profileId: profile.id, weekYear, weekNumber },
+    where: { profileId: profile.id, weekYear, weekNumber, source: "system" },
   });
 
   await generateWeeklyTasks(profile.id);

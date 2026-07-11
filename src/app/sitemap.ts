@@ -10,16 +10,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: base,                    lastModified: now, changeFrequency: "daily",   priority: 1.0 },
-    { url: `${base}/forum`,         lastModified: now, changeFrequency: "hourly",  priority: 0.9 },
-    { url: `${base}/fragor`,        lastModified: now, changeFrequency: "hourly",  priority: 0.9 },
-    { url: `${base}/vaxtdatabas`,   lastModified: now, changeFrequency: "weekly",  priority: 0.8 },
-    { url: `${base}/guider`,        lastModified: now, changeFrequency: "daily",   priority: 0.8 },
-    { url: `${base}/kunskapsbank`,  lastModified: now, changeFrequency: "daily",   priority: 0.8 },
-    { url: `${base}/ordlista`,      lastModified: now, changeFrequency: "weekly",  priority: 0.7 },
-    { url: `${base}/odlingstips`,   lastModified: now, changeFrequency: "daily",   priority: 0.8 },
-    { url: `${base}/butik`,         lastModified: now, changeFrequency: "daily",   priority: 0.8 },
-    // community, om-oss, kontakt finns ej som sidor – ej med i sitemap
+    { url: base,                      lastModified: now, changeFrequency: "daily",   priority: 1.0 },
+    { url: `${base}/forum`,           lastModified: now, changeFrequency: "hourly",  priority: 0.9 },
+    { url: `${base}/fragor`,          lastModified: now, changeFrequency: "hourly",  priority: 0.9 },
+    { url: `${base}/vaxtdatabas`,     lastModified: now, changeFrequency: "weekly",  priority: 0.8 },
+    { url: `${base}/guider`,          lastModified: now, changeFrequency: "daily",   priority: 0.8 },
+    { url: `${base}/kunskapsbank`,    lastModified: now, changeFrequency: "daily",   priority: 0.8 },
+    { url: `${base}/ordlista`,        lastModified: now, changeFrequency: "weekly",  priority: 0.7 },
+    { url: `${base}/butik`,           lastModified: now, changeFrequency: "daily",   priority: 0.8 },
+    { url: `${base}/odlingskalender`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/utmaningar`,      lastModified: now, changeFrequency: "weekly",  priority: 0.7 },
+    { url: `${base}/grupper`,         lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
+    { url: `${base}/frobyte`,         lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
+    { url: `${base}/vaxtdiagnos`,     lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/vaxtidentifiering`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/premium`,         lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${base}/nyhetsbrev`,      lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/om-oss`,          lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/kontakt`,         lastModified: now, changeFrequency: "monthly", priority: 0.5 },
   ];
 
   try {
@@ -31,7 +39,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         take: 200,
       }),
       prisma.question.findMany({
-        select: { id: true, updatedAt: true },
+        where: { status: { not: "hidden" } },
+        select: { slug: true, updatedAt: true },
         orderBy: { createdAt: "desc" },
         take: 200,
       }),
@@ -70,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       })),
       ...questions.map((q) => ({
-        url: `${base}/fragor/${q.id}`,
+        url: `${base}/fragor/${q.slug}`,
         lastModified: q.updatedAt,
         changeFrequency: "weekly" as const,
         priority: 0.7,

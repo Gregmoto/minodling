@@ -11,6 +11,7 @@ import {
   Save, Lock,
 } from "lucide-react";
 import { HEALTH_SYMPTOMS as SYMPTOMS } from "@/lib/plant-health";
+import { formatPrice } from "@/lib/utils";
 import type { HealthCheckResult } from "@/app/api/health-check/route";
 
 // ── Typer ─────────────────────────────────────────────────────────
@@ -255,7 +256,7 @@ function ResultCard({
                 {result.products.map((p) => (
                   <Link
                     key={p.id}
-                    href={`/butik/produkter/${p.slug}`}
+                    href={`/butik/produkt/${p.slug}`}
                     className="flex flex-col gap-2 p-3 rounded-xl border border-gray-100 hover:border-green-200 hover:shadow-sm transition-all group"
                   >
                     {p.imageUrl
@@ -264,7 +265,7 @@ function ResultCard({
                     }
                     <div>
                       <p className="text-xs font-semibold text-gray-700 group-hover:text-green-700 line-clamp-2 leading-tight">{p.name}</p>
-                      <p className="text-xs text-green-600 font-bold mt-0.5">{p.price.toFixed(2)} kr</p>
+                      <p className="text-xs text-green-600 font-bold mt-0.5">{formatPrice(p.price)}</p>
                     </div>
                   </Link>
                 ))}
@@ -299,7 +300,7 @@ function ResultCard({
                 </Link>
               )}
               <Link
-                href={`/community?q=${encodeURIComponent(result.problemLabel)}`}
+                href={`/fragor?q=${encodeURIComponent(result.problemLabel)}`}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
               >
                 <MessageCircle className="h-4 w-4" />
@@ -336,10 +337,14 @@ function ImageUploader({ onFile }: { onFile: (f: File) => void }) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label="Ladda upp en bild"
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
       onClick={() => fileRef.current?.click()}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current?.click(); } }}
       className={`
         relative flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed
         cursor-pointer transition-all py-12 px-6
@@ -501,7 +506,10 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
 
   const handleFile = (file: File) => {
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImagePreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev); // frigör förra objekt-URL:en
+      return URL.createObjectURL(file);
+    });
     setStep(2);
   };
 
@@ -613,7 +621,8 @@ export function DiagnosisWizard({ plants, isMock, isLoggedIn }: Props) {
           <img src={imagePreview} alt="Uppladdad bild" className="w-full h-full object-cover" />
           <button
             type="button"
-            onClick={() => { setImagePreview(null); setImageFile(null); }}
+            aria-label="Ta bort bild"
+            onClick={() => { setImagePreview((prev) => { if (prev) URL.revokeObjectURL(prev); return null; }); setImageFile(null); }}
             className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70"
           >
             <X className="h-4 w-4 text-white" />

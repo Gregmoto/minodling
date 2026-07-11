@@ -48,7 +48,7 @@ export function plantMetadata(
       description,
       ...(image && { images: [{ url: image, width: 800, height: 600, alt: plant.name }] }),
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: { card: "summary_large_image", title, description, ...(image && { images: [image] }) },
   };
 }
 
@@ -75,7 +75,7 @@ export function guideMetadata(
       description,
       ...(image && { images: [{ url: image, width: 1200, height: 630, alt: guide.title }] }),
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: { card: "summary_large_image", title, description, ...(image && { images: [image] }) },
   };
 }
 
@@ -142,7 +142,7 @@ export function organizationSchema(settings: SiteSettings) {
     "@type": "Organization",
     name: settings.siteName,
     url: settings.seoCanonical,
-    logo: `${settings.seoCanonical}/logo.png`,
+    logo: `${settings.seoCanonical}/apple-touch-icon.png`,
     contactPoint: {
       "@type": "ContactPoint",
       email: settings.contactEmail,

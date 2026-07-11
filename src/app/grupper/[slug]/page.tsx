@@ -51,8 +51,13 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ sl
     ? { id: navProfile.id, username: navProfile.username, displayName: navProfile.fullName, avatarUrl: navProfile.avatarUrl, role: navProfile.role }
     : null;
 
+  // Fråga direkt – medlemslistan ovan är trunkerad (take: 24) och skulle annars
+  // dölja "lämna"-knappen för medlemmar utanför de 24 första.
   const myMembership = navProfile
-    ? group.members.find((m) => m.profile.id === navProfile.id) ?? null
+    ? await prisma.groupMember.findUnique({
+        where: { groupId_userId: { groupId: group.id, userId: navProfile.id } },
+        select: { role: true },
+      })
     : null;
 
   // Hämta fler medlemmar om det finns fler än 24

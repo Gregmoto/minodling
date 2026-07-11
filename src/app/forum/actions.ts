@@ -9,7 +9,8 @@ import { slugify } from "@/lib/utils";
 
 // ── Poänghjälp ────────────────────────────────────────────────────
 async function awardPoints(userId: string, points: number, reason: string, refType?: string, refId?: string) {
-  await Promise.all([
+  // Transaktion så att saldo och liggare aldrig hamnar i otakt.
+  await prisma.$transaction([
     prisma.profile.update({ where: { id: userId }, data: { points: { increment: points } } }),
     prisma.pointTransaction.create({
       data: { userId, points, reason, referenceType: refType, referenceId: refId },

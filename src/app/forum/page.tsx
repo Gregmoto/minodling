@@ -26,14 +26,22 @@ interface ForumPageProps {
   searchParams: Promise<{ sort?: string; kategori?: string; sida?: string }>;
 }
 
+const PAGE_SIZE = 20;
+
 export default async function ForumPage({ searchParams }: ForumPageProps) {
   const params       = await searchParams;
   const sort         = params.sort ?? "new";
   const kategori     = params.kategori;
+  const page         = Math.max(1, parseInt(params.sida ?? "1", 10) || 1);
 
   const user = await getCurrentUser();
 
-  const [categoryGroups, posts, profile] = await Promise.all([
+  const where = {
+    status: { in: ["published", "pinned"] },
+    ...(kategori ? { category: kategori } : {}),
+  };
+
+  const [categoryGroups, posts, totalPosts, profile] = await Promise.all([
     prisma.post.groupBy({
       by: ["category"],
       where: { category: { not: null }, status: { in: ["published", "pinned"] } },
@@ -41,20 +49,19 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
       orderBy: { _count: { id: "desc" } },
     }),
     prisma.post.findMany({
-      where: {
-        status: { in: ["published", "pinned"] },
-        ...(kategori ? { category: kategori } : {}),
-      },
+      where,
       orderBy:
         sort === "top" ? { likesCount: "desc" }
         : sort === "hot" ? { commentsCount: "desc" }
         : { createdAt: "desc" },
-      take: 20,
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
       include: {
         author: { select: { username: true, fullName: true, avatarUrl: true } },
         _count: { select: { comments: true } },
       },
     }),
+    prisma.post.count({ where }),
     user
       ? prisma.profile.findUnique({
           where: { userId: user.id },
@@ -62,6 +69,10 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
         })
       : null,
   ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
+  const pageQuery = (n: number) =>
+    `/forum?sort=${sort}${kategori ? `&kategori=${encodeURIComponent(kategori)}` : ""}${n > 1 ? `&sida=${n}` : ""}`;
 
   const navUser = profile
     ? { id: profile.id, username: profile.username, displayName: profile.fullName, avatarUrl: profile.avatarUrl, role: profile.role }
@@ -86,7 +97,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Forum</h1>
                   <p className="text-gray-500 text-sm mt-1">
-                    {posts.length} inlägg{kategori ? " i denna kategori" : ""}
+                    {totalPosts} inlägg{kategori ? " i denna kategori" : ""}
                   </p>
                 </div>
                 {user && (
@@ -176,6 +187,31 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                     </Card>
                   ))}
                 </div>
+              )}
+
+              {/* Paginering */}
+              {totalPages > 1 && (
+                <nav className="flex items-center justify-center gap-2 mt-8" aria-label="Sidnavigering">
+                  {page > 1 && (
+                    <Link
+                      href={pageQuery(page - 1)}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-sage-200 text-gray-600 hover:border-green-400 transition-colors"
+                    >
+                      Föregående
+                    </Link>
+                  )}
+                  <span className="px-3 py-1.5 text-sm text-gray-500">
+                    Sida {page} av {totalPages}
+                  </span>
+                  {page < totalPages && (
+                    <Link
+                      href={pageQuery(page + 1)}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-sage-200 text-gray-600 hover:border-green-400 transition-colors"
+                    >
+                      Nästa
+                    </Link>
+                  )}
+                </nav>
               )}
             </div>
 

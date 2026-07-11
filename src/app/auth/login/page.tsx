@@ -12,7 +12,12 @@ import { Card } from "@/components/ui/Card";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/dashboard";
+  const redirectParam = searchParams.get("redirect");
+  // Tillåt bara interna sökvägar – skydda mot open redirect till externa domäner.
+  const redirect =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

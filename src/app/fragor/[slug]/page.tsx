@@ -91,8 +91,9 @@ export default async function QuestionPage({ params }: Props) {
   const isMod           = profile ? ["admin", "moderator"].includes(profile.role) : false;
   const isQuestionAuthor = profile ? profile.id === question.author.id : false;
 
-  // Increment view counter (fire and forget)
-  incrementViews(question.id);
+  // Öka visningsräknaren – awaita så att skrivningen hinner köra klart på
+  // serverless (en fire-and-forget-promise kan annars tappas när svaret flushas).
+  await incrementViews(question.id).catch(() => {});
 
   // FAQ JSON-LD schema if there are answers
   const faqJsonLd = question.answers.length > 0

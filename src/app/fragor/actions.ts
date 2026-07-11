@@ -9,7 +9,8 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 
 // ── Hjälpfunktion: poäng ─────────────────────────────────────────
 async function awardPoints(userId: string, points: number, reason: string, refType?: string, refId?: string) {
-  await Promise.all([
+  // Transaktion så att saldo och liggare aldrig hamnar i otakt.
+  await prisma.$transaction([
     prisma.profile.update({ where: { id: userId }, data: { points: { increment: points } } }),
     prisma.pointTransaction.create({
       data: { userId, points, reason, referenceType: refType, referenceId: refId },
@@ -106,7 +107,12 @@ export async function addAnswer(questionId: string, content: string, imageUrl?: 
 
   await prisma.question.update({
     where: { id: questionId },
-    data:  { answersCount: { increment: 1 }, status: "answered" },
+    data:  { answersCount: { increment: 1 } },
+  });
+  // Flippa bara öppna frågor till "answered" – rör inte dolda/stängda frågor.
+  await prisma.question.updateMany({
+    where: { id: questionId, status: "open" },
+    data:  { status: "answered" },
   });
 
   await awardPoints(profile.id, 8, "Svarade på en fråga", "answer", answer.id);
@@ -201,13 +207,25 @@ export async function markBestAnswer(questionId: string, answerId: string) {
       data:  { bestAnswerId: answerId, status: "answered" },
     });
 
-    // Award extra points to answer author
+    // Award extra points to answer author – bara en gång per svar, annars
+    // kan frågeägaren farma poäng genom att markera/avmarkera i loop.
     const answer = await prisma.answer.findUnique({
       where: { id: answerId },
       select: { userId: true },
     });
     if (answer && answer.userId !== profile.id) {
-      await awardPoints(answer.userId, 15, "Bästa svar utsett", "answer", answerId);
+      const alreadyAwarded = await prisma.pointTransaction.findFirst({
+        where: {
+          userId: answer.userId,
+          referenceType: "answer",
+          referenceId: answerId,
+          reason: "Bästa svar utsett",
+        },
+        select: { id: true },
+      });
+      if (!alreadyAwarded) {
+        await awardPoints(answer.userId, 15, "Bästa svar utsett", "answer", answerId);
+      }
     }
   }
 

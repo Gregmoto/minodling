@@ -67,8 +67,9 @@ export async function joinGroup(groupId: string) {
     data: { groupId, userId: profile.id, role: "member" },
   });
 
+  const group = await prisma.group.findUnique({ where: { id: groupId }, select: { slug: true } });
   revalidatePath("/grupper");
-  revalidatePath(`/grupper`);
+  if (group) revalidatePath(`/grupper/${group.slug}`);
 }
 
 // ── Lämna grupp ───────────────────────────────────────────────────
@@ -87,7 +88,9 @@ export async function leaveGroup(groupId: string) {
     where: { groupId_userId: { groupId, userId: profile.id } },
   });
 
+  const group = await prisma.group.findUnique({ where: { id: groupId }, select: { slug: true } });
   revalidatePath("/grupper");
+  if (group) revalidatePath(`/grupper/${group.slug}`);
 }
 
 // ── Ta bort grupp (admin/skapare) ─────────────────────────────────
