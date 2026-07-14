@@ -2,12 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/settings";
-import { AnalyticsScripts } from "@/components/analytics/AnalyticsScripts";
+import { GoogleTags } from "@/components/analytics/GoogleTags";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
-import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
-import { CookieBanner } from "@/components/cookies/CookieBanner";
-import { ConsentedAnalytics } from "@/components/analytics/ConsentedAnalytics";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -89,34 +87,17 @@ export default async function RootLayout({
       <head>
         {/* Explicit apple-touch-icon – mer tillförlitligt än Next.js metadata på iOS */}
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        {/* Google AdSense – verifiering och annonsvisning */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6174495278181413"
-          crossOrigin="anonymous"
-        />
+        {/* Google Consent Mode v2 + AdSense + GA (samtycke via Googles CMP) */}
+        <GoogleTags gaId={settings.gaId} gaScript={settings.gaScript} />
       </head>
       <body className="min-h-screen flex flex-col font-sans">
         <JsonLd data={[organizationSchema(settings), websiteSchema(settings)]} />
 
-        <CookieConsentProvider>
-          {children}
+        {children}
 
-          {/* Cookie-banner – visas tills användaren gjort ett val */}
-          <CookieBanner />
-          <ConsentedAnalytics />
-
-          {/*
-           * AnalyticsScripts laddas BARA efter samtycke.
-           * gaId/gaScript och bingId skickas från server men
-           * scripten injiceras aldrig förrän consent.analytics/marketing är true.
-           */}
-          <AnalyticsScripts
-            gaId={settings.gaId}
-            gaScript={settings.gaScript}
-            bingId={settings.bingVerification}
-          />
-        </CookieConsentProvider>
+        {/* Samtycke sköts av Googles "European regulations message" (CMP) via
+            Consent Mode v2 – se GoogleTags i <head>. Vercel Analytics är cookielöst. */}
+        <Analytics />
       </body>
     </html>
   );
