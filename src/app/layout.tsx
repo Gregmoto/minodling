@@ -89,6 +89,12 @@ export default async function RootLayout({
       <head>
         {/* Explicit apple-touch-icon – mer tillförlitligt än Next.js metadata på iOS */}
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        {/* Google AdSense – verifiering och annonsvisning */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6174495278181413"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="min-h-screen flex flex-col font-sans">
         <JsonLd data={[organizationSchema(settings), websiteSchema(settings)]} />
