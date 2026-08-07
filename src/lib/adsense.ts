@@ -12,12 +12,12 @@
 export const ADSENSE_CLIENT = "ca-pub-1402015911354425";
 
 export const AD_SLOTS = {
-  /** Toppbanner – horisontell, direkt under navigeringen */
-  top:     process.env.NEXT_PUBLIC_ADSENSE_SLOT_TOP     ?? "",
-  /** Sidokolumn – vertikal/kvadratisk i aside */
-  sidebar: process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR ?? "",
-  /** I artikel – flytande annons mitt i innehållet */
-  article: process.env.NEXT_PUBLIC_ADSENSE_SLOT_ARTICLE ?? "",
-  /** Ovanför footer – horisontell, sist på sidan */
-  footer:  process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER  ?? "",
+  /** "Odling - Toppbanner" – direkt under navigeringen */
+  top:     process.env.NEXT_PUBLIC_ADSENSE_SLOT_TOP     ?? "9897709302",
+  /** "Odling - Sidokolumn" – i aside */
+  sidebar: process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR ?? "2315953949",
+  /** "Odling - artikel" – mitt i innehållet */
+  article: process.env.NEXT_PUBLIC_ADSENSE_SLOT_ARTICLE ?? "5385684426",
+  /** "Odling - Footer" – sist på sidan */
+  footer:  process.env.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER  ?? "2475736041",
 } as const;

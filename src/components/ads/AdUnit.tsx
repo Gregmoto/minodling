@@ -19,8 +19,6 @@ interface AdUnitProps {
   responsive?: boolean;
   className?: string;
   style?: React.CSSProperties;
-  /** Minsta höjd så att layouten inte hoppar när annonsen laddas (CLS) */
-  minHeight?: number;
 }
 
 /**
@@ -40,7 +38,6 @@ export function AdUnit({
   responsive = true,
   className,
   style,
-  minHeight = 100,
 }: AdUnitProps) {
   const pushed = useRef(false);
 
@@ -58,13 +55,13 @@ export function AdUnit({
   if (!slot) return null;
 
   return (
-    <div className={className}>
+    <div className={`ad-unit ${className ?? ""}`}>
       <span className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1">
         Annons
       </span>
       <ins
         className="adsbygoogle"
-        style={{ display: "block", minHeight, ...style }}
+        style={{ display: "block", ...style }}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot={slot}
         data-ad-format={format}
@@ -77,50 +74,36 @@ export function AdUnit({
 
 // ── Namngivna placeringar ────────────────────────────────────────────
 
-/** Toppbanner – horisontell, direkt under navigeringen */
+// Alla fyra enheter är skapade som responsiva displayannonser i AdSense
+// (data-ad-format="auto" + data-full-width-responsive="true"), så markupen
+// nedan speglar exakt den kod AdSense genererade.
+
+/** "Odling - Toppbanner" – direkt under navigeringen */
 export function AdTopBanner({ className = "" }: { className?: string }) {
   return (
     <AdUnit
       slot={AD_SLOTS.top}
       className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4 ${className}`}
-      minHeight={90}
     />
   );
 }
 
-/** Sidokolumn – passar i <aside> */
+/** "Odling - Sidokolumn" – passar i <aside> */
 export function AdSidebar({ className = "" }: { className?: string }) {
-  return (
-    <AdUnit
-      slot={AD_SLOTS.sidebar}
-      className={className}
-      minHeight={250}
-      responsive={false}
-    />
-  );
+  return <AdUnit slot={AD_SLOTS.sidebar} className={className} />;
 }
 
-/** I artikel – flytande annons mitt i innehållet */
+/** "Odling - artikel" – mitt i innehållet */
 export function AdInArticle({ className = "" }: { className?: string }) {
-  return (
-    <AdUnit
-      slot={AD_SLOTS.article}
-      format="fluid"
-      layout="in-article"
-      className={`my-8 ${className}`}
-      style={{ textAlign: "center" }}
-      minHeight={200}
-    />
-  );
+  return <AdUnit slot={AD_SLOTS.article} className={`my-8 ${className}`} />;
 }
 
-/** Ovanför footer – horisontell, sist på sidan */
+/** "Odling - Footer" – sist på sidan */
 export function AdAboveFooter({ className = "" }: { className?: string }) {
   return (
     <AdUnit
       slot={AD_SLOTS.footer}
       className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 ${className}`}
-      minHeight={90}
     />
   );
 }

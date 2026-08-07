@@ -201,3 +201,10 @@
   .slide-in-up   { @apply animate-slide-up; }
   .slide-in-down { @apply animate-slide-down; }
 }
+
+/* ── AdSense ─────────────────────────────────────────────────────────
+   Google sätter data-ad-status="unfilled" när ingen annons kunde visas.
+   Dölj då hela enheten så att "Annons"-etiketten inte står ensam kvar. */
+.ad-unit:has(> ins[data-ad-status="unfilled"]) {
+  display: none;
+}
