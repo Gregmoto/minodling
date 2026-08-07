@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Sprout, Instagram, Facebook } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { CookieSettingsButton } from "@/components/cookies/CookieSettingsButton";
+import { AdAboveFooter } from "@/components/ads/AdUnit";
 
 const footerLinks = {
   community: [
@@ -26,8 +27,13 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-sage-100 bg-cream-50 mt-auto">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <>
+      {/* Annons ovanför footern – visas på alla sidor som använder Footer
+          (admin, moderator och auth-sidor har egen layout utan Footer) */}
+      <AdAboveFooter />
+
+      <footer className="border-t border-sage-100 bg-cream-50 mt-auto">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
 
           {/* Varumärke */}
@@ -126,7 +132,8 @@ export function Footer() {
             </a>
           </p>
         </div>
-      </div>
-    </footer>
+        </div>
+      </footer>
+    </>
   );
 }

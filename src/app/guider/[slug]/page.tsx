@@ -15,6 +15,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
+import { AdTopBanner, AdSidebar, AdInArticle } from "@/components/ads/AdUnit";
 import Image from "next/image";
 import { BookOpen } from "lucide-react";
 
@@ -95,6 +96,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} />
+      <AdTopBanner />
       <main className="flex-1 bg-cream-50">
         {/* Hero */}
         {guide.imageUrl ? (
@@ -142,6 +144,8 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 <Card><p className="text-gray-400 text-center py-8">Innehåll kommer snart.</p></Card>
               )}
 
+              {guide.content && <AdInArticle />}
+
               <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-between text-sm text-gray-400">
                 <Link href="/guider" className="text-green-700 hover:text-green-800 transition-colors">← Alla guider</Link>
                 <span>Publicerad {formatDate(guide.createdAt)}</span>
@@ -151,6 +155,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
             {/* Sidebar */}
             <aside className="lg:w-64 shrink-0">
               <div className="sticky top-24 space-y-6">
+                <AdSidebar />
 
                 {/* Relaterade guider */}
                 {relatedGuides.length > 0 && (

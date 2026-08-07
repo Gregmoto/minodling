@@ -23,6 +23,7 @@ import { PlantDetailTabs } from "@/components/plants/PlantDetailTabs";
 import { PlantSidebarAuth } from "@/components/plants/PlantSidebarAuth";
 import { PlantSidebarStatus } from "@/components/plants/PlantSidebarStatus";
 import { PlantTipFormServer } from "@/components/plants/PlantTipFormServer";
+import { AdTopBanner, AdInArticle } from "@/components/ads/AdUnit";
 import { getRequestUser } from "@/lib/auth-cache";
 
 // ── Cachade DB-anrop (5 min) ──────────────────────────────────────
@@ -226,6 +227,7 @@ export default async function PlantDetailPage({ params }: PageProps) {
       <Suspense fallback={<div className="h-16 border-b border-gray-100 bg-white" />}>
         <NavbarWithAuth />
       </Suspense>
+      <AdTopBanner />
 
       <main className="flex-1">
 
@@ -466,6 +468,10 @@ export default async function PlantDetailPage({ params }: PageProps) {
               </div>
 
             </div>
+          </div>
+
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <AdInArticle />
           </div>
         </div>
       </main>

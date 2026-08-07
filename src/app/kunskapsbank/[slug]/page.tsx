@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import Image from "next/image";
 import { formatDate } from "@/lib/utils";
+import { AdTopBanner, AdInArticle } from "@/components/ads/AdUnit";
 
 const getArticle = unstable_cache(
   async (slug: string) =>
@@ -56,6 +57,7 @@ export default async function KunskapsbankArtikelPage({ params }: { params: Prom
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} />
+      <AdTopBanner />
       <main className="flex-1 bg-cream-50">
         {article.imageUrl && (
           <div className="relative h-64 overflow-hidden">
@@ -87,6 +89,8 @@ export default async function KunskapsbankArtikelPage({ params }: { params: Prom
           ) : (
             <Card><p className="text-gray-400 text-center py-8">Innehåll kommer snart.</p></Card>
           )}
+
+          {article.content && <AdInArticle />}
 
           <div className="mt-10 pt-6 border-t border-gray-100">
             <Link href="/kunskapsbank" className="text-sm text-green-700 hover:text-green-800 transition-colors">

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { formatRelativeDate } from "@/lib/utils";
+import { AdTopBanner, AdSidebar } from "@/components/ads/AdUnit";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
@@ -113,6 +114,7 @@ export default async function FragorPage({ searchParams }: Props) {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} />
+      <AdTopBanner />
 
       <main className="flex-1 bg-cream-50">
         {/* Hero */}
@@ -169,6 +171,7 @@ export default async function FragorPage({ searchParams }: Props) {
             {/* Sidebar */}
             <aside className="lg:w-56 shrink-0">
               <div className="sticky top-24 space-y-6">
+                <AdSidebar />
                 {/* Sortering */}
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Sortera</p>

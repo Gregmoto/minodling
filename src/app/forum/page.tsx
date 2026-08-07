@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import { formatRelativeDate } from "@/lib/utils";
+import { AdTopBanner, AdSidebar } from "@/components/ads/AdUnit";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
@@ -87,6 +88,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} />
+      <AdTopBanner />
 
       <main className="flex-1 bg-cream-50">
         <div className="container-main py-8">
@@ -217,6 +219,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
 
             {/* Sidebar */}
             <aside className="lg:w-72 space-y-5 shrink-0">
+              <AdSidebar />
               <Card padding="none">
                 <div className="px-5 py-4 border-b border-sage-100">
                   <h2 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">

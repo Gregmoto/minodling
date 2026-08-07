@@ -9,6 +9,8 @@
  * samtycke. Utanför EES visas ingen CMP och signalerna förblir "denied"
  * (GA kör då i cookielöst modelleringsläge).
  */
+import { ADSENSE_CLIENT } from "@/lib/adsense";
+
 interface GoogleTagsProps {
   gaId?:     string | null;
   gaScript?: string | null;
@@ -40,7 +42,7 @@ export function GoogleTags({ gaId, gaScript }: GoogleTagsProps) {
       {/* 2. Google AdSense */}
       <script
         async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1402015911354425"
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
         crossOrigin="anonymous"
       />
 
