@@ -230,7 +230,7 @@ export default async function HomePage() {
         {/* ════════════════════════════════════════════════════════
             1. HERO
         ════════════════════════════════════════════════════════ */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-[#f0f7ef] via-[#fafaf8] to-[#f5f0e8]">
+        <section className="relative overflow-hidden bg-gradient-to-br from-[#f2f7ef] via-[#fdfcf8] to-[#f2efe4]">
           {/* Dekor */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-green-200/30 blur-3xl" />
@@ -313,9 +313,9 @@ export default async function HomePage() {
                     fetchPriority="high"
                   />
                   {/* Gradient – tona in mot höger bakgrund */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#fafaf8]/50 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#fdfcf8]/50 pointer-events-none" />
                   {/* Gradient – tona in nerifrån */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#f0f7ef]/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#f2f7ef]/60 via-transparent to-transparent pointer-events-none" />
                 </div>
 
                 {/* Floating card: AI-identifiering (övre högra hörnet) */}
@@ -479,7 +479,7 @@ export default async function HomePage() {
         {/* ════════════════════════════════════════════════════════
             3. MIN ODLING (personlig sektion)
         ════════════════════════════════════════════════════════ */}
-        <section className="py-14 sm:py-20 bg-[#f6f9f5]">
+        <section className="py-14 sm:py-20 bg-[#f2f7ef]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {navUser && userHomeData ? (
               /* INLOGGAD */
@@ -683,7 +683,7 @@ export default async function HomePage() {
             5. ODLINGSKALENDER
         ════════════════════════════════════════════════════════ */}
         {calendarTips.length > 0 && (
-          <section className="py-14 sm:py-20 bg-[#f6f9f5]">
+          <section className="py-14 sm:py-20 bg-[#f2f7ef]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-end justify-between mb-6">
                 <div>
@@ -742,7 +742,7 @@ export default async function HomePage() {
         ════════════════════════════════════════════════════════ */}
         <section className="py-14 sm:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="rounded-3xl bg-gradient-to-br from-[#1a3a2a] to-[#0f2419] overflow-hidden">
+            <div className="rounded-3xl bg-gradient-to-br from-[#1e5450] to-[#0e2b29] overflow-hidden">
               <div className="grid lg:grid-cols-2 gap-0">
                 {/* Text */}
                 <div className="p-8 sm:p-12 flex flex-col justify-center">
@@ -839,7 +839,7 @@ export default async function HomePage() {
             7. BUTIK PREVIEW
         ════════════════════════════════════════════════════════ */}
         {shopProducts.length > 0 && (
-          <section className="py-14 sm:py-20 bg-[#f6f9f5]">
+          <section className="py-14 sm:py-20 bg-[#f2f7ef]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-end justify-between mb-6">
                 <div>
@@ -1043,7 +1043,7 @@ export default async function HomePage() {
             9. GUIDER
         ════════════════════════════════════════════════════════ */}
         {guides.length > 0 && (
-          <section className="py-14 sm:py-20 bg-[#f6f9f5]">
+          <section className="py-14 sm:py-20 bg-[#f2f7ef]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-end justify-between mb-6">
                 <div>

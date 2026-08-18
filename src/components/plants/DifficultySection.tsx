@@ -24,11 +24,11 @@ const DIFFICULTY: Record<DifficultyLevel, DifficultyConfig> = {
     score:     28,
     label:     "Lätt",
     sublabel:  "Passar nybörjare",
-    color:     "#4CAF50",
-    bgColor:   "#E8F5E9",
-    textColor: "#2d6b2d",
-    badgeBg:   "#E8F5E9",
-    badgeText: "#2d6b2d",
+    color:     "#4f8f4e",
+    bgColor:   "#eaf2e6",
+    textColor: "#1e5450",
+    badgeBg:   "#eaf2e6",
+    badgeText: "#1e5450",
   },
   medium: {
     score:     55,
@@ -295,7 +295,7 @@ function ActionButtons({
           isGrowing ? "opacity-90" : "",
         )}
         style={{
-          backgroundColor: isGrowing ? "#2d6b2d" : color,
+          backgroundColor: isGrowing ? "#1e5450" : color,
           boxShadow:       `0 4px 14px ${color}40`,
         }}>
         {isGrowing && <Sprout className="h-4 w-4" />}

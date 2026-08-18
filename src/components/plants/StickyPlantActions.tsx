@@ -24,7 +24,7 @@ export function StickyPlantActions({
   isGrowing,
   onPlanToGrow,
   onGrowingIt,
-  accentColor = "#4CAF50",
+  accentColor = "#4f8f4e",
   mobileOnly  = false,
   className,
 }: StickyPlantActionsProps) {
@@ -75,7 +75,7 @@ export function StickyPlantActions({
             "inline-flex items-center justify-center gap-2 shadow-sm",
           )}
           style={{
-            backgroundColor: isGrowing ? "#2d6b2d" : accentColor,
+            backgroundColor: isGrowing ? "#1e5450" : accentColor,
             boxShadow:       `0 4px 14px ${accentColor}40`,
           }}
         >

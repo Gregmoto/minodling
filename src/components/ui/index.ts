@@ -5,7 +5,7 @@
  *   import { Button, Card, Badge } from "@/components/ui";
  *
  * Designsystem:
- *   - Primärfärg:  green-500 (#4CAF50)
+ *   - Primärfärg:  green-500 (#4f8f4e)
  *   - Accent:      harvest-500 (#f47220)
  *   - Bakgrund:    cream-50 (#F8F9F7)
  *   - Text:        gray-900 (#222)
