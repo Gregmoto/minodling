@@ -1,6 +1,6 @@
 # Migration: Vercel → Cloudflare Workers
 
-Status: **förberedelserna är klara och verifierade.** Koden kör i båda runtimes
+Status: **infrastrukturen är uppsatt och deployad. Databaslagret är INTE löst än – se Öppen blockerare.** Koden kör i båda runtimes
 samtidigt, så Vercel-deployen är opåverkad tills du själv pekar om DNS.
 
 Adapter: OpenNext (`@opennextjs/cloudflare` 1.20) · DB: Cloudflare Hyperdrive
@@ -128,3 +128,49 @@ varm.
 
 **Annonsintäkter.** Sajten tjänar pengar nu. Verifiera hela testchecklistan på
 `*.workers.dev` innan DNS byts, så att AdSense inte tappar verifiering.
+
+
+---
+
+## Öppen blockerare: Prisma mot Workers
+
+Workern är deployad och serverar sidor på https://minodling.omdio.workers.dev,
+men **alla databasläsningar misslyckas tyst**. Sidor svarar 200 men renderar
+tomma listor eftersom koden har `.catch(() => [])`.
+
+Felet i `wrangler tail`:
+```
+prisma:error [unenv] fs.readdir is not implemented yet!
+```
+
+Prisma försöker ladda sin **binära query-motor**, som inte finns i workerd.
+Hyperdrive-bindningen fungerar – verifierat med diagnostiklogg som visade att
+connection stringen hittas (182 tecken). Problemet är alltså inte anslutningen
+utan hur Prisma-klienten paketeras.
+
+### Vad som redan provats
+1. Prisma 5.22 + `driverAdapters` + pg-adapter → samma fel.
+2. Uppgradering till Prisma 6.19.3 + `queryCompiler` (tar bort Rust-motorn)
+   → samma fel.
+3. Extra generator `prisma-client` med `runtime = "workerd"` till
+   `src/generated/prisma-workers`, plus webpack-alias i `next.config.ts` som
+   pekar om `@prisma/client` när `CLOUDFLARE_BUILD=1` → aliaset får inte fäste
+   genom OpenNext-buntningen; samma fel.
+
+### Troliga nästa steg
+- Verifiera att aliaset faktiskt tillämpas (inspektera
+  `.open-next/server-functions/default/handler.mjs` efter referenser till
+  `prisma-workers` respektive `.prisma/client`).
+- Alternativt importera den workerd-genererade klienten **direkt** i
+  `src/lib/prisma.ts` istället för via alias, och låta Node-bygget använda en
+  separat fil (t.ex. via `serverExternalPackages` + villkorad import).
+- Kontrollera att WASM-modulen för queryCompiler kommer med i bundlen; workerd
+  kräver att `.wasm` importeras som modul.
+- Om det låser sig: Prisma Accelerate eller byte till en Workers-native
+  klient (t.ex. Kysely eller postgres.js) för de tyngsta läsvägarna.
+
+### Vad som DÄREMOT fungerar på Workers
+- Statiska och SSG-renderade sidor (`/`, `/om-oss`, `/integritetspolicy`)
+- Assets, `ads.txt`, `icon.svg`, `robots.txt`, `manifest.webmanifest`
+- Bindningarna: Hyperdrive, R2-cache, KV-tagcache, Assets
+- Bundle 3,9 MB gzippat – ryms i Workers Paid

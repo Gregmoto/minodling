@@ -47,3 +47,6 @@ prisma/migrations/
 # Cloudflare / OpenNext
 .open-next/
 .wrangler/
+
+# Genererad Prisma-klient för workerd
+src/generated/

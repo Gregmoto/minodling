@@ -1,64 +1,46 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /**
- * Prisma-klient som fungerar i två runtimes samtidigt:
+ * Prisma-klient för två runtimes.
  *
- *  - Node (Vercel, lokal utveckling): vanlig PrismaClient mot DATABASE_URL.
- *  - Cloudflare Workers: pg-driveradapter mot Hyperdrive, vars connection
- *    string bara finns i request-kontexten – aldrig vid modulinladdning.
+ * Med queryCompiler kör Prisma helt i JS/WASM utan binär motor, vilket är
+ * förutsättningen för Cloudflare Workers. Driveradaptern krävs då alltid,
+ * så pg används i båda miljöerna – skillnaden är bara anslutningen:
  *
- * Därför byggs klienten lat, vid första faktiska användningen, via en Proxy.
- * Det gör att alla befintliga `import prisma from "@/lib/prisma"` fungerar
- * oförändrat i båda miljöerna.
+ *  - Workers: Hyperdrive, vars connection string bara finns i request-
+ *    kontexten. Därför byggs klienten lat, via en Proxy.
+ *  - Node (Vercel, lokalt): DATABASE_URL.
+ *
+ * Alla befintliga `import prisma from "@/lib/prisma"` fungerar oförändrat.
  */
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-/** Hyperdrive-bindningens connection string, eller undefined utanför Workers. */
-function hyperdriveUrl(): string | undefined {
+function connectionString(): string {
   try {
-    // Endast tillgänglig i Workers-runtime. Importeras lat så att Node-bygget
-    // (Vercel) aldrig behöver lösa upp modulen.
-    const { getCloudflareContext } = require("@opennextjs/cloudflare");
-    const env = getCloudflareContext()?.env as
-      | { HYPERDRIVE?: { connectionString?: string } }
+    const ctx = getCloudflareContext() as
+      | { env?: { HYPERDRIVE?: { connectionString?: string } } }
       | undefined;
-    return env?.HYPERDRIVE?.connectionString;
+    const url = ctx?.env?.HYPERDRIVE?.connectionString;
+    if (url) return url;
   } catch {
-    return undefined;
+    // Inte i Workers-runtime – faller igenom till DATABASE_URL.
   }
-}
-
-function createClient(): PrismaClient {
-  const url = hyperdriveUrl();
-
-  if (url) {
-    // Workers: TCP via nodejs_compat, pooling via Hyperdrive.
-    const { PrismaPg } = require("@prisma/adapter-pg");
-    const { Pool } = require("pg");
-    return new PrismaClient({
-      adapter: new PrismaPg(new Pool({ connectionString: url })),
-      log: ["error"],
-    });
-  }
-
-  // Node: oförändrat beteende mot tidigare.
-  return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
+  return process.env.DATABASE_URL ?? "";
 }
 
 function getClient(): PrismaClient {
   if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createClient();
+    globalForPrisma.prisma = new PrismaClient({
+      adapter: new PrismaPg({ connectionString: connectionString() }),
+      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    });
   }
   return globalForPrisma.prisma;
 }
 
-/**
- * Lat proxy – klienten instansieras först när en modell faktiskt används,
- * alltså inuti en request där Hyperdrive-bindningen existerar.
- */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop, receiver) {
     const client = getClient();

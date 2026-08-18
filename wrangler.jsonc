@@ -25,7 +25,7 @@
   "kv_namespaces": [
     {
       "binding": "NEXT_TAG_CACHE_KV",
-      "id": "ERSÄTT_MED_KV_ID"
+      "id": "f724c6b658a3423fbd7ab3c96e0a89e2"
     }
   ],
 
@@ -37,7 +37,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "ERSÄTT_MED_HYPERDRIVE_ID"
+      "id": "840fb72da74841e4875e889e455579cd"
     }
   ],
 

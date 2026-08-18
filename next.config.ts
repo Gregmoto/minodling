@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   compress: true,
@@ -20,7 +21,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: ["@prisma/client"],
+  // I Cloudflare-bygget pekas @prisma/client om till den workerd-riktade
+  // klienten (Prisma "prisma-client"-generatorn). Node/Vercel använder den
+  // vanliga. Aliaset gör att inga call-sites behöver ändras.
+  ...(process.env.CLOUDFLARE_BUILD === "1"
+    ? {
+        webpack(config: { resolve: { alias: Record<string, string> } }) {
+          config.resolve.alias["@prisma/client"] = path.resolve(
+            process.cwd(), "src/generated/prisma-workers",
+          );
+          return config;
+        },
+      }
+    : { serverExternalPackages: ["@prisma/client"] }),
 
   // Långa cache-headers för statiska tillgångar
   async headers() {
