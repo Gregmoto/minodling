@@ -6,19 +6,19 @@
 @layer base {
   :root {
     /* Fonter */
-    --font-inter:    "Inter", system-ui, sans-serif;
-    --font-playfair: "Playfair Display", Georgia, serif;
+    --font-karla:   "Karla", system-ui, sans-serif;
+    --font-poppins: "Poppins", system-ui, sans-serif;
 
     /* Brand-färger */
-    --color-primary:         #4CAF50;
-    --color-primary-light:   #E8F5E9;
-    --color-primary-dark:    #2d6b2d;
-    --color-accent:          #f47220;
-    --color-accent-light:    #fff8f1;
-    --color-bg:              #F8F9F7;
-    --color-text:            #222222;
-    --color-text-muted:      #6b7280;
-    --color-border:          #e6ede6;
+    --color-primary:         #1e5450;
+    --color-primary-light:   #eaf2e6;
+    --color-primary-dark:    #143b38;
+    --color-accent:          #c4682f;
+    --color-accent-light:    #fdf3ec;
+    --color-bg:              #f7f5ef;
+    --color-text:            #22302a;
+    --color-text-muted:      #5c6b60;
+    --color-border:          #e4e0d4;
     --color-surface:         #ffffff;
 
     /* Radier */

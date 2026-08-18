@@ -8,7 +8,7 @@ export default function AppleIcon() {
     (
       <div
         style={{
-          background:     "#4f664f",
+          background:     "#1e5450",
           borderRadius:   "40px",
           width:          "100%",
           height:         "100%",
@@ -24,14 +24,10 @@ export default function AppleIcon() {
           viewBox="0 0 100 100"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Stjälk */}
-          <line x1="50" y1="72" x2="50" y2="46" stroke="white" strokeWidth="5" strokeLinecap="round" />
-          {/* Vänster blad */}
-          <path d="M50 58 C50 58 34 54 30 40 C38 40 50 46 50 58Z" fill="white" />
-          {/* Höger blad */}
-          <path d="M50 52 C50 52 66 44 72 30 C62 32 50 42 50 52Z" fill="white" />
-          {/* Knopp */}
-          <circle cx="50" cy="34" r="5" fill="white" />
+          <rect width="100" height="100" rx="24" fill="#1e5450" />
+          <path d="M50 84 V50" stroke="#f7f5ef" strokeWidth="10" strokeLinecap="round" />
+          <path d="M51 58C51 38 40 22 20 18C16 40 29 55 51 58Z" fill="#f7f5ef" />
+          <path d="M49 58C49 38 60 22 80 18C84 40 71 55 49 58Z" fill="#7fbf7c" />
         </svg>
       </div>
     ),

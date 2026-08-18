@@ -83,7 +83,7 @@ export function AdTopBanner({ className = "" }: { className?: string }) {
   return (
     <AdUnit
       slot={AD_SLOTS.top}
-      className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4 ${className}`}
+      className={`w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4 ${className}`}
     />
   );
 }
@@ -103,7 +103,7 @@ export function AdAboveFooter({ className = "" }: { className?: string }) {
   return (
     <AdUnit
       slot={AD_SLOTS.footer}
-      className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 ${className}`}
+      className={`w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 ${className}`}
     />
   );
 }

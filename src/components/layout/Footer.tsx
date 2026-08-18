@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Sprout, Instagram, Facebook } from "lucide-react";
+import { BrandMark, Wordmark } from "@/components/brand/Logo";
+import { Instagram, Facebook } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { CookieSettingsButton } from "@/components/cookies/CookieSettingsButton";
 import { AdAboveFooter } from "@/components/ads/AdUnit";
@@ -39,12 +40,8 @@ export function Footer() {
           {/* Varumärke */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-600 text-white">
-                <Sprout className="h-5 w-5" />
-              </div>
-              <span className="font-display text-xl font-bold text-gray-900">
-                min<span className="text-green-600">odling</span>
-              </span>
+              <BrandMark className="h-9 w-9 shrink-0" />
+              <Wordmark className="h-5 w-auto shrink-0" />
             </Link>
             <p className="text-sm text-gray-500 leading-relaxed mb-5">
               Sveriges community för alla som älskar att odla. Dela kunskap, inspiration och

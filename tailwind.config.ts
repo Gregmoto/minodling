@@ -10,47 +10,48 @@ const config: Config = {
     extend: {
       // ── Färgpalett ──────────────────────────────────────────────
       colors: {
-        // Primär grön – brand primary
+        // Varumärkesramp: ljusgrön → bladgrön → teal.
+        // Ljusa steg = badges/ytor, 500 = accentgrön, 700+ = primär teal.
         green: {
-          50:  "#f0f7f0",
-          100: "#dceddc",
-          200: "#bbdcbb",
-          300: "#8fc48f",
-          400: "#5fa65f",
-          500: "#4CAF50",   // brand primary (#4CAF50)
-          600: "#3d8c40",
-          700: "#2d6b2d",
-          800: "#265626",
-          900: "#1c381c",
-          950: "#0e1f0e",
+          50:  "#f2f7ef",
+          100: "#eaf2e6",
+          200: "#c8dcc8",
+          300: "#9cc79b",
+          400: "#6fa96d",
+          500: "#4f8f4e",   // accentgrön (logotypens "Odling")
+          600: "#3d7a3c",
+          700: "#1e5450",   // primär teal (logotypens "Min")
+          800: "#143b38",
+          900: "#0e2b29",
+          950: "#071a19",
         },
 
-        // Sage – mjuk sekundär grön
+        // Sage – varma neutraler: kantlinjer, dämpad text, ytor
         sage: {
-          50:  "#f4f7f4",
-          100: "#e6ede6",
-          200: "#cddacd",
-          300: "#aabfaa",
-          400: "#849e84",
-          500: "#658065",
-          600: "#4f664f",
-          700: "#405240",
-          800: "#354235",
-          900: "#2c372c",
+          50:  "#faf8f2",
+          100: "#efebe0",
+          200: "#e4e0d4",   // kantlinje
+          300: "#c9c3b2",
+          400: "#a8a392",
+          500: "#8a9184",
+          600: "#5c6b60",   // dämpad text
+          700: "#47534a",
+          800: "#363f38",
+          900: "#22302a",   // brödtext
         },
 
-        // Harvest orange – accent för skördesäsong och CTAs
+        // Harvest – terrakotta-accent
         harvest: {
-          50:  "#fff8f1",
-          100: "#feecda",
-          200: "#fdd5b0",
-          300: "#fbb77d",
-          400: "#f89147",
-          500: "#f47220",   // brand accent
-          600: "#e55a0e",
-          700: "#c04309",
-          800: "#9a360d",
-          900: "#7c2e0e",
+          50:  "#fdf3ec",
+          100: "#f7e8dc",
+          200: "#f0d0b6",
+          300: "#e4ae85",
+          400: "#d68a55",
+          500: "#c4682f",   // accent
+          600: "#a85a28",
+          700: "#8c4a21",
+          800: "#713c1d",
+          900: "#5c321b",
         },
 
         // Earth – varma jordtoner
@@ -67,28 +68,28 @@ const config: Config = {
           900: "#573830",
         },
 
-        // Cream – bakgrundsfärger
+        // Cream – bakgrunder
         cream: {
-          50:  "#F8F9F7",   // sidans primära bakgrund
-          100: "#fdf9f0",
-          200: "#faf2de",
-          300: "#f5e8c4",
-          400: "#edd9a0",
-          500: "#e3c87a",
+          50:  "#f7f5ef",   // sidans primära bakgrund
+          100: "#fdfcf8",
+          200: "#f2efe4",
+          300: "#eae5d5",
+          400: "#ded7c2",
+          500: "#cfc6ac",
         },
 
-        // Forest – mörkare grönt
+        // Forest – djup teal
         forest: {
-          600: "#2d5a3d",
-          700: "#234832",
-          800: "#1a3626",
+          600: "#1e5450",
+          700: "#163f3c",
+          800: "#0e2b29",
         },
       },
 
       // ── Typografi ────────────────────────────────────────────────
       fontFamily: {
-        sans:    ["var(--font-inter)", "system-ui", "sans-serif"],
-        display: ["var(--font-playfair)", "Georgia", "serif"],
+        sans:    ["var(--font-karla)", "system-ui", "sans-serif"],
+        display: ["var(--font-poppins)", "system-ui", "sans-serif"],
       },
       fontSize: {
         "2xs": ["0.65rem", { lineHeight: "1rem" }],
@@ -109,8 +110,8 @@ const config: Config = {
         card:         "0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.05)",
         "card-hover": "0 4px 20px rgba(0,0,0,0.10), 0 8px 32px rgba(0,0,0,0.06)",
         "inner-sm":   "inset 0 1px 3px rgba(0,0,0,0.07)",
-        green:        "0 4px 14px rgba(76,175,80,0.25)",
-        harvest:      "0 4px 14px rgba(244,114,32,0.25)",
+        green:        "0 4px 14px rgba(30,84,80,0.20)",
+        harvest:      "0 4px 14px rgba(196,104,47,0.22)",
       },
 
       // ── Animationer ──────────────────────────────────────────────
@@ -141,10 +142,10 @@ const config: Config = {
       // ── Bakgrunder ───────────────────────────────────────────────
       backgroundImage: {
         "gradient-radial":  "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-nature":  "linear-gradient(135deg, #f0f7f0 0%, #faf7f2 50%, #fdf9f0 100%)",
-        "gradient-green":   "linear-gradient(135deg, #4CAF50 0%, #2d6b2d 100%)",
-        "gradient-harvest": "linear-gradient(135deg, #f47220 0%, #c04309 100%)",
-        "gradient-hero":    "linear-gradient(135deg, #f0f7f0 0%, #faf7f2 40%, #fdf9f0 70%, #f4f7f4 100%)",
+        "gradient-nature":  "linear-gradient(135deg, #eaf2e6 0%, #f7f5ef 50%, #fdfcf8 100%)",
+        "gradient-green":   "linear-gradient(135deg, #4f8f4e 0%, #1e5450 100%)",
+        "gradient-harvest": "linear-gradient(135deg, #c4682f 0%, #8c4a21 100%)",
+        "gradient-hero":    "linear-gradient(135deg, #eaf2e6 0%, #f7f5ef 40%, #fdfcf8 70%, #faf8f2 100%)",
       },
 
       // ── Spacing extras ───────────────────────────────────────────

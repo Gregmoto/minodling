@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { BrandMark, Wordmark } from "@/components/brand/Logo";
 import { usePathname } from "next/navigation";
 import {
-  Menu, X, Sprout, Bell, ChevronDown,
+  Menu, X, Bell, ChevronDown,
   LayoutDashboard, BookOpen, AlarmClock,
   User, Settings, ShieldCheck, LogOut, Leaf,
 } from "lucide-react";
@@ -51,12 +52,8 @@ export function Navbar({ user }: NavbarProps) {
             aria-label="Minodling – till startsidan"
             onClick={() => setMobileOpen(false)}
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-green-600 text-white group-hover:bg-green-700 transition-colors">
-              <Sprout className="h-4.5 w-4.5" />
-            </div>
-            <span className="hidden sm:block font-bold text-[16px] text-gray-900 tracking-tight">
-              min<span className="text-green-600">odling</span>
-            </span>
+            <BrandMark className="h-8 w-8 shrink-0 transition-transform group-hover:scale-105" />
+            <Wordmark className="hidden sm:block h-[18px] w-auto shrink-0" />
           </Link>
 
           {/* ── Desktop nav – alla länkar direkt ── */}

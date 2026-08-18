@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Poppins, Karla } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/settings";
 import { GoogleTags } from "@/components/analytics/GoogleTags";
@@ -7,15 +7,16 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/next";
 
-const inter = Inter({
+const karla = Karla({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-karla",
   display: "swap",
 });
 
-const playfair = Playfair_Display({
+const poppins = Poppins({
   subsets: ["latin"],
-  variable: "--font-playfair",
+  weight: ["500", "600", "700"],
+  variable: "--font-poppins",
   display: "swap",
 });
 
@@ -83,7 +84,7 @@ export default async function RootLayout({
   const settings = await getSettings();
 
   return (
-    <html lang="sv" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="sv" className={`${karla.variable} ${poppins.variable}`}>
       <head>
         {/* Explicit apple-touch-icon – mer tillförlitligt än Next.js metadata på iOS */}
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
