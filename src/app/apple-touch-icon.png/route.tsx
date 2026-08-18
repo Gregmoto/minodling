@@ -2,7 +2,7 @@
  * Serves the apple-touch-icon at the standard iOS fallback URL.
  * iOS Safari looks for /apple-touch-icon.png even without a <link> tag.
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 import { ImageResponse } from "next/og";
 

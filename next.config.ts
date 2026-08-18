@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   images: {
+    // Cloudflare har ingen inbyggd next/image-optimering (Vercel gör det gratis).
+    // I CF-bygget serveras originalbilderna. Vill du ha optimering: byt till en
+    // custom loader mot Cloudflare Images eller Supabases render-endpoint.
+    ...(process.env.CLOUDFLARE_BUILD === "1" ? { unoptimized: true } : {}),
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000, // 1 år – Next.js Image-optimerade bilder är content-hashed
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

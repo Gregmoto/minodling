@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "minodling",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  // Inkrementell cache för ISR/SSG (t.ex. /odlingskalender/[manad]).
+  // Skapa med: npx wrangler r2 bucket create minodling-inc-cache
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "minodling-inc-cache"
+    }
+  ],
+
+  // Tag-cache för revalidatePath / revalidateTag("settings").
+  // Skapa med: npx wrangler kv namespace create NEXT_TAG_CACHE_KV
+  // Klistra in id:t som kommandot skriver ut.
+  "kv_namespaces": [
+    {
+      "binding": "NEXT_TAG_CACHE_KV",
+      "id": "ERSÄTT_MED_KV_ID"
+    }
+  ],
+
+  // Postgres-pooling vid edge. Skapa med:
+  //   npx wrangler hyperdrive create minodling-db \
+  //     --connection-string="postgres://postgres:<lösenord>@db.<ref>.supabase.co:5432/postgres"
+  // Använd Supabases DIREKTA anslutning (port 5432), inte poolern –
+  // Hyperdrive sköter poolingen själv.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "ERSÄTT_MED_HYPERDRIVE_ID"
+    }
+  ],
+
+  "observability": { "enabled": true }
+}
