@@ -5,6 +5,12 @@
   "compatibility_date": "2025-03-01",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Produktionsdomäner – wrangler skapar custom domains och pekar om DNS.
+  "routes": [
+    { "pattern": "minodling.se", "custom_domain": true },
+    { "pattern": "www.minodling.se", "custom_domain": true }
+  ],
+
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
