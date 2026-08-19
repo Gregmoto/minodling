@@ -29,7 +29,27 @@ const nextConfig: NextConfig = {
         webpack(config: {
           resolve: { alias: Record<string, string> };
           experiments?: Record<string, boolean>;
+          externals?: unknown[];
         }) {
+          // Prismas WASM-import använder Cloudflares "?module"-konvention.
+          // Webpack förstår den inte och gör om den till fs.readFile, så vi
+          // lämnar den orörd åt wrangler/esbuild som hanterar den korrekt.
+          config.externals = config.externals ?? [];
+          (config.externals as unknown[]).unshift(
+            (
+              { request }: { request?: string },
+              cb: (e?: unknown, r?: string) => void,
+            ) => {
+              if (!request?.endsWith(".wasm?module")) return cb();
+              // Absolut sökväg – den relativa bryts när importen hamnar i
+              // olika sid-chunkar.
+              const abs = path.resolve(
+                process.cwd(),
+                "src/generated/prisma-workers/internal/query_compiler_bg.wasm",
+              );
+              return cb(undefined, "module " + abs + "?module");
+            },
+          );
           // Workerd-klienten importerar query_engine_bg.wasm
           config.experiments = { ...config.experiments, asyncWebAssembly: true };
           config.resolve.alias["@/lib/prisma-client"] = path.resolve(

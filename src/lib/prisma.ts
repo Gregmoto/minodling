@@ -1,4 +1,8 @@
-import { PrismaClient } from "./prisma-client";
+import { PrismaClient as NodePrismaClient } from "@prisma/client";
+import { PrismaClient as EdgePrismaClient } from "./prisma-client";
+
+/** Typen är identisk för båda klienterna – de genereras ur samma schema. */
+type PrismaClient = NodePrismaClient;
 import { PrismaPg } from "@prisma/adapter-pg";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
@@ -18,23 +22,37 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-function connectionString(): string {
-  try {
-    const ctx = getCloudflareContext() as
-      | { env?: { HYPERDRIVE?: { connectionString?: string } } }
-      | undefined;
-    const url = ctx?.env?.HYPERDRIVE?.connectionString;
-    if (url) return url;
-  } catch {
-    // Inte i Workers-runtime – faller igenom till DATABASE_URL.
-  }
-  return process.env.DATABASE_URL ?? "";
-}
-
+/**
+ * På Workers är Hyperdrive-anslutningen giltig endast inom en request.
+ * Klienten cachas därför på request-kontexten (ExecutionContext), inte
+ * globalt – en global singleton håller kvar en död anslutning och alla
+ * anrop efter det första misslyckas tyst.
+ */
 function getClient(): PrismaClient {
+  try {
+    const ctx = getCloudflareContext() as unknown as {
+      env?: { HYPERDRIVE?: { connectionString?: string } };
+      ctx?: Record<string, unknown>;
+    };
+    const url = ctx?.env?.HYPERDRIVE?.connectionString;
+    if (url) {
+      const store = (ctx.ctx ?? ctx) as Record<string, unknown>;
+      if (!store.__prisma) {
+        store.__prisma = new (EdgePrismaClient as typeof NodePrismaClient)({
+          adapter: new PrismaPg({ connectionString: url }),
+          log: ["error"],
+        });
+      }
+      return store.__prisma as PrismaClient;
+    }
+  } catch {
+    // Inte i Workers-runtime.
+  }
+
+  // Node (Vercel, lokalt, samt prerendering under bygget).
   if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient({
-      adapter: new PrismaPg({ connectionString: connectionString() }),
+    globalForPrisma.prisma = new NodePrismaClient({
+      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" }),
       log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     });
   }

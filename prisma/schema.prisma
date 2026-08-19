@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters", "queryCompiler"]
+  provider = "prisma-client-js"
 }
 
 // Workerd-riktad klient för Cloudflare Workers. next.config aliasar
@@ -12,7 +11,7 @@ generator clientWorkers {
   moduleFormat    = "esm"
   generatedFileExtension = "ts"
   importFileExtension    = ""
-  previewFeatures = ["driverAdapters", "queryCompiler"]
+  engineType      = "client"
 }
 
 datasource db {

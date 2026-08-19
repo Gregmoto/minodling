@@ -11,11 +11,11 @@
   },
 
   // Inkrementell cache för ISR/SSG (t.ex. /odlingskalender/[manad]).
-  // Skapa med: npx wrangler r2 bucket create minodling-inc-cache
+  // Skapa med: npx wrangler r2 bucket create minodling-cache-v2
   "r2_buckets": [
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "minodling-inc-cache"
+      "bucket_name": "minodling-cache-v2"
     }
   ],
 
