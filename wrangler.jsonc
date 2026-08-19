@@ -41,5 +41,11 @@
     }
   ],
 
+  // Låt wrangler bunta .wasm som riktiga moduler. Prismas WASM-motor laddas
+  // annars via fs.readFile, som inte finns i workerd.
+  "rules": [
+    { "type": "CompiledWasm", "globs": ["**/*.wasm"], "fallthrough": true }
+  ],
+
   "observability": { "enabled": true }
 }

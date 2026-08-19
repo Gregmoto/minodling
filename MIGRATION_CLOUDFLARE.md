@@ -148,29 +148,39 @@ Hyperdrive-bindningen fungerar – verifierat med diagnostiklogg som visade att
 connection stringen hittas (182 tecken). Problemet är alltså inte anslutningen
 utan hur Prisma-klienten paketeras.
 
-### Vad som redan provats
-1. Prisma 5.22 + `driverAdapters` + pg-adapter → samma fel.
-2. Uppgradering till Prisma 6.19.3 + `queryCompiler` (tar bort Rust-motorn)
-   → samma fel.
-3. Extra generator `prisma-client` med `runtime = "workerd"` till
-   `src/generated/prisma-workers`, plus webpack-alias i `next.config.ts` som
-   pekar om `@prisma/client` när `CLOUDFLARE_BUILD=1` → aliaset får inte fäste
-   genom OpenNext-buntningen; samma fel.
+### Vad som provats (allt misslyckat)
+1. Prisma 5.22 + `driverAdapters` + pg-adapter → `fs.readdir`.
+2. Prisma 6.19.3 + `queryCompiler` → `fs.readdir`.
+3. Extra generator `prisma-client`, `runtime = "workerd"`, alias på
+   `@prisma/client` → aliaset fick inte fäste.
+4. Alias på egen indirektionsmodul (`src/lib/prisma-client.ts` →
+   `prisma-client.workers.ts`) + `asyncWebAssembly` i webpack → bygget går
+   igenom och WASM-motorn hamnar i bundlen, men felet blir `fs.readFile`.
+5. `rules: [{ type: "CompiledWasm" }]` i wrangler.jsonc → ingen effekt.
+6. Generator utan `runtime = "workerd"` → klienten faller tillbaka på
+   `runtime/library`, alltså den binära motorn. Sämre.
 
-### Troliga nästa steg
-- Verifiera att aliaset faktiskt tillämpas (inspektera
-  `.open-next/server-functions/default/handler.mjs` efter referenser till
-  `prisma-workers` respektive `.prisma/client`).
-- Alternativt importera den workerd-genererade klienten **direkt** i
-  `src/lib/prisma.ts` istället för via alias, och låta Node-bygget använda en
-  separat fil (t.ex. via `serverExternalPackages` + villkorad import).
-- Kontrollera att WASM-modulen för queryCompiler kommer med i bundlen; workerd
-  kräver att `.wasm` importeras som modul.
-- Om det låser sig: Prisma Accelerate eller byte till en Workers-native
-  klient (t.ex. Kysely eller postgres.js) för de tyngsta läsvägarna.
+### Kärnan i problemet
+- Med `runtime = "workerd"` genereras klienten mot `wasm-engine-edge`, som
+  laddar sin `.wasm` via `fs.readFile` – finns inte i workerd.
+- Utan flaggan genereras den mot `runtime/library`, alltså binärmotorn.
+- `queryCompiler` (som skulle ge en ren JS-kompilator med base64-inlinad WASM,
+  filerna finns i `node_modules/@prisma/client/runtime/`) slår inte igenom i
+  den genererade klienten.
 
-### Vad som DÄREMOT fungerar på Workers
-- Statiska och SSG-renderade sidor (`/`, `/om-oss`, `/integritetspolicy`)
-- Assets, `ads.txt`, `icon.svg`, `robots.txt`, `manifest.webmanifest`
-- Bindningarna: Hyperdrive, R2-cache, KV-tagcache, Assets
-- Bundle 3,9 MB gzippat – ryms i Workers Paid
+Verifierat fel via temporär diagnostikrutt:
+```
+Error: [unenv] fs.readFile is not implemented yet!
+  at createNotImplementedError (worker.js:47:10)
+```
+
+### Rekommendation
+**Prisma Accelerate** löser detta utan kodändringar – den är HTTP-baserad och
+behöver varken binärmotor eller WASM i workern. Byt bara connection string.
+Alternativt stanna på Vercel, där allt fungerar.
+
+### Vad som fungerar på Workers idag
+- Statiska och SSG-renderade sidor, assets, `ads.txt`, ikoner, robots, manifest
+- Bindningar: Hyperdrive, R2-cache, KV-tagcache, Assets
+- Bundle 3,9 MB gzippat, ryms i Workers Paid
+- Hyperdrive-anslutningen i sig (connection string hittas i runtime)

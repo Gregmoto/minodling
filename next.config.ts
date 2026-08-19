@@ -26,10 +26,17 @@ const nextConfig: NextConfig = {
   // vanliga. Aliaset gör att inga call-sites behöver ändras.
   ...(process.env.CLOUDFLARE_BUILD === "1"
     ? {
-        webpack(config: { resolve: { alias: Record<string, string> } }) {
-          config.resolve.alias["@prisma/client"] = path.resolve(
-            process.cwd(), "src/generated/prisma-workers",
+        webpack(config: {
+          resolve: { alias: Record<string, string> };
+          experiments?: Record<string, boolean>;
+        }) {
+          // Workerd-klienten importerar query_engine_bg.wasm
+          config.experiments = { ...config.experiments, asyncWebAssembly: true };
+          config.resolve.alias["@/lib/prisma-client"] = path.resolve(
+            process.cwd(), "src/lib/prisma-client.workers.ts",
           );
+          config.resolve.alias[path.resolve(process.cwd(), "src/lib/prisma-client.ts")] =
+            path.resolve(process.cwd(), "src/lib/prisma-client.workers.ts");
           return config;
         },
       }
