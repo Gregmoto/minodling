@@ -5,10 +5,15 @@
   "compatibility_date": "2025-03-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  // Produktionsdomäner – wrangler skapar custom domains och pekar om DNS.
+  // Behåll *.workers.dev som test- och reservadress.
+  "workers_dev": true,
+
+  // Produktionsdomäner som ROUTES, inte custom domains. Routes läggs ovanpå
+  // befintlig (proxad) DNS utan att några poster raderas – ingen nedtid, och
+  // rollback sker genom att ta bort raderna och deploya om.
   "routes": [
-    { "pattern": "minodling.se", "custom_domain": true },
-    { "pattern": "www.minodling.se", "custom_domain": true }
+    { "pattern": "minodling.se/*", "zone_name": "minodling.se" },
+    { "pattern": "www.minodling.se/*", "zone_name": "minodling.se" }
   ],
 
   "assets": {
