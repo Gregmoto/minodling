@@ -13,7 +13,7 @@
     "db:studio": "prisma studio",
     "cf:build": "CLOUDFLARE_BUILD=1 prisma generate && CLOUDFLARE_BUILD=1 opennextjs-cloudflare build",
     "cf:preview": "CLOUDFLARE_BUILD=1 opennextjs-cloudflare preview",
-    "cf:deploy": "CLOUDFLARE_BUILD=1 opennextjs-cloudflare deploy"
+    "cf:deploy": "node scripts/cf-deploy.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
