@@ -1,7 +1,9 @@
 # Migration: Vercel → Cloudflare Workers
 
-Status: **infrastrukturen är uppsatt och deployad. Databaslagret är INTE löst än – se Öppen blockerare.** Koden kör i båda runtimes
-samtidigt, så Vercel-deployen är opåverkad tills du själv pekar om DNS.
+Status: **KLAR. minodling.se körs på Cloudflare Workers.**
+
+Koden kör i båda runtimes samtidigt, så Vercel finns kvar som rollback tills
+du tar bort routes ur `wrangler.jsonc`.
 
 Adapter: OpenNext (`@opennextjs/cloudflare` 1.20) · DB: Cloudflare Hyperdrive
 
@@ -129,58 +131,41 @@ varm.
 **Annonsintäkter.** Sajten tjänar pengar nu. Verifiera hela testchecklistan på
 `*.workers.dev` innan DNS byts, så att AdSense inte tappar verifiering.
 
-
 ---
 
-## Öppen blockerare: Prisma mot Workers
+## Hur Prisma fick att fungera i Workers
 
-Workern är deployad och serverar sidor på https://minodling.omdio.workers.dev,
-men **alla databasläsningar misslyckas tyst**. Sidor svarar 200 men renderar
-tomma listor eftersom koden har `.catch(() => [])`.
+Tre separata orsaker låg bakom att databasläsningar misslyckades tyst:
 
-Felet i `wrangler tail`:
-```
-prisma:error [unenv] fs.readdir is not implemented yet!
-```
+1. **Fel motor.** `engineType = "client"` i generatorn ger `wasm-compiler-edge`
+   i stället för `wasm-engine-edge`, som laddar sin `.wasm` via `fs.readFile` –
+   något workerd saknar. `driverAdapters` och `queryCompiler` är GA i 6.19;
+   preview-flaggorna var no-ops och är borttagna.
 
-Prisma försöker ladda sin **binära query-motor**, som inte finns i workerd.
-Hyperdrive-bindningen fungerar – verifierat med diagnostiklogg som visade att
-connection stringen hittas (182 tecken). Problemet är alltså inte anslutningen
-utan hur Prisma-klienten paketeras.
+2. **WASM-importen förstördes av webpack.** Prisma använder Cloudflares
+   `?module`-konvention, som webpack gör om till en filläsning. Importen
+   externaliseras nu med absolut sökväg i `next.config.ts` så att
+   wrangler/esbuild hanterar den.
 
-### Vad som provats (allt misslyckat)
-1. Prisma 5.22 + `driverAdapters` + pg-adapter → `fs.readdir`.
-2. Prisma 6.19.3 + `queryCompiler` → `fs.readdir`.
-3. Extra generator `prisma-client`, `runtime = "workerd"`, alias på
-   `@prisma/client` → aliaset fick inte fäste.
-4. Alias på egen indirektionsmodul (`src/lib/prisma-client.ts` →
-   `prisma-client.workers.ts`) + `asyncWebAssembly` i webpack → bygget går
-   igenom och WASM-motorn hamnar i bundlen, men felet blir `fs.readFile`.
-5. `rules: [{ type: "CompiledWasm" }]` i wrangler.jsonc → ingen effekt.
-6. Generator utan `runtime = "workerd"` → klienten faller tillbaka på
-   `runtime/library`, alltså den binära motorn. Sämre.
+3. **Död anslutning mellan requests.** Hyperdrive är giltig endast inom en
+   request. Den globala singletonen höll kvar en död anslutning, så bara det
+   första anropet efter en deploy fungerade – resten misslyckades tyst.
+   Klienten cachas nu på request-kontexten. Node och prerendering använder
+   fortsatt Node-klienten, annars bakas tomma resultat in i cachen vid bygget.
 
-### Kärnan i problemet
-- Med `runtime = "workerd"` genereras klienten mot `wasm-engine-edge`, som
-  laddar sin `.wasm` via `fs.readFile` – finns inte i workerd.
-- Utan flaggan genereras den mot `runtime/library`, alltså binärmotorn.
-- `queryCompiler` (som skulle ge en ren JS-kompilator med base64-inlinad WASM,
-  filerna finns i `node_modules/@prisma/client/runtime/`) slår inte igenom i
-  den genererade klienten.
+## Kvar att göra
 
-Verifierat fel via temporär diagnostikrutt:
-```
-Error: [unenv] fs.readFile is not implemented yet!
-  at createNotImplementedError (worker.js:47:10)
-```
+- [ ] **Stripe-secrets** – inga secrets är satta på Workern (`wrangler secret
+      list` returnerar `[]`). Kassan fungerar inte förrän dessa läggs in, och
+      webhook-URL:en behöver pekas om i Stripe.
+- [ ] **Verifiera skrivningar** – server actions (skapa inlägg, påminnelser)
+      är inte testade i produktion.
+- [ ] **Bildoptimering** – `unoptimized` är på i CF-bygget.
+- [ ] **Vercel Analytics** – rapporterar inte längre; byt till Cloudflare Web
+      Analytics.
+- [ ] **Pausa Vercel** – först efter några dagars stabil drift.
 
-### Rekommendation
-**Prisma Accelerate** löser detta utan kodändringar – den är HTTP-baserad och
-behöver varken binärmotor eller WASM i workern. Byt bara connection string.
-Alternativt stanna på Vercel, där allt fungerar.
+## Rollback
 
-### Vad som fungerar på Workers idag
-- Statiska och SSG-renderade sidor, assets, `ads.txt`, ikoner, robots, manifest
-- Bindningar: Hyperdrive, R2-cache, KV-tagcache, Assets
-- Bundle 3,9 MB gzippat, ryms i Workers Paid
-- Hyperdrive-anslutningen i sig (connection string hittas i runtime)
+Ta bort `routes` ur `wrangler.jsonc` och kör `npm run cf:deploy`. Trafiken går
+tillbaka till Vercel direkt; inga DNS-poster har ändrats.
