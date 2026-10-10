@@ -50,3 +50,16 @@ prisma/migrations/
 
 # Genererad Prisma-klient för workerd
 src/generated/
+
+# Python
+__pycache__/
+*.pyc
+
+# Search Console-export (innehåller sajtdata)
+search-console/
+
+# iOS / Capacitor
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/DerivedData/

@@ -6,6 +6,7 @@ import { GoogleTags } from "@/components/analytics/GoogleTags";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/next";
+import { NativeBridge } from "@/components/native/NativeBridge";
 
 const karla = Karla({
   subsets: ["latin"],
@@ -98,6 +99,7 @@ export default async function RootLayout({
 
         {/* Samtycke sköts av Googles "European regulations message" (CMP) via
             Consent Mode v2 – se GoogleTags i <head>. Vercel Analytics är cookielöst. */}
+        <NativeBridge />
         <Analytics />
       </body>
     </html>

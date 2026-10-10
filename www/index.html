@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Min Odling</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    margin: 0; min-height: 100dvh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+    background: #f7f5ef; color: #22302a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    text-align: center; padding: 24px;
+  }
+  .mark { width: 76px; height: 76px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 700; }
+  p { margin: 0; color: #5c6b60; font-size: 15px; line-height: 1.5; max-width: 30ch; }
+  button {
+    margin-top: 4px; padding: 12px 24px; border: 0; border-radius: 999px;
+    background: #1e5450; color: #fff; font-size: 15px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+  <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+    <rect width="100" height="100" rx="24" fill="#1e5450"/>
+    <path d="M50 84 V50" stroke="#f7f5ef" stroke-width="10" stroke-linecap="round"/>
+    <path d="M51 58C51 38 40 22 20 18C16 40 29 55 51 58Z" fill="#f7f5ef"/>
+    <path d="M49 58C49 38 60 22 80 18C84 40 71 55 49 58Z" fill="#7fbf7c"/>
+  </svg>
+  <h1>Ingen anslutning</h1>
+  <p>Min Odling behöver internet för att hämta det senaste. Dina sparade växter finns kvar offline.</p>
+  <button onclick="location.reload()">Försök igen</button>
+</body>
+</html>

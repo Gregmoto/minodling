@@ -75,6 +75,7 @@ model Profile {
   aiUsage                 AiUsage[]
 
   @@map("profiles")
+  deviceTokens DeviceToken[]
 }
 
 model ModeratorPermission {
@@ -297,6 +298,25 @@ model DiaryEntry {
 
   @@index([diaryId])
   @@map("diary_entries")
+}
+
+/// Enheter som registrerat sig för push-notiser från iOS-appen.
+/// En användare kan ha flera enheter; token roteras av Apple och är unik.
+model DeviceToken {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @db.Uuid @map("user_id")
+  token      String   @unique
+  platform   String   @default("ios")
+  /// Stängs av när APNs svarar att token inte längre är giltig.
+  isActive   Boolean  @default(true) @map("is_active")
+  lastSeenAt DateTime @default(now()) @map("last_seen_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  owner Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("device_tokens")
 }
 
 model Reminder {
