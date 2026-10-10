@@ -19,7 +19,7 @@ export function TopBar({ freeShippingThreshold, message }: TopBarProps) {
     || (thresholdKr ? `🚚 Fri frakt på order över ${thresholdKr} kr` : "🚚 Fri frakt – se villkor i butiken");
 
   return (
-    <div className="relative bg-green-700 text-white text-sm py-2 px-4">
+    <div className="hide-in-app relative bg-green-700 text-white text-sm py-2 px-4">
       <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
         <Truck className="h-3.5 w-3.5 shrink-0" />
         <Link href="/butik" className="hover:underline font-medium leading-tight text-center">

@@ -178,7 +178,7 @@ export function Navbar({ user }: NavbarProps) {
             {/* Mobil-hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 transition-colors ml-1"
+              className="hide-in-app lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 transition-colors ml-1"
               aria-label="Meny"
               aria-expanded={mobileOpen}
             >

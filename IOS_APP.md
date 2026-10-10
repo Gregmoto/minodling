@@ -3,8 +3,9 @@
 Appen är ett Capacitor-skal som visar den publicerade sajten, plus native-
 funktioner som webben inte kan ge: push-notiser, kamera, lokal lagring.
 
-**Status: appen bygger och kör i simulatorn.** Push och kamera är kodade men
-kan inte verifieras i simulator – se *Vad som återstår*.
+**Status: appen bygger och kör i simulatorn med eget app-skal.** Flikfält i
+botten, egen menysida och dold webbnavigering. Push-dialogen verifierad i
+simulator; själva leveransen av notiser kräver fysisk enhet.
 
 ---
 
@@ -60,7 +61,22 @@ Det native-värde som gör appen till mer än en webbläsare ligger i:
 | `src/lib/apns.ts` | Skickar notiser via APNs – Web Crypto, fungerar på Cloudflare Workers |
 | `src/app/api/push/register/route.ts` | Appen registrerar sin enhetstoken |
 | `src/app/api/push/send-reminders/route.ts` | Cron-jobb som skickar dagens påminnelser |
+| `src/components/native/AppTabBar.tsx` | Flikfält i botten – visas bara i appen |
+| `src/app/meny/page.tsx` | "Mer"-fliken; appens egen navigationsyta |
 | `www/index.html` | Reservsida när nätet är nere |
+
+### App-skalet
+
+Appen ska inte kännas som en webbsida i en ruta. Därför:
+
+* **Flikfält i botten** med fem flikar: Hem, Växter, Identifiera, Min odling,
+  Mer. Kameran lyfts fram i en egen cirkel – det är appens tydligaste nytta.
+* **Webbnavigering döljs.** `NativeBridge` sätter `data-native="ios"` på
+  `<html>`, och CSS-regeln `[data-native] .hide-in-app` plockar bort
+  fraktbannern, sidfoten och hamburgermenyn. Klassen `hide-in-app` kan sättas
+  på vad som helst som inte hör hemma i appen.
+* **Safe areas** respekteras uppe och nere, gummibandseffekten är avstängd och
+  långtryck markerar inte text – små saker som annars avslöjar webbvyn.
 
 `src/lib/native.ts` använder dynamiska importer bakom en `isNative()`-kontroll,
 så webbygget drar aldrig in native-koden och sajten fungerar oförändrat i
@@ -147,6 +163,17 @@ främmande i ett app-sammanhang. Värt att se över inför App Store-granskning.
 **Riktlinje 4.2.** Apple avvisar appar som bara är en inpackad webbplats.
 Push-notiser och kamera är det som motiverar appen – se till att de faktiskt
 fungerar och syns innan granskning.
+
+---
+
+## Testa mot lokal dev-server
+
+Appen laddar produktionssajten, så lokala ändringar syns inte förrän de är
+deployade. För att testa lokalt: peka `server.url` i `capacitor.config.ts` mot
+`http://localhost:3000`, sätt `iosScheme: "http"`, och lägg till
+`NSAppTransportSecurity.NSAllowsArbitraryLoads` i `Info.plist`.
+
+**Återställ till `https://minodling.se` innan du arkiverar.**
 
 ---
 

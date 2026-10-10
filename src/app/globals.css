@@ -208,3 +208,26 @@
 .ad-unit:has(> ins[data-ad-status="unfilled"]) {
   display: none;
 }
+
+/* ── App-läge (Capacitor) ─────────────────────────────────────────────
+   NativeBridge sätter data-native="ios" på <html> när vi kör i appen.
+   Här döljs webbspecifik navigering så att appen får sitt eget skal med
+   flikfält i botten i stället för att se ut som en webbsida i en ruta. */
+[data-native] .hide-in-app { display: none !important; }
+
+/* Plats för flikfältet, plus hemindikatorn på moderna iPhones. */
+[data-native] body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+
+/* Innehållet ska inte hamna under statusfältet/kameraön. */
+[data-native] body { padding-top: env(safe-area-inset-top); }
+
+/* Ingen gummibandseffekt – det avslöjar webbvyn direkt. */
+[data-native] body { overscroll-behavior-y: none; }
+
+/* Ingen textmarkering vid långtryck, och inget blått highlight vid tryck. */
+[data-native] { -webkit-tap-highlight-color: transparent; }
+[data-native] body { -webkit-touch-callout: none; }
+[data-native] input, [data-native] textarea, [data-native] [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
