@@ -11,7 +11,23 @@ const moderatorRoutes = ["/moderator"];
 // Skicka inloggade vidare från auth-sidor
 const authRoutes      = ["/auth/login", "/auth/register"];
 
+/**
+ * Testadresser under vibedev.se får aldrig indexeras. Styrt på värdnamnet,
+ * så att regeln inte kan slå på produktionsdomänen av misstag.
+ */
+function withNoindex(request: NextRequest, response: NextResponse): NextResponse {
+  const host = request.headers.get("host") ?? "";
+  if (host === "vibedev.se" || host.endsWith(".vibedev.se")) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
+  return withNoindex(request, await handle(request));
+}
+
+async function handle(request: NextRequest): Promise<NextResponse> {
   let supabaseResponse = NextResponse.next({ request });
 
   const { pathname } = request.nextUrl;

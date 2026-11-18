@@ -5,10 +5,10 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   images: {
-    // Cloudflare har ingen inbyggd next/image-optimering (Vercel gör det gratis).
-    // I CF-bygget serveras originalbilderna. Vill du ha optimering: byt till en
-    // custom loader mot Cloudflare Images eller Supabases render-endpoint.
-    ...(process.env.CLOUDFLARE_BUILD === "1" ? { unoptimized: true } : {}),
+    // Originalbilderna serveras, precis som i produktion på Cloudflare. Att slå
+    // på optimering kräver `sharp` i körbilden – listat som nästa steg, inte
+    // en del av flytten.
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000, // 1 år – Next.js Image-optimerade bilder är content-hashed
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        // Självhostad Supabase på servern
+        protocol: "https",
+        hostname: "db.minodling.se",
         pathname: "/storage/v1/object/public/**",
       },
     ],
@@ -60,7 +66,11 @@ const nextConfig: NextConfig = {
           return config;
         },
       }
-    : { serverExternalPackages: ["@prisma/client"] }),
+    : {
+        serverExternalPackages: ["@prisma/client"],
+        // Fristående serverbygge för Coolify: .next/standalone har egen server.js.
+        output: "standalone" as const,
+      }),
 
   // Långa cache-headers för statiska tillgångar
   async headers() {

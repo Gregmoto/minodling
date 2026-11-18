@@ -1,0 +1,22 @@
+# Byggs om i bilden
+node_modules
+.next
+src/generated
+
+# Hemligheter får aldrig in i bildens byggkontext
+.env
+.env.*
+!.env.example
+
+# Cloudflare-driften, används inte på servern
+.open-next
+.wrangler
+
+# Inte en del av appen
+.git
+ios
+www
+search-console
+__pycache__
+*.md
+!README.md

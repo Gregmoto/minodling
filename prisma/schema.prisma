@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  // "native" för utvecklingsmaskinen, musl för Alpine-bilden i Coolify.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 // Workerd-riktad klient för Cloudflare Workers. next.config aliasar
