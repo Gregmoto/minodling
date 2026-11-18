@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { getSettings } from "@/lib/settings";
 import prisma from "@/lib/prisma";
 
+// Renderas vid varje anrop. Bygget i Coolify når inte databasen, så en
+// förrenderad version skulle sakna alla databasposter tills den förnyats.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const s = await getSettings();
   if (!s.seoSitemapEnabled) return [];
